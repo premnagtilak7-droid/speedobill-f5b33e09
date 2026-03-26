@@ -306,7 +306,7 @@ const AppLayout = () => {
 
       {/* Mobile bottom navigation */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-xl md:hidden"
+        className="fixed bottom-0 left-0 right-0 z-50 glass-bottombar md:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="flex items-stretch justify-around">
