@@ -2,7 +2,7 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard, UtensilsCrossed, Grid3X3, ChefHat, BarChart3,
-  Settings, LogOut, ScrollText, Menu, X, Wallet, Users, Package, CalendarCheck, Store, Zap
+  Settings, LogOut, ScrollText, Menu, X, Wallet, Users, Package, CalendarCheck, Store, Zap, CreditCard, ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
