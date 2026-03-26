@@ -114,7 +114,7 @@ const StaffPage = () => {
 
   const addLeave = async () => {
     if (!selectedStaff || !hotelId) return;
-    const { error } = await supabase.from("staff_leaves").insert({
+    const { error } = await supabase.from("staff_leaves" as any).insert({
       hotel_id: hotelId,
       staff_user_id: selectedStaff.user_id,
       leave_date: leaveForm.leave_date,
