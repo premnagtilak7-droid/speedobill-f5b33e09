@@ -40,7 +40,14 @@ const AppLayout = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const navItems = role === "chef" ? chefNav : role === "waiter" ? waiterNav : ownerNav;
+  const baseNav = role === "chef" ? chefNav : role === "waiter" ? waiterNav : ownerNav;
+  const navItems = [
+    ...baseNav,
+    ...(isCreator ? [
+      { label: "Pricing", icon: CreditCard, path: "/pricing" },
+      { label: "Creator Admin", icon: ShieldCheck, path: "/creator-admin" },
+    ] : []),
+  ];
 
   const NavButton = ({ item, onClick }: { item: typeof ownerNav[0]; onClick?: () => void }) => {
     const active = location.pathname === item.path;
