@@ -176,7 +176,7 @@ const SpeedoBot = () => {
 
             {isLoading && messages[messages.length - 1]?.role === "user" && (
               <div className="flex justify-start">
-                <div className="bg-white/8 rounded-xl px-3 py-2 rounded-bl-sm">
+                <div className="rounded-xl px-3 py-2 rounded-bl-sm" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
                   <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
                 </div>
               </div>
