@@ -364,6 +364,7 @@ const MenuPage = () => {
                   items={filtered}
                   renderItem={renderMenuCard}
                   className="gap-2.5 md:gap-3 lg:gap-3.5"
+                  size={density}
                 />
               )}
             </div>
