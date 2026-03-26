@@ -515,8 +515,9 @@ const Tables = () => {
                     <div className="flex items-center rounded-lg border border-border overflow-hidden">
                       {["none", "A", "B", "C", "D"].map((s) => (
                         <button key={s} onClick={() => void loadSeatOrder(s)}
-                          className={`px-2.5 py-1.5 text-[11px] font-medium transition-colors ${tableSplit === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+                          className={`relative px-2.5 py-1.5 text-[11px] font-medium transition-colors ${tableSplit === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
                           {s === "none" ? "All" : s}
+                          {seatFlags[s] && tableSplit !== s && <span className="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-primary" />}
                         </button>
                       ))}
                     </div>
