@@ -307,10 +307,8 @@ const Dashboard = () => {
         {quickStats.map((stat, i) => (
           <div
             key={stat.label}
-            className="rounded-xl overflow-hidden animate-pop-in"
+            className="rounded-xl overflow-hidden animate-pop-in glass-card hover-lift"
             style={{
-              background: "hsl(var(--card))",
-              border: "1px solid hsl(var(--border) / 0.5)",
               animationDelay: `${i * 40}ms`,
             }}
           >
