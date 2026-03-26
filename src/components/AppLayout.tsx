@@ -34,7 +34,8 @@ const chefNav = [
 ];
 
 const AppLayout = () => {
-  const { signOut, role } = useAuth();
+  const { signOut, role, user } = useAuth();
+  const isCreator = user?.email === "speedobill7@gmail.com";
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
