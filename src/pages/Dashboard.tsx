@@ -409,15 +409,14 @@ const Dashboard = () => {
         <h2 className="text-[13px] font-semibold mb-2 text-muted-foreground uppercase tracking-wider">Quick Actions</h2>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
           {actionCards.map((card, i) => (
-            <button
+              <button
               key={card.label}
-              className="rounded-xl p-3 text-left transition-all duration-200 hover:-translate-y-0.5 animate-pop-in group btn-press"
+              className="rounded-xl p-3 text-left animate-pop-in group btn-press glass-card hover-lift"
               style={{
-                background: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border) / 0.5)",
                 animationDelay: `${(i + 5) * 40}ms`,
               }}
               onClick={() => navigate(card.to)}
+            >
             >
               <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${card.gradient} mb-2 transition-transform duration-200 group-hover:scale-110`}>
                 <card.icon size={15} className="text-white" />

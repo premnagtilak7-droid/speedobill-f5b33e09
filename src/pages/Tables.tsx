@@ -403,7 +403,7 @@ const Tables = () => {
     }
     return (
       <button key={item.id} onClick={() => addMenuItemToOrder(item)}
-        className="group relative overflow-hidden rounded-2xl border border-border bg-card p-3 text-center transition-all hover:border-primary hover:shadow-lg aspect-square flex flex-col items-center justify-center gap-2">
+        className="group relative overflow-hidden rounded-2xl glass-card p-3 text-center hover-lift aspect-square flex flex-col items-center justify-center gap-2">
         {qty > 0 && <div className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow animate-qty-badge-in">{qty}</div>}
         <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-muted overflow-hidden">
           {item.image_url ? <img src={item.image_url} alt="" className="h-full w-full object-cover" /> : <UtensilsCrossed className="h-7 w-7 text-muted-foreground/40" />}
