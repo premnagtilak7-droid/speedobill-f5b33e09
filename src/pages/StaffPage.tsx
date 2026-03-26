@@ -587,6 +587,44 @@ const StaffPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Add Staff Dialog */}
+      <Dialog open={addStaffDialog} onOpenChange={setAddStaffDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Add New Staff Member</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Create a staff account and assign them to your hotel automatically.</p>
+          <div className="space-y-3 mt-2">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Full Name</label>
+              <Input placeholder="Enter staff name" value={addStaffForm.full_name} onChange={e => setAddStaffForm({ ...addStaffForm, full_name: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Email <span className="text-destructive">*</span></label>
+              <Input type="email" placeholder="staff@example.com" value={addStaffForm.email} onChange={e => setAddStaffForm({ ...addStaffForm, email: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Password (optional — they can reset later)</label>
+              <Input type="password" placeholder="Set a temporary password" value={addStaffForm.password} onChange={e => setAddStaffForm({ ...addStaffForm, password: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Role <span className="text-destructive">*</span></label>
+              <Select value={addStaffForm.role} onValueChange={v => setAddStaffForm({ ...addStaffForm, role: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="waiter">Waiter</SelectItem>
+                  <SelectItem value="chef">Chef</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Phone</label>
+              <Input type="tel" placeholder="+91 9876543210" value={addStaffForm.phone} onChange={e => setAddStaffForm({ ...addStaffForm, phone: e.target.value })} />
+            </div>
+            <Button className="w-full" onClick={addStaffMember} disabled={addingStaff || !addStaffForm.email}>
+              {addingStaff ? "Creating..." : "Add Staff Member"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
