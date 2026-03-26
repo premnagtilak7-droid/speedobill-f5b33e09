@@ -130,6 +130,38 @@ const StaffPage = () => {
     else { toast.success("Leave recorded"); setLeaveDialog(false); loadData(); }
   };
 
+  const addStaffMember = async () => {
+    if (!addStaffForm.email || !addStaffForm.role) {
+      toast.error("Email and role are required");
+      return;
+    }
+    setAddingStaff(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("create-staff", {
+        body: {
+          email: addStaffForm.email.trim(),
+          password: addStaffForm.password || undefined,
+          full_name: addStaffForm.full_name.trim(),
+          role: addStaffForm.role,
+          phone: addStaffForm.phone.trim(),
+        },
+      });
+      if (res.error || res.data?.error) {
+        toast.error(res.data?.error || res.error?.message || "Failed to add staff");
+      } else {
+        toast.success(`${addStaffForm.full_name || addStaffForm.email} added as ${addStaffForm.role}!`);
+        setAddStaffDialog(false);
+        setAddStaffForm({ email: "", password: "", full_name: "", role: "waiter", phone: "" });
+        loadData();
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add staff");
+    } finally {
+      setAddingStaff(false);
+    }
+  };
+
   const getStaffAttendance = (userId: string) => attendance.filter(a => a.user_id === userId);
   const getStaffSalaries = (userId: string) => salaries.filter(s => s.staff_user_id === userId);
   const getStaffShifts = (userId: string) => shifts.filter(s => s.staff_user_id === userId);
