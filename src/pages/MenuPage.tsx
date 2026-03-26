@@ -398,6 +398,7 @@ const MenuPage = () => {
             items={filtered}
             renderItem={renderMenuCard}
             className="gap-2"
+            size={density}
           />
         )}
       </div>
