@@ -81,12 +81,17 @@ const MenuItemForm = ({ open, onOpenChange, editItem, hotelId, categories, onSav
         }
       );
       const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || "Generation failed");
+      if (!resp.ok) {
+        if (resp.status === 429) {
+          throw new Error(data.error || "Gemini image quota reached. Please try again shortly.");
+        }
+        throw new Error(data.error || "Generation failed");
+      }
       if (data.image_base64) {
         setAiGeneratedBase64(data.image_base64);
         setImagePreview(data.image_base64);
         setImageFile(null);
-        toast.success("AI image generated!");
+        toast.success(`AI image generated${data.model_used ? ` via ${data.model_used}` : ""}!`);
       }
     } catch (err: any) {
       toast.error("AI generation failed: " + err.message);
