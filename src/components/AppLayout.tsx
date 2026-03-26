@@ -79,6 +79,42 @@ const ownerSections: NavSection[] = [
   },
 ];
 
+const managerSections: NavSection[] = [
+  {
+    title: "MAIN",
+    items: [
+      { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+      { label: "Tables", icon: Grid3X3, path: "/tables" },
+      { label: "Incoming", icon: Bell, path: "/incoming-orders" },
+      { label: "Kitchen", icon: ChefHat, path: "/kitchen" },
+      { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
+    ],
+  },
+  {
+    title: "MANAGE",
+    items: [
+      { label: "Staff", icon: Users, path: "/staff" },
+      { label: "Customers", icon: UserCheck, path: "/customers" },
+      { label: "Voids", icon: FileText, path: "/void-reports" },
+      { label: "Close Day", icon: CalendarCheck, path: "/daily-closing" },
+    ],
+  },
+  {
+    title: "INSIGHTS",
+    items: [
+      { label: "Analytics", icon: BarChart3, path: "/analytics" },
+      { label: "Order History", icon: ScrollText, path: "/order-history" },
+    ],
+  },
+  {
+    title: "CONFIG",
+    items: [
+      { label: "Table QR", icon: QrCode, path: "/table-qr" },
+      { label: "Inventory Control", icon: Package, path: "/inventory-hub" },
+    ],
+  },
+];
+
 const waiterSections: NavSection[] = [
   {
     title: "MAIN",
