@@ -109,6 +109,10 @@ const AppLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const isCreator = user?.email === "speedobill7@gmail.com";
 
+  // Activate real-time notification hooks
+  useRoleNotifications();
+  useIncomingOrders();
+
   const baseSections = role === "chef" ? chefSections : role === "waiter" ? waiterSections : ownerSections;
   const navSections = isCreator
     ? [...baseSections, { title: "ADMIN", items: [{ label: "Creator Admin", icon: ShieldCheck, path: "/creator-admin" }] }]
