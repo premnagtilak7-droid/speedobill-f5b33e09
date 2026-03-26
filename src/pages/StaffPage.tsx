@@ -612,6 +612,7 @@ const StaffPage = () => {
                 <SelectContent>
                   <SelectItem value="waiter">Waiter</SelectItem>
                   <SelectItem value="chef">Chef</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
                 </SelectContent>
               </Select>
             </div>
