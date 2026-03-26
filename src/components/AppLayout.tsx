@@ -264,7 +264,7 @@ const AppLayout = () => {
       )}
 
       {/* Desktop sidebar */}
-      <aside className={`hidden md:flex flex-col border-r border-border bg-card sticky top-0 h-screen transition-all duration-200 ${collapsed ? "w-16" : "w-56 lg:w-60"}`}>
+      <aside className={`hidden md:flex flex-col glass-sidebar sticky top-0 h-screen transition-all duration-200 ${collapsed ? "w-16" : "w-56 lg:w-60"}`}>
         <div className="flex items-center justify-between px-3 py-3 mb-1">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl gradient-btn-primary flex items-center justify-center shadow-md">
