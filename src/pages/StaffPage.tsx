@@ -43,9 +43,9 @@ const StaffPage = () => {
       supabase.from("profiles").select("*").eq("hotel_id", hotelId),
       supabase.from("hotels").select("hotel_code").eq("id", hotelId).single(),
       supabase.from("attendance_logs").select("*").eq("hotel_id", hotelId).order("created_at", { ascending: false }).limit(500),
-      supabase.from("staff_salaries").select("*").eq("hotel_id", hotelId).order("created_at", { ascending: false }),
-      supabase.from("staff_shifts").select("*").eq("hotel_id", hotelId).order("shift_date", { ascending: false }).limit(200),
-      supabase.from("staff_leaves").select("*").eq("hotel_id", hotelId).order("leave_date", { ascending: false }),
+      supabase.from("staff_salaries" as any).select("*").eq("hotel_id", hotelId).order("created_at", { ascending: false }),
+      supabase.from("staff_shifts" as any).select("*").eq("hotel_id", hotelId).order("shift_date", { ascending: false }).limit(200),
+      supabase.from("staff_leaves" as any).select("*").eq("hotel_id", hotelId).order("leave_date", { ascending: false }),
       supabase.from("orders").select("waiter_id, total, status").eq("hotel_id", hotelId).eq("status", "billed"),
     ]);
     setStaff(staffRes.data || []);
@@ -83,7 +83,7 @@ const StaffPage = () => {
 
   const addSalary = async () => {
     if (!selectedStaff || !hotelId) return;
-    const { error } = await supabase.from("staff_salaries").insert({
+    const { error } = await supabase.from("staff_salaries" as any).insert({
       hotel_id: hotelId,
       staff_user_id: selectedStaff.user_id,
       month: salaryForm.month,
@@ -99,7 +99,7 @@ const StaffPage = () => {
 
   const addShift = async () => {
     if (!selectedStaff || !hotelId) return;
-    const { error } = await supabase.from("staff_shifts").insert({
+    const { error } = await supabase.from("staff_shifts" as any).insert({
       hotel_id: hotelId,
       staff_user_id: selectedStaff.user_id,
       shift_date: shiftForm.shift_date,
@@ -114,7 +114,7 @@ const StaffPage = () => {
 
   const addLeave = async () => {
     if (!selectedStaff || !hotelId) return;
-    const { error } = await supabase.from("staff_leaves").insert({
+    const { error } = await supabase.from("staff_leaves" as any).insert({
       hotel_id: hotelId,
       staff_user_id: selectedStaff.user_id,
       leave_date: leaveForm.leave_date,
