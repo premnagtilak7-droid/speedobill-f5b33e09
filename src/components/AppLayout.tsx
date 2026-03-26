@@ -121,15 +121,6 @@ const chefBottomNav: NavItem[] = [
   { label: "Kitchen", icon: ChefHat, path: "/kitchen" },
 ];
 
-const creatorSections: NavSection[] = [
-  {
-    title: "GOD MODE",
-    items: [
-      { label: "Command Center", icon: ShieldCheck, path: "/creator-admin" },
-    ],
-  },
-];
-
 const AppLayout = () => {
   const { signOut, role, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -137,15 +128,11 @@ const AppLayout = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const isCreator = user?.email === "speedobill7@gmail.com";
 
   useRoleNotifications();
   useIncomingOrders();
 
-  const baseSections = role === "chef" ? chefSections : role === "waiter" ? waiterSections : ownerSections;
-  const navSections = isCreator
-    ? creatorSections
-    : baseSections;
+  const navSections = role === "chef" ? chefSections : role === "waiter" ? waiterSections : ownerSections;
 
   const bottomNavItems = role === "chef" ? chefBottomNav : role === "waiter" ? waiterBottomNav : ownerBottomNav;
 
