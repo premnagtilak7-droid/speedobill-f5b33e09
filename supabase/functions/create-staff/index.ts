@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Verify caller is an owner
+    // Verify caller is an owner or manager
     const callerClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -35,17 +35,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check caller is owner
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
-    const { data: callerRole } = await adminClient
+
+    // Check caller is owner or manager
+    const { data: callerRoles } = await adminClient
       .from("user_roles")
       .select("role")
       .eq("user_id", caller.id)
-      .eq("role", "owner")
-      .maybeSingle();
+      .in("role", ["owner", "manager"]);
 
-    if (!callerRole) {
-      return new Response(JSON.stringify({ error: "Only owners can add staff" }), {
+    const isOwner = callerRoles?.some((r: any) => r.role === "owner");
+    const isManager = callerRoles?.some((r: any) => r.role === "manager");
+
+    if (!isOwner && !isManager) {
+      return new Response(JSON.stringify({ error: "Only owners or managers can add staff" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -59,7 +62,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!callerProfile?.hotel_id) {
-      return new Response(JSON.stringify({ error: "No hotel found for owner" }), {
+      return new Response(JSON.stringify({ error: "No hotel found" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -74,9 +77,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!["waiter", "chef"].includes(role)) {
-      return new Response(JSON.stringify({ error: "Role must be waiter or chef" }), {
+    const allowedRoles = ["waiter", "chef", "manager"];
+    if (!allowedRoles.includes(role)) {
+      return new Response(JSON.stringify({ error: `Role must be one of: ${allowedRoles.join(", ")}` }), {
         status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Managers cannot create other managers — only owners can
+    if (role === "manager" && !isOwner) {
+      return new Response(JSON.stringify({ error: "Only owners can create manager accounts" }), {
+        status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -109,7 +121,7 @@ Deno.serve(async (req) => {
       })
       .eq("user_id", newUserId);
 
-    // Ensure user_roles entry exists (trigger may have created it)
+    // Ensure user_roles entry exists
     const { data: existingRole } = await adminClient
       .from("user_roles")
       .select("id")
