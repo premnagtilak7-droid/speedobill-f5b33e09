@@ -275,6 +275,16 @@ const AppLayout = () => {
 
       {/* Main content */}
       <main className="flex-1 min-h-screen pt-14 md:pt-0 overflow-x-hidden">
+        {/* Desktop top bar */}
+        <div className="hidden md:flex h-12 items-center justify-end gap-2 px-6 border-b border-border bg-card/50">
+          <NotificationBell />
+          <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-secondary/60 transition-colors">
+            {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
+          </button>
+          <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
+            <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">{userInitials}</AvatarFallback>
+          </Avatar>
+        </div>
         <Outlet />
       </main>
     </div>
