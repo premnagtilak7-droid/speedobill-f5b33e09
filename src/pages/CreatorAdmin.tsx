@@ -122,7 +122,7 @@ const CreatorAdmin = () => {
           <p className="text-xs text-muted-foreground">Total Keys</p>
         </CardContent></Card>
         <Card><CardContent className="p-4 text-center">
-          <p className="text-2xl font-bold text-green-600">{unusedCount}</p>
+          <p className="text-2xl font-bold text-primary">{unusedCount}</p>
           <p className="text-xs text-muted-foreground">Available</p>
         </CardContent></Card>
         <Card><CardContent className="p-4 text-center">
