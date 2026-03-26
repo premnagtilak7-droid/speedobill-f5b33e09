@@ -31,6 +31,9 @@ const StaffPage = () => {
   const [salaryForm, setSalaryForm] = useState({ base_salary: "", advance_paid: "", bonus: "", deductions: "", notes: "", month: format(new Date(), "yyyy-MM") });
   const [shiftForm, setShiftForm] = useState({ shift_date: format(new Date(), "yyyy-MM-dd"), shift_type: "morning", start_time: "09:00", end_time: "17:00", notes: "" });
   const [leaveForm, setLeaveForm] = useState({ leave_date: format(new Date(), "yyyy-MM-dd"), leave_type: "casual", reason: "" });
+  const [addStaffDialog, setAddStaffDialog] = useState(false);
+  const [addStaffForm, setAddStaffForm] = useState({ email: "", password: "", full_name: "", role: "waiter", phone: "" });
+  const [addingStaff, setAddingStaff] = useState(false);
 
   useEffect(() => {
     if (!hotelId) return;
@@ -127,6 +130,38 @@ const StaffPage = () => {
     else { toast.success("Leave recorded"); setLeaveDialog(false); loadData(); }
   };
 
+  const addStaffMember = async () => {
+    if (!addStaffForm.email || !addStaffForm.role) {
+      toast.error("Email and role are required");
+      return;
+    }
+    setAddingStaff(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("create-staff", {
+        body: {
+          email: addStaffForm.email.trim(),
+          password: addStaffForm.password || undefined,
+          full_name: addStaffForm.full_name.trim(),
+          role: addStaffForm.role,
+          phone: addStaffForm.phone.trim(),
+        },
+      });
+      if (res.error || res.data?.error) {
+        toast.error(res.data?.error || res.error?.message || "Failed to add staff");
+      } else {
+        toast.success(`${addStaffForm.full_name || addStaffForm.email} added as ${addStaffForm.role}!`);
+        setAddStaffDialog(false);
+        setAddStaffForm({ email: "", password: "", full_name: "", role: "waiter", phone: "" });
+        loadData();
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add staff");
+    } finally {
+      setAddingStaff(false);
+    }
+  };
+
   const getStaffAttendance = (userId: string) => attendance.filter(a => a.user_id === userId);
   const getStaffSalaries = (userId: string) => salaries.filter(s => s.staff_user_id === userId);
   const getStaffShifts = (userId: string) => shifts.filter(s => s.staff_user_id === userId);
@@ -156,6 +191,9 @@ const StaffPage = () => {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold flex items-center gap-2"><Users className="h-6 w-6 text-primary" /> Staff Management</h1>
         <div className="flex items-center gap-2">
+          <Button size="sm" onClick={() => setAddStaffDialog(true)}>
+            <Plus className="h-4 w-4 mr-1" /> Add Staff
+          </Button>
           <span className="text-sm text-muted-foreground">Hotel Code:</span>
           <Badge variant="outline" className="font-mono text-sm">{hotel?.hotel_code}</Badge>
           <Button size="icon" variant="ghost" onClick={copyCode}><Copy className="h-3.5 w-3.5" /></Button>
@@ -546,6 +584,44 @@ const StaffPage = () => {
             </Select>
             <Input placeholder="Reason" value={leaveForm.reason} onChange={e => setLeaveForm({ ...leaveForm, reason: e.target.value })} />
             <Button className="w-full" onClick={addLeave}>Record Leave</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Add Staff Dialog */}
+      <Dialog open={addStaffDialog} onOpenChange={setAddStaffDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Add New Staff Member</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Create a staff account and assign them to your hotel automatically.</p>
+          <div className="space-y-3 mt-2">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Full Name</label>
+              <Input placeholder="Enter staff name" value={addStaffForm.full_name} onChange={e => setAddStaffForm({ ...addStaffForm, full_name: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Email <span className="text-destructive">*</span></label>
+              <Input type="email" placeholder="staff@example.com" value={addStaffForm.email} onChange={e => setAddStaffForm({ ...addStaffForm, email: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Password (optional — they can reset later)</label>
+              <Input type="password" placeholder="Set a temporary password" value={addStaffForm.password} onChange={e => setAddStaffForm({ ...addStaffForm, password: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Role <span className="text-destructive">*</span></label>
+              <Select value={addStaffForm.role} onValueChange={v => setAddStaffForm({ ...addStaffForm, role: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="waiter">Waiter</SelectItem>
+                  <SelectItem value="chef">Chef</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Phone</label>
+              <Input type="tel" placeholder="+91 9876543210" value={addStaffForm.phone} onChange={e => setAddStaffForm({ ...addStaffForm, phone: e.target.value })} />
+            </div>
+            <Button className="w-full" onClick={addStaffMember} disabled={addingStaff || !addStaffForm.email}>
+              {addingStaff ? "Creating..." : "Add Staff Member"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
