@@ -83,7 +83,7 @@ const StaffPage = () => {
 
   const addSalary = async () => {
     if (!selectedStaff || !hotelId) return;
-    const { error } = await supabase.from("staff_salaries").insert({
+    const { error } = await supabase.from("staff_salaries" as any).insert({
       hotel_id: hotelId,
       staff_user_id: selectedStaff.user_id,
       month: salaryForm.month,
