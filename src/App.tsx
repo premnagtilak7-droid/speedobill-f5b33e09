@@ -86,7 +86,13 @@ const AppRoutes = () => {
   }
 
   const isCreator = user?.email === "speedobill7@gmail.com";
-  const defaultAuthenticatedRoute = isCreator ? "/creator-admin" : role === "chef" ? "/kds" : "/dashboard";
+  const defaultAuthenticatedRoute = isCreator
+    ? "/creator-admin"
+    : role === "chef"
+      ? "/kds"
+      : role === "waiter"
+        ? "/tables"
+        : "/dashboard";
 
   return (
     <Suspense fallback={<LazyFallback />}>
