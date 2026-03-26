@@ -369,6 +369,8 @@ const Tables = () => {
     setHeldOrders((data || []) as any[]);
   }, [hotelId]);
 
+  // Fetch held orders on mount AND when toggled, so badge count is always accurate
+  useEffect(() => { void fetchHeldOrders(); }, [fetchHeldOrders]);
   useEffect(() => { if (showHeld) void fetchHeldOrders(); }, [showHeld, fetchHeldOrders]);
 
   const resumeHeldOrder = async (held: any) => {
