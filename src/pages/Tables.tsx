@@ -409,7 +409,7 @@ const Tables = () => {
       <div className="flex flex-wrap gap-4 text-xs">
         {Object.entries(tableStyles).map(([status, s]) => (
           <div key={status} className="flex items-center gap-1.5">
-            <div className={`h-3 w-3 rounded-full bg-gradient-to-br ${s.gradient}`} />
+            <div className={`h-3 w-3 rounded-full ${s.dot}`} />
             <span className="capitalize text-muted-foreground">{s.label}</span>
           </div>
         ))}
