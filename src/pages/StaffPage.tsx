@@ -152,7 +152,7 @@ const StaffPage = () => {
       } else {
         toast.success(`${addStaffForm.full_name || addStaffForm.email} added as ${addStaffForm.role}!`);
         setAddStaffDialog(false);
-        setAddStaffForm({ email: "", password: "", full_name: "", role: "waiter", phone: "" });
+        setAddStaffForm({ email: "", password: "", full_name: "", role: "waiter" as string, phone: "" });
         loadData();
       }
     } catch (err: any) {
