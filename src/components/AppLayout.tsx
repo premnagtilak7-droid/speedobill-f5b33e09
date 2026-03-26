@@ -11,6 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { NotificationBell } from "@/components/NotificationBell";
+import { useRoleNotifications } from "@/hooks/useRoleNotifications";
+import { useIncomingOrders } from "@/hooks/useIncomingOrders";
 
 interface NavItem {
   label: string;
@@ -105,6 +108,10 @@ const AppLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const isCreator = user?.email === "speedobill7@gmail.com";
+
+  // Activate real-time notification hooks
+  useRoleNotifications();
+  useIncomingOrders();
 
   const baseSections = role === "chef" ? chefSections : role === "waiter" ? waiterSections : ownerSections;
   const navSections = isCreator
@@ -208,9 +215,12 @@ const AppLayout = () => {
           </div>
           <span className="font-bold text-primary text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>SpeedoBill</span>
         </div>
-        <button onClick={toggleTheme} className="p-1">
-          {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
-        </button>
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+          <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-secondary/60">
+            {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile sidebar overlay */}
@@ -265,6 +275,16 @@ const AppLayout = () => {
 
       {/* Main content */}
       <main className="flex-1 min-h-screen pt-14 md:pt-0 overflow-x-hidden">
+        {/* Desktop top bar */}
+        <div className="hidden md:flex h-12 items-center justify-end gap-2 px-6 border-b border-border bg-card/50">
+          <NotificationBell />
+          <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-secondary/60 transition-colors">
+            {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
+          </button>
+          <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
+            <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">{userInitials}</AvatarFallback>
+          </Avatar>
+        </div>
         <Outlet />
       </main>
     </div>
