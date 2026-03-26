@@ -171,8 +171,9 @@ const MenuPage = () => {
       onDelete={isOwner ? () => { void deleteItem(item.id); } : undefined}
       showManagement={isOwner}
       dimmed={!item.is_available}
+      size={density}
     />
-  ), [deleteItem, increment, isOwner, openEdit, quantities]);
+  ), [deleteItem, density, increment, isOwner, openEdit, quantities]);
 
   const addCustomCategory = async () => {
     if (!hotelId || !newCategoryName.trim()) return;
