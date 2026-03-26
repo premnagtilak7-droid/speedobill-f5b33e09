@@ -243,7 +243,7 @@ const AppLayout = () => {
         <div className="fixed inset-0 z-[60] md:hidden" onClick={() => setSidebarOpen(false)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <aside
-            className="absolute left-0 top-0 bottom-0 w-72 bg-card border-r border-border flex flex-col p-3 animate-slide-in-right"
+            className="absolute left-0 top-0 bottom-0 w-72 glass-sidebar flex flex-col p-3 animate-slide-in-right"
             style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
             onClick={(e) => e.stopPropagation()}
           >
