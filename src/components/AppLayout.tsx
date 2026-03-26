@@ -54,8 +54,8 @@ const ownerSections: NavSection[] = [
   {
     title: "MANAGE",
     items: [
-      { label: "Team", icon: Users, path: "/staff" },
-      { label: "Staff", icon: UserCheck, path: "/staff" },
+      { label: "Staff", icon: Users, path: "/staff" },
+      { label: "Customers", icon: UserCheck, path: "/customers" },
       { label: "Voids", icon: FileText, path: "/void-reports" },
       { label: "Close Day", icon: CalendarCheck, path: "/daily-closing" },
     ],
