@@ -192,7 +192,7 @@ const SpeedoBot = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask me anything..."
-                className="flex-1 bg-white/8 text-white placeholder:text-white/30 text-sm rounded-xl px-3.5 py-2.5 border border-white/10 focus:border-orange-500/50 focus:outline-none transition-colors"
+                className="flex-1 bg-white/10 text-white placeholder:text-white/40 text-sm rounded-xl px-3.5 py-2.5 border border-white/10 focus:border-orange-500/50 focus:outline-none transition-colors caret-orange-400"
                 disabled={isLoading}
               />
               <button
