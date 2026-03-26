@@ -17,6 +17,7 @@ import MenuItemForm from "@/components/menu/MenuItemForm";
 import MenuCartBar from "@/components/menu/MenuCartBar";
 import MenuSelectionSheet from "@/components/menu/MenuSelectionSheet";
 import { Card, CardContent } from "@/components/ui/card";
+import { useGridDensity } from "@/hooks/useGridDensity";
 
 interface PriceVariant {
   label: string;
