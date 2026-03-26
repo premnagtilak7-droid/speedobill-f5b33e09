@@ -2,26 +2,45 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import {
   LayoutDashboard, UtensilsCrossed, Grid3X3, ChefHat, BarChart3,
-  Settings, LogOut, ScrollText, Menu, X
+  Settings, LogOut, ScrollText, Menu, X, Wallet, Users, QrCode,
+  Package, ClipboardList, Store, CalendarCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
-const navItems = [
+const ownerNav = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Tables", icon: Grid3X3, path: "/tables" },
   { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
   { label: "Kitchen", icon: ChefHat, path: "/kitchen" },
   { label: "Orders", icon: ScrollText, path: "/order-history" },
   { label: "Analytics", icon: BarChart3, path: "/analytics" },
+  { label: "Expenses", icon: Wallet, path: "/expenses" },
+  { label: "Staff", icon: Users, path: "/staff" },
+  { label: "Inventory", icon: Package, path: "/inventory-hub" },
+  { label: "Daily Closing", icon: CalendarCheck, path: "/daily-closing" },
   { label: "Settings", icon: Settings, path: "/settings" },
 ];
 
+const waiterNav = [
+  { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+  { label: "Tables", icon: Grid3X3, path: "/tables" },
+  { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
+  { label: "Orders", icon: ScrollText, path: "/order-history" },
+  { label: "Counter", icon: Store, path: "/counter" },
+];
+
+const chefNav = [
+  { label: "Kitchen", icon: ChefHat, path: "/kitchen" },
+];
+
 const AppLayout = () => {
-  const { signOut } = useAuth();
+  const { signOut, role } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const navItems = role === "chef" ? chefNav : role === "waiter" ? waiterNav : ownerNav;
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -73,7 +92,7 @@ const AppLayout = () => {
           <h1 className="text-lg font-bold text-primary">Speedo Bill</h1>
           <p className="text-[10px] text-muted-foreground">Canteen Management</p>
         </div>
-        <nav className="flex-1 space-y-1">
+        <nav className="flex-1 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
             <button
               key={item.path}
