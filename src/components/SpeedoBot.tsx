@@ -160,7 +160,8 @@ const SpeedoBot = () => {
                     msg.role === "user"
                       ? "bg-orange-500 text-white rounded-br-sm"
                       : "bg-white/8 text-white/90 rounded-bl-sm"
-                  }`}
+                   }`}
+                  style={msg.role === "assistant" ? { backgroundColor: "rgba(255,255,255,0.08)" } : undefined}
                 >
                   {msg.role === "assistant" ? (
                     <div className="prose prose-sm prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_li]:my-0.5 [&_strong]:text-orange-300 [&_h2]:text-sm [&_h2]:mt-2 [&_h2]:mb-1">
