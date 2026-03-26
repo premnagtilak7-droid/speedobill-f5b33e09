@@ -350,6 +350,66 @@ const Tables = () => {
     toast.success(`Split: ${n} guests × ${formatCurrency(each)} each`);
   };
 
+  /* ────────── hold order ────────── */
+  const holdCurrentOrder = async () => {
+    if (!selectedTable || !hotelId || !user || !orderItems.length) { toast.error("Add items first"); return; }
+    await supabase.from("held_orders").insert({
+      hotel_id: hotelId, table_id: selectedTable.id, table_number: selectedTable.table_number,
+      held_by: user.id, held_by_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "Staff",
+      items: orderItems, discount_percent: discountValue, split_label: splitLabel, status: "held",
+    });
+    toast.success("Order held ✓");
+    setOrderItems([]); setActiveOrderId(null);
+  };
+
+  const fetchHeldOrders = useCallback(async () => {
+    if (!hotelId) return;
+    const { data } = await supabase.from("held_orders").select("id, table_number, items, created_at")
+      .eq("hotel_id", hotelId).eq("status", "held").order("created_at", { ascending: false });
+    setHeldOrders((data || []) as any[]);
+  }, [hotelId]);
+
+  useEffect(() => { if (showHeld) void fetchHeldOrders(); }, [showHeld, fetchHeldOrders]);
+
+  const resumeHeldOrder = async (held: any) => {
+    setOrderItems((held.items || []).map((i: any, idx: number) => ({ ...i, key: i.key || `resumed-${idx}` })));
+    setActiveOrderId(null);
+    await supabase.from("held_orders").update({ status: "resumed", resumed_at: new Date().toISOString() }).eq("id", held.id);
+    toast.success(`Resumed order from T-${held.table_number}`);
+    setShowHeld(false);
+    await fetchHeldOrders();
+  };
+
+  /* ────────── table transfer ────────── */
+  const transferToTable = async (targetTableId: string) => {
+    if (!activeOrderId || !selectedTable) return;
+    await supabase.from("orders").update({ table_id: targetTableId }).eq("id", activeOrderId);
+    // Update KOT tickets too
+    await supabase.from("kot_tickets").update({ table_id: targetTableId }).eq("order_id", activeOrderId);
+    // Mark old table empty if no other orders
+    const { data: remaining } = await supabase.from("orders").select("id").eq("table_id", selectedTable.id).eq("status", "active").limit(1);
+    if (!remaining || remaining.length === 0) {
+      await supabase.from("restaurant_tables").update({ status: "empty" }).eq("id", selectedTable.id);
+    }
+    await supabase.from("restaurant_tables").update({ status: "occupied" }).eq("id", targetTableId);
+    toast.success("Bill transferred!");
+    setShowTransfer(false); resetPanelState(); await fetchTables();
+  };
+
+  /* ────────── CRM lookup ────────── */
+  const lookupCustomer = async () => {
+    if (!hotelId || !customerLookupPhone.trim()) return;
+    const { data } = await supabase.from("customers").select("id, name, phone, loyalty_points")
+      .eq("hotel_id", hotelId).eq("phone", customerLookupPhone.trim()).maybeSingle();
+    if (data) {
+      setLookedUpCustomer(data as any);
+      toast.success(`Found: ${data.name}`);
+    } else {
+      setLookedUpCustomer(null);
+      toast.info("No customer found. They'll be created on first bill.");
+    }
+  };
+
   /* ────────── persist order ────────── */
   const persistOrder = async (sendToKds: boolean) => {
     if (!selectedTable || !hotelId || !user || !orderItems.length) { toast.error("Add items first"); return; }
