@@ -164,7 +164,6 @@ const Tables = () => {
     } catch (e: any) { toast.error(e.message || "Failed to open table"); } finally { setPanelLoading(false); }
   }, [hotelId]);
 
-  /* Load a specific seat's order */
   const loadSeatOrder = useCallback(async (seat: string) => {
     if (!selectedTable || !hotelId) return;
     setTableSplit(seat);
@@ -178,7 +177,7 @@ const Tables = () => {
       if (seatLabel) query = query.eq("split_label", seatLabel);
       else query = query.is("split_label", null);
       const { data: order } = await query.maybeSingle();
-      if (!order) return;
+      if (!order) return; // blank slate for new seat — user can add items
       const { data: items } = await supabase.from("order_items").select("id, name, price, quantity, is_custom").eq("order_id", order.id);
       setActiveOrderId(order.id);
       setDiscountPercent(String(order.discount_percent ?? 0));
