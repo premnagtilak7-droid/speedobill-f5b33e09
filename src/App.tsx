@@ -92,7 +92,9 @@ const AppRoutes = () => {
       ? "/kds"
       : role === "waiter"
         ? "/tables"
-        : "/dashboard";
+        : role === "manager"
+          ? "/dashboard"
+          : "/dashboard";
 
   return (
     <Suspense fallback={<LazyFallback />}>
