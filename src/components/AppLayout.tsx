@@ -13,6 +13,7 @@ import { useState, memo, useCallback } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useRoleNotifications } from "@/hooks/useRoleNotifications";
+import SectionErrorBoundary from "@/components/SectionErrorBoundary";
 import { useIncomingOrders } from "@/hooks/useIncomingOrders";
 
 interface NavItem {
