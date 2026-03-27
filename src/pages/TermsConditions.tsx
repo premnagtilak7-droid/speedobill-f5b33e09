@@ -61,7 +61,7 @@ const TermsConditions = () => {
             <li>Paid subscriptions can be activated via License Keys or Razorpay online payment.</li>
             <li>Subscription fees are non-refundable once the license period has begun.</li>
             <li>If your subscription expires, access to premium features will be restricted until renewal.</li>
-            <li>Mangal Multiproduct reserves the right to modify pricing with 30 days advance notice.</li>
+            <li>Speedo Bill reserves the right to modify pricing with 30 days advance notice.</li>
           </ul>
         </section>
 
