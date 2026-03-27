@@ -336,7 +336,9 @@ const AppLayout = () => {
             <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">{userInitials}</AvatarFallback>
           </Avatar>
         </div>
-        <Outlet />
+        <SectionErrorBoundary section="Page Content">
+          <Outlet />
+        </SectionErrorBoundary>
       </main>
 
       {/* Mobile bottom navigation */}
