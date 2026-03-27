@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 
 const SettingsPage = () => {
   const { user, hotelId } = useAuth();
+  const navigate = useNavigate();
   const [hotel, setHotel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
