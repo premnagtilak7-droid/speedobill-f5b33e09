@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useIncomingOrders, stopTitleFlash } from "@/hooks/useIncomingOrders";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Bell, Check, ChefHat, Clock, XCircle } from "lucide-react";
-import { format } from "date-fns";
+import { Bell, Check, ChefHat, Clock, ShoppingCart, User } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
 
 interface KOTTicket {
   id: string;
@@ -23,6 +24,7 @@ interface KOTTicket {
 
 const IncomingOrders = () => {
   const { hotelId, user } = useAuth();
+  const { incomingOrders, dismissOrder } = useIncomingOrders();
   const [tickets, setTickets] = useState<KOTTicket[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -173,46 +175,106 @@ const IncomingOrders = () => {
     <div className="p-4 md:p-6 space-y-6 max-w-6xl mx-auto">
       <div>
         <h1 className="text-xl font-bold flex items-center gap-2">
-          <Bell className="h-5 w-5 text-primary" /> Incoming Orders (KOT)
+          <Bell className="h-5 w-5 text-primary" /> Incoming Orders
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {tickets.length} ticket(s) today · {pending.length} pending
+          {incomingOrders.length} QR order(s) · {tickets.length} KOT ticket(s) today · {pending.length} pending
         </p>
       </div>
 
-      {tickets.length === 0 ? (
+      {/* ── Customer QR Orders Section ── */}
+      {incomingOrders.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-primary flex items-center gap-1.5">
+            <ShoppingCart className="h-4 w-4" /> Customer QR Orders ({incomingOrders.length})
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {incomingOrders.map((order) => (
+              <Card key={order.id} className="overflow-hidden border-primary/30 animate-pop-in">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <span className="text-sm font-bold text-primary">T{order.table_number}</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">Table {order.table_number}</p>
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {formatDistanceToNow(new Date(order.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] bg-primary/15 text-primary border-primary/30">
+                      NEW
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-1.5 border-t pt-2">
+                    {(order.items as any[])?.map((item: any, i: number) => (
+                      <div key={i} className="flex items-start justify-between text-sm">
+                        <span className="font-medium">{item.name}</span>
+                        <span className="text-muted-foreground">×{item.quantity} · ₹{item.price * item.quantity}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between border-t pt-2">
+                    <span className="text-sm font-bold">₹{order.total_amount}</span>
+                    <Button size="sm" className="gap-1" onClick={() => {
+                      dismissOrder(order.id);
+                      stopTitleFlash();
+                      toast.success(`Order from Table ${order.table_number} confirmed`);
+                    }}>
+                      <Check className="h-3.5 w-3.5" /> Confirm
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── KOT Tickets Section ── */}
+      {tickets.length === 0 && incomingOrders.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <ChefHat className="h-12 w-12 mx-auto mb-3 opacity-30" />
           <p className="text-sm">No incoming orders yet today</p>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-3">
-            <h2 className="text-sm font-semibold text-amber-600 flex items-center gap-1.5">
-              <Clock className="h-4 w-4" /> Pending ({pending.length})
-            </h2>
-            {pending.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-6">All clear!</p>
-            ) : pending.map(renderTicket)}
+      ) : tickets.length > 0 ? (
+        <>
+          <h2 className="text-sm font-semibold flex items-center gap-1.5">
+            <ChefHat className="h-4 w-4" /> Kitchen Tickets (KOT)
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold text-amber-600 flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5" /> Pending ({pending.length})
+              </h3>
+              {pending.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-6">All clear!</p>
+              ) : pending.map(renderTicket)}
+            </div>
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold text-blue-600 flex items-center gap-1.5">
+                <ChefHat className="h-3.5 w-3.5" /> Preparing ({preparing.length})
+              </h3>
+              {preparing.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-6">Nothing cooking</p>
+              ) : preparing.map(renderTicket)}
+            </div>
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold text-green-600 flex items-center gap-1.5">
+                <Check className="h-3.5 w-3.5" /> Ready ({ready.length})
+              </h3>
+              {ready.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-6">None ready</p>
+              ) : ready.map(renderTicket)}
+            </div>
           </div>
-          <div className="space-y-3">
-            <h2 className="text-sm font-semibold text-blue-600 flex items-center gap-1.5">
-              <ChefHat className="h-4 w-4" /> Preparing ({preparing.length})
-            </h2>
-            {preparing.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-6">Nothing cooking</p>
-            ) : preparing.map(renderTicket)}
-          </div>
-          <div className="space-y-3">
-            <h2 className="text-sm font-semibold text-green-600 flex items-center gap-1.5">
-              <Check className="h-4 w-4" /> Ready ({ready.length})
-            </h2>
-            {ready.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-6">None ready</p>
-            ) : ready.map(renderTicket)}
-          </div>
-        </div>
-      )}
+        </>
+      ) : null}
     </div>
   );
 };
