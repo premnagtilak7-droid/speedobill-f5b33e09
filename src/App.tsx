@@ -10,6 +10,7 @@ import RoleGuard from "@/components/RoleGuard";
 import AppLayout from "@/components/AppLayout";
 import { lazy, Suspense } from "react";
 import SpeedoBot from "@/components/SpeedoBot";
+import PinLockGate from "@/components/PinLockGate";
 
 // Eager load auth pages + critical entry routes for stability
 import Auth from "./pages/Auth";
