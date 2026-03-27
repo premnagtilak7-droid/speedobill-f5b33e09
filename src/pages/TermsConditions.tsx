@@ -83,7 +83,7 @@ const TermsConditions = () => {
           <ul className="list-disc pl-5 text-muted-foreground space-y-1">
             <li>You retain full ownership of all business data (menus, orders, customer records, financials) entered into Speedo Bill.</li>
             <li>You may export your data at any time using the built-in Data Export feature.</li>
-            <li>Mangal Multiproduct will not use your business data for commercial purposes without your consent.</li>
+            <li>Speedo Bill will not use your business data for commercial purposes without your consent.</li>
             <li>Aggregated, anonymized data may be used for platform improvement and analytics.</li>
           </ul>
         </section>
