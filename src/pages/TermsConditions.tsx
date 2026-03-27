@@ -140,6 +140,8 @@ const TermsConditions = () => {
           <p className="text-muted-foreground">
             For questions regarding these Terms:<br />
             <strong className="text-foreground">Speedo Bill</strong><br />
+            Chinchwade Nagar, Dagdoba Chowk, Chinchwad, Pune — 411033<br />
+            Phone: +91 98902 29484<br />
             Email: support@speedobill.com<br />
             These terms may be updated periodically. Continued use constitutes acceptance.
           </p>

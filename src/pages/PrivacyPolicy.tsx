@@ -115,6 +115,8 @@ const PrivacyPolicy = () => {
           <p className="text-muted-foreground">
             For privacy-related queries, data requests, or concerns:<br />
             <strong className="text-foreground">Speedo Bill</strong><br />
+            Chinchwade Nagar, Dagdoba Chowk, Chinchwad, Pune — 411033<br />
+            Phone: +91 98902 29484<br />
             Email: support@speedobill.com<br />
             This policy may be updated periodically. Continued use of the Service constitutes acceptance of any modifications.
           </p>
