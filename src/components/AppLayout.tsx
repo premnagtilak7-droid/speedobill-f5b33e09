@@ -9,7 +9,7 @@ import {
   HelpCircle, ChevronLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, memo, useCallback } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useRoleNotifications } from "@/hooks/useRoleNotifications";
