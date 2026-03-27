@@ -80,7 +80,6 @@ const PrivacyPolicy = () => {
           </p>
           <ul className="list-disc pl-5 text-muted-foreground space-y-1">
             <li><strong className="text-foreground">Service Providers:</strong> Supabase (hosting), Razorpay (payments), and cloud infrastructure providers under strict data processing agreements.</li>
-            <li><strong className="text-foreground">Legal Requirements:</strong> When required by law, court order, or government regulation.</li>
             <li><strong className="text-foreground">Business Transfers:</strong> In case of merger, acquisition, or asset sale, with prior notice.</li>
           </ul>
         </section>
