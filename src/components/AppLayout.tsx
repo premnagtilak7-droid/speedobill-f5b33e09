@@ -376,4 +376,4 @@ const AppLayout = () => {
   );
 };
 
-export default AppLayout;
+export default memo(AppLayout);
