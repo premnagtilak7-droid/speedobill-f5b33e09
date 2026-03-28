@@ -5,11 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Store, Plus, Minus, ShoppingCart, Trash2 } from "lucide-react";
 
+interface PriceVariant { label: string; price: number; }
 interface CartItem {
   id: string;
+  key: string;
   name: string;
   price: number;
   qty: number;
@@ -23,6 +26,7 @@ const CounterOrder = () => {
   const [loading, setLoading] = useState(true);
   const [placing, setPlacing] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const [variantItem, setVariantItem] = useState<any>(null);
 
   useEffect(() => {
     if (!hotelId) return;
@@ -37,19 +41,30 @@ const CounterOrder = () => {
     })();
   }, [hotelId, user]);
 
-  const addToCart = (item: any) => {
+  const handleItemClick = (item: any) => {
+    const variants = ((item.price_variants as PriceVariant[] | null) || []).filter(v => v.label && v.price > 0);
+    if (variants.length > 0) {
+      setVariantItem(item);
+    } else {
+      addToCart(item.id, item.name, item.price);
+    }
+  };
+
+  const addToCart = (itemId: string, name: string, price: number, variantLabel?: string) => {
+    const key = variantLabel ? `${itemId}-${variantLabel}` : itemId;
+    const displayName = variantLabel ? `${name} (${variantLabel})` : name;
     setCart(prev => {
-      const existing = prev.find(c => c.id === item.id);
-      if (existing) return prev.map(c => c.id === item.id ? { ...c, qty: c.qty + 1 } : c);
-      return [...prev, { id: item.id, name: item.name, price: item.price, qty: 1 }];
+      const existing = prev.find(c => c.key === key);
+      if (existing) return prev.map(c => c.key === key ? { ...c, qty: c.qty + 1 } : c);
+      return [...prev, { id: itemId, key, name: displayName, price, qty: 1 }];
     });
   };
 
-  const updateQty = (id: string, delta: number) => {
-    setCart(prev => prev.map(c => c.id === id ? { ...c, qty: Math.max(1, c.qty + delta) } : c));
+  const updateQty = (key: string, delta: number) => {
+    setCart(prev => prev.map(c => c.key === key ? { ...c, qty: Math.max(1, c.qty + delta) } : c));
   };
 
-  const removeFromCart = (id: string) => setCart(prev => prev.filter(c => c.id !== id));
+  const removeFromCart = (key: string) => setCart(prev => prev.filter(c => c.key !== key));
 
   const total = cart.reduce((s, c) => s + c.price * c.qty, 0);
 
@@ -92,17 +107,28 @@ const CounterOrder = () => {
         <div className="lg:col-span-2 space-y-3">
           <Input placeholder="Search menu..." value={search} onChange={e => setSearch(e.target.value)} />
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {filtered.map(item => (
-              <button
-                key={item.id}
-                onClick={() => addToCart(item)}
-                className="p-3 rounded-lg border bg-card hover:bg-accent/50 text-left transition-colors"
-              >
-                <p className="font-medium text-sm truncate">{item.name}</p>
-                <p className="text-xs text-muted-foreground">{item.category}</p>
-                <p className="text-sm font-bold text-primary mt-1">₹{item.price}</p>
-              </button>
-            ))}
+            {filtered.map(item => {
+              const variants = ((item.price_variants as PriceVariant[] | null) || []).filter((v: PriceVariant) => v.label && v.price > 0);
+              const hasVariants = variants.length > 0;
+              const priceLabel = hasVariants ? `₹${Math.min(...variants.map((v: PriceVariant) => v.price))}+` : `₹${item.price}`;
+              const qty = cart.filter(c => c.key.startsWith(item.id)).reduce((s, c) => s + c.qty, 0);
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleItemClick(item)}
+                  className="relative p-3 rounded-lg border bg-card hover:bg-accent/50 text-left transition-colors"
+                >
+                  {qty > 0 && (
+                    <div className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                      {qty}
+                    </div>
+                  )}
+                  <p className="font-medium text-sm truncate">{item.name}</p>
+                  <p className="text-xs text-muted-foreground">{item.category}</p>
+                  <p className="text-sm font-bold text-primary mt-1">{priceLabel}</p>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -112,16 +138,16 @@ const CounterOrder = () => {
           <CardContent className="space-y-3">
             {cart.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Tap items to add</p>}
             {cart.map(c => (
-              <div key={c.id} className="flex items-center justify-between gap-2">
+              <div key={c.key} className="flex items-center justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{c.name}</p>
                   <p className="text-xs text-muted-foreground">₹{c.price} × {c.qty}</p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQty(c.id, -1)}><Minus className="h-3 w-3" /></Button>
+                  <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQty(c.key, -1)}><Minus className="h-3 w-3" /></Button>
                   <span className="w-6 text-center text-sm">{c.qty}</span>
-                  <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQty(c.id, 1)}><Plus className="h-3 w-3" /></Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeFromCart(c.id)}><Trash2 className="h-3 w-3" /></Button>
+                  <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQty(c.key, 1)}><Plus className="h-3 w-3" /></Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeFromCart(c.key)}><Trash2 className="h-3 w-3" /></Button>
                 </div>
               </div>
             ))}
@@ -139,6 +165,34 @@ const CounterOrder = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Variant Picker */}
+      <Dialog open={!!variantItem} onOpenChange={(open) => { if (!open) setVariantItem(null); }}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle className="text-base">{variantItem?.name}</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground mb-2">Select a variant:</p>
+          <div className="space-y-2">
+            {((variantItem?.price_variants as PriceVariant[] | null) || [])
+              .filter((v: PriceVariant) => v.label && v.price > 0)
+              .map((v: PriceVariant) => (
+                <Button
+                  key={v.label}
+                  variant="outline"
+                  className="w-full justify-between h-11"
+                  onClick={() => {
+                    addToCart(variantItem!.id, variantItem!.name, v.price, v.label);
+                    setVariantItem(null);
+                  }}
+                >
+                  <span className="capitalize font-medium">{v.label}</span>
+                  <span className="font-bold text-primary">₹{v.price}</span>
+                </Button>
+              ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
