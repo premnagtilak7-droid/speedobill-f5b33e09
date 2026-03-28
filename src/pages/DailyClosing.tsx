@@ -27,7 +27,7 @@ const DailyClosing = () => {
       const startOfDay = `${today}T00:00:00.000Z`;
       const endOfDay = `${today}T23:59:59.999Z`;
 
-      const [salesRes, expRes, ordersRes, counterRes, ingredientsRes, wastageRes, purchaseRes, recipesRes, orderItemsRes] = await Promise.all([
+      const [salesRes, expRes, ordersRes, counterRes, ingredientsRes, wastageRes, purchaseRes] = await Promise.all([
         supabase.from("orders").select("total").eq("hotel_id", hotelId).eq("status", "billed").gte("created_at", startOfDay).lte("created_at", endOfDay),
         supabase.from("daily_expenses").select("amount").eq("hotel_id", hotelId).eq("expense_date", today),
         supabase.from("orders").select("id", { count: "exact", head: true }).eq("hotel_id", hotelId).gte("created_at", startOfDay).lte("created_at", endOfDay),
@@ -35,12 +35,6 @@ const DailyClosing = () => {
         supabase.from("ingredients").select("id, name, unit, current_stock").eq("hotel_id", hotelId),
         supabase.from("wastage_logs").select("ingredient_id, quantity").eq("hotel_id", hotelId).gte("created_at", startOfDay).lte("created_at", endOfDay),
         supabase.from("purchase_logs").select("ingredient_id, quantity").eq("hotel_id", hotelId).gte("purchased_at", startOfDay).lte("purchased_at", endOfDay),
-        supabase.from("recipes").select("menu_item_id, ingredient_id, quantity_required").eq("hotel_id", hotelId),
-        supabase.from("order_items").select("name, quantity, order_id").in(
-          "order_id",
-          // Get today's billed order IDs
-          (salesRes.data || []).length > 0 ? [] : []
-        ),
       ]);
 
       const totalSales = (salesRes.data || []).reduce((s, o) => s + Number(o.total), 0);
