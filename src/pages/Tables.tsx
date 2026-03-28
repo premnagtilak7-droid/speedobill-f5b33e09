@@ -961,4 +961,4 @@ const Tables = () => {
   );
 };
 
-export default Tables;
+export default React.memo(Tables);
