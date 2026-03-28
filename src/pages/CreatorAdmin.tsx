@@ -46,12 +46,13 @@ const generateKeyCode = () => {
   return `SB-${seg()}-${seg()}-${seg()}-${seg()}`;
 };
 
-type TabId = "command" | "directory" | "revenue" | "vault" | "broadcast" | "console";
+type TabId = "command" | "directory" | "revenue" | "vault" | "broadcast" | "console" | "wholesale";
 
 const TABS: { id: TabId; label: string; shortLabel: string; icon: any }[] = [
   { id: "command", label: "Executive Command", shortLabel: "Command", icon: Crown },
   { id: "directory", label: "Client Directory", shortLabel: "Directory", icon: Users },
   { id: "revenue", label: "Revenue & Payments", shortLabel: "Revenue", icon: CreditCard },
+  { id: "wholesale", label: "Wholesale Store", shortLabel: "Wholesale", icon: Store },
   { id: "vault", label: "License Vault", shortLabel: "Licenses", icon: Key },
   { id: "broadcast", label: "Smart Broadcast", shortLabel: "Broadcast", icon: Megaphone },
   { id: "console", label: "Developer Console", shortLabel: "Console", icon: Terminal },
