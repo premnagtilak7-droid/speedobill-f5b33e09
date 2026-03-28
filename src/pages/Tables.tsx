@@ -573,6 +573,19 @@ const Tables = () => {
         </div>
       </div>
 
+      {/* Counter billing banner */}
+      {counterBillingEnabled && (
+        <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary/10 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Store className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-foreground">Counter Billing is ON — use Counter for takeaway orders</span>
+          </div>
+          <Button size="sm" variant="default" onClick={() => window.location.href = "/counter"} className="gap-1.5">
+            <Store className="h-3.5 w-3.5" /> Go to Counter
+          </Button>
+        </div>
+      )}
+
       {/* status legend */}
       <div className="flex flex-wrap gap-4 text-xs">
         {Object.entries(tableStyles).map(([status, s]) => (
