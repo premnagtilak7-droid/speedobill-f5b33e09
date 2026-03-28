@@ -60,6 +60,7 @@ const Tables = () => {
   const { user, hotelId, role } = useAuth();
   const { density, setDensity } = useGridDensity("qb_tables_density");
   const isOwner = role === "owner";
+  const [counterBillingEnabled, setCounterBillingEnabled] = useState(false);
 
   /* ── data ── */
   const [tables, setTables] = useState<Table[]>([]);
