@@ -138,7 +138,7 @@ const Tables = () => {
       supabase.from("hotels").select("name, address, phone, tax_percent, gst_enabled, upi_qr_url").eq("id", hotelId).maybeSingle(),
     ]);
     setTables(tablesRes.data || []);
-    setMenuItems((menuRes.data || []) as MenuItem[]);
+    setMenuItems((menuRes.data || []) as unknown as MenuItem[]);
     setHotelInfo((hotelRes.data as HotelInfo | null) || null);
     setLoading(false);
   }, [hotelId]);
