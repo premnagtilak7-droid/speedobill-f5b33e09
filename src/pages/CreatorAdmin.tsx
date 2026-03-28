@@ -139,18 +139,41 @@ const CreatorAdmin = () => {
 
   const fetchData = async () => {
     setLoading(true);
-    const [licRes, hotelRes, profileRes] = await Promise.all([
+    const [licRes, hotelRes, profileRes, wsRes, wsInqRes] = await Promise.all([
       supabase.from("licenses").select("*").order("created_at", { ascending: false }),
       supabase.from("hotels").select("id, name, owner_id, subscription_tier, subscription_expiry, created_at, phone"),
       supabase.from("profiles").select("user_id, full_name, role, hotel_id, subscription_status, trial_ends_at, created_at"),
+      supabase.from("wholesale_products" as any).select("*").order("created_at", { ascending: false }),
+      supabase.from("wholesale_inquiries" as any).select("*").order("created_at", { ascending: false }),
     ]);
     if (licRes.data) setLicenses(licRes.data);
     if (hotelRes.data) setHotels(hotelRes.data as any);
     if (profileRes.data) setProfiles(profileRes.data as any);
+    if (wsRes.data) setWsProducts(wsRes.data as any);
+    if (wsInqRes.data) setWsInquiries(wsInqRes.data as any);
     setLoading(false);
   };
 
   useEffect(() => { if (isCreator) fetchData(); }, [isCreator]);
+
+  const addWholesaleProduct = async () => {
+    if (!wsNewName || !wsNewPrice) return;
+    const { error } = await supabase.from("wholesale_products" as any).insert({
+      name: wsNewName, category: wsNewCategory, unit: wsNewUnit,
+      price: Number(wsNewPrice), mrp: Number(wsNewMrp) || Number(wsNewPrice),
+      is_urgent: wsNewUrgent, min_order_qty: Number(wsNewMinQty) || 1,
+    } as any);
+    if (error) { toast.error("Failed to add product"); return; }
+    toast.success("Product added!");
+    setWsNewName(""); setWsNewPrice(""); setWsNewMrp(""); setWsNewUrgent(false); setWsNewMinQty("1");
+    fetchData();
+  };
+
+  const deleteWholesaleProduct = async (id: string) => {
+    await supabase.from("wholesale_products" as any).delete().eq("id", id);
+    setWsProducts(prev => prev.filter(p => p.id !== id));
+    toast.success("Product removed");
+  };
 
   /* ─── Computed ─── */
   const usedKeys = licenses.filter(l => l.is_used);
