@@ -123,25 +123,26 @@ const CustomerOrder = () => {
       return;
     }
     setLookingUp(true);
-    const { data } = await supabase
-      .from("customers")
-      .select("name, phone, total_visits, loyalty_points, loyalty_tier")
-      .eq("hotel_id", table.hotel_id)
-      .eq("phone", phone)
-      .maybeSingle();
+    try {
+      const { data } = await supabase.functions.invoke("qr-order", {
+        body: { action: "lookup_customer", hotel_id: table.hotel_id, phone },
+      });
 
-    if (data) {
-      setCustomerProfile(data as CustomerProfile);
-      if (!customerName && data.name) setCustomerName(data.name);
-      // 10th order = 50% off
-      const visits = data.total_visits || 0;
-      if ((visits + 1) % 10 === 0 && visits > 0) {
-        setLoyaltyDiscount(50);
-        toast.success("🎉 Congratulations! Your 10th visit — 50% OFF this order!", { duration: 5000 });
+      if (data?.customer) {
+        setCustomerProfile(data.customer as CustomerProfile);
+        if (!customerName && data.customer.name) setCustomerName(data.customer.name);
+        const visits = data.customer.total_visits || 0;
+        if ((visits + 1) % 10 === 0 && visits > 0) {
+          setLoyaltyDiscount(50);
+          toast.success("🎉 Congratulations! Your 10th visit — 50% OFF this order!", { duration: 5000 });
+        } else {
+          setLoyaltyDiscount(0);
+        }
       } else {
+        setCustomerProfile(null);
         setLoyaltyDiscount(0);
       }
-    } else {
+    } catch {
       setCustomerProfile(null);
       setLoyaltyDiscount(0);
     }
