@@ -245,6 +245,11 @@ const CustomersPage = () => {
                     <div>
                       <p className="font-semibold">{c.loyalty_points || 0} pts</p>
                       <p className="text-[10px] text-muted-foreground">{c.total_visits || 0} visits</p>
+                      {loyaltyConfig?.enabled && loyaltyConfig.visit_goal > 0 && (
+                        <p className="text-[10px] text-primary font-medium">
+                          {(c.visit_count || 0) % loyaltyConfig.visit_goal}/{loyaltyConfig.visit_goal} progress
+                        </p>
+                      )}
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
