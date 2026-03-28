@@ -17,7 +17,8 @@ import { toast } from "sonner";
 
 /* ────────── types ────────── */
 interface Table { id: string; table_number: number; capacity: number; status: string; section_name: string; }
-interface MenuItem { id: string; name: string; category: string; price: number; image_url?: string | null; is_available: boolean; }
+interface PriceVariant { label: string; price: number; }
+interface MenuItem { id: string; name: string; category: string; price: number; image_url?: string | null; is_available: boolean; price_variants?: PriceVariant[] | null; }
 interface OrderLine { key: string; name: string; price: number; quantity: number; source: "menu" | "custom"; }
 interface HotelInfo { name: string; address: string | null; phone: string | null; tax_percent: number; gst_enabled: boolean; upi_qr_url: string | null; }
 
@@ -97,6 +98,9 @@ const Tables = () => {
   const [tableSplit, setTableSplit] = useState("none");
   const [showUpiQr, setShowUpiQr] = useState(false);
 
+  /* ── variant picker ── */
+  const [variantPickerItem, setVariantPickerItem] = useState<MenuItem | null>(null);
+
   /* ── split payment ── */
   const [splitPayOpen, setSplitPayOpen] = useState(false);
   const [splitCash, setSplitCash] = useState("");
@@ -130,11 +134,11 @@ const Tables = () => {
     setLoading(true);
     const [tablesRes, menuRes, hotelRes] = await Promise.all([
       supabase.from("restaurant_tables").select("id, table_number, capacity, status, section_name").eq("hotel_id", hotelId).order("table_number"),
-      supabase.from("menu_items").select("id, name, category, price, image_url, is_available").eq("hotel_id", hotelId).eq("is_available", true).order("category").order("name"),
+      supabase.from("menu_items").select("id, name, category, price, image_url, is_available, price_variants").eq("hotel_id", hotelId).eq("is_available", true).order("category").order("name"),
       supabase.from("hotels").select("name, address, phone, tax_percent, gst_enabled, upi_qr_url").eq("id", hotelId).maybeSingle(),
     ]);
     setTables(tablesRes.data || []);
-    setMenuItems((menuRes.data || []) as MenuItem[]);
+    setMenuItems((menuRes.data || []) as unknown as MenuItem[]);
     setHotelInfo((hotelRes.data as HotelInfo | null) || null);
     setLoading(false);
   }, [hotelId]);
@@ -294,11 +298,20 @@ const Tables = () => {
 
   /* ────────── order item helpers ────────── */
   const addMenuItemToOrder = (item: MenuItem) => {
+    const variants = (item.price_variants as PriceVariant[] | null)?.filter(v => v.label && v.price > 0) || [];
+    if (variants.length > 0) {
+      setVariantPickerItem(item);
+      return;
+    }
+    addItemDirectly(item.id, item.name, Number(item.price || 0));
+  };
+  const addItemDirectly = (itemId: string, name: string, price: number, variantLabel?: string) => {
+    const k = variantLabel ? `menu-${itemId}-${variantLabel}` : `menu-${itemId}`;
+    const displayName = variantLabel ? `${name} (${variantLabel})` : name;
     setOrderItems((prev) => {
-      const k = `menu-${item.id}`;
       const existing = prev.find((l) => l.key === k);
       if (existing) return prev.map((l) => l.key === k ? { ...l, quantity: l.quantity + 1 } : l);
-      return [...prev, { key: k, name: item.name, price: Number(item.price || 0), quantity: 1, source: "menu" as const }];
+      return [...prev, { key: k, name: displayName, price, quantity: 1, source: "menu" as const }];
     });
   };
   const updateQuantity = (key: string, delta: number) => {
@@ -525,7 +538,14 @@ const Tables = () => {
 
   /* ────────── render menu card ────────── */
   const renderMenuCard = (item: MenuItem) => {
-    const qty = orderItems.find((l) => l.key === `menu-${item.id}`)?.quantity || 0;
+    const variants = (item.price_variants as PriceVariant[] | null)?.filter(v => v.label && v.price > 0) || [];
+    const hasVariants = variants.length > 0;
+    // Sum qty across all variant keys for this item
+    const qty = orderItems.filter(l => l.key.startsWith(`menu-${item.id}`)).reduce((s, l) => s + l.quantity, 0);
+    const priceLabel = hasVariants
+      ? `₹${Math.min(...variants.map(v => v.price))}+`
+      : formatCurrency(Number(item.price));
+
     if (density === "compact") {
       return (
         <button key={item.id} onClick={() => addMenuItemToOrder(item)}
@@ -535,7 +555,7 @@ const Tables = () => {
             {item.image_url ? <img src={item.image_url} alt="" className="h-full w-full object-cover" /> : <UtensilsCrossed className="h-5 w-5 text-muted-foreground/50" />}
           </div>
           <p className="w-full text-xs font-semibold text-foreground leading-tight line-clamp-2">{item.name}</p>
-          <p className="text-sm font-bold text-primary">{formatCurrency(Number(item.price))}</p>
+          <p className="text-sm font-bold text-primary">{priceLabel}</p>
         </button>
       );
     }
@@ -547,7 +567,7 @@ const Tables = () => {
           {item.image_url ? <img src={item.image_url} alt="" className="h-full w-full object-cover" /> : <UtensilsCrossed className="h-7 w-7 text-muted-foreground/40" />}
         </div>
         <p className="w-full text-sm font-semibold text-foreground leading-tight line-clamp-2">{item.name}</p>
-        <p className="text-base font-bold text-primary">{formatCurrency(Number(item.price))}</p>
+        <p className="text-base font-bold text-primary">{priceLabel}</p>
       </button>
     );
   };
@@ -978,6 +998,34 @@ const Tables = () => {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Variant Picker Dialog */}
+      <Dialog open={!!variantPickerItem} onOpenChange={(open) => { if (!open) setVariantPickerItem(null); }}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle className="text-base">{variantPickerItem?.name}</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground mb-2">Select a variant:</p>
+          <div className="space-y-2">
+            {((variantPickerItem?.price_variants as PriceVariant[] | null) || [])
+              .filter(v => v.label && v.price > 0)
+              .map((v) => (
+                <Button
+                  key={v.label}
+                  variant="outline"
+                  className="w-full justify-between h-11"
+                  onClick={() => {
+                    addItemDirectly(variantPickerItem!.id, variantPickerItem!.name, v.price, v.label);
+                    setVariantPickerItem(null);
+                  }}
+                >
+                  <span className="capitalize font-medium">{v.label}</span>
+                  <span className="font-bold text-primary">{formatCurrency(v.price)}</span>
+                </Button>
+              ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
