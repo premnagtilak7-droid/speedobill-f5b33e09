@@ -298,11 +298,20 @@ const Tables = () => {
 
   /* ────────── order item helpers ────────── */
   const addMenuItemToOrder = (item: MenuItem) => {
+    const variants = (item.price_variants as PriceVariant[] | null)?.filter(v => v.label && v.price > 0) || [];
+    if (variants.length > 0) {
+      setVariantPickerItem(item);
+      return;
+    }
+    addItemDirectly(item.id, item.name, Number(item.price || 0));
+  };
+  const addItemDirectly = (itemId: string, name: string, price: number, variantLabel?: string) => {
+    const k = variantLabel ? `menu-${itemId}-${variantLabel}` : `menu-${itemId}`;
+    const displayName = variantLabel ? `${name} (${variantLabel})` : name;
     setOrderItems((prev) => {
-      const k = `menu-${item.id}`;
       const existing = prev.find((l) => l.key === k);
       if (existing) return prev.map((l) => l.key === k ? { ...l, quantity: l.quantity + 1 } : l);
-      return [...prev, { key: k, name: item.name, price: Number(item.price || 0), quantity: 1, source: "menu" as const }];
+      return [...prev, { key: k, name: displayName, price, quantity: 1, source: "menu" as const }];
     });
   };
   const updateQuantity = (key: string, delta: number) => {
