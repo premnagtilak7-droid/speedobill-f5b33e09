@@ -17,7 +17,7 @@ import {
   MessageSquare, RefreshCw, Wifi, Database, Server,
   Clock, UserPlus, ArrowUpRight, ArrowDownRight, Share2,
   Filter, Mail, Phone, RotateCcw, Megaphone, Target,
-  Globe, Layers
+  Globe, Layers, Store, Package, Plus, Minus, Trash2
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
