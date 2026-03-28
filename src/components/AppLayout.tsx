@@ -34,6 +34,7 @@ const ownerSections: NavSection[] = [
       { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
       { label: "Tables", icon: Grid3X3, path: "/tables" },
       { label: "Incoming", icon: Bell, path: "/incoming-orders" },
+      { label: "Online Orders", icon: ShoppingBag, path: "/online-orders" },
       { label: "Kitchen", icon: ChefHat, path: "/kitchen" },
       { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
     ],
