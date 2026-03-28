@@ -11,6 +11,7 @@ import {
   User, Gift, Star
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import CustomerVIPCard from "@/components/loyalty/CustomerVIPCard";
 
 interface MenuItem {
   id: string;
