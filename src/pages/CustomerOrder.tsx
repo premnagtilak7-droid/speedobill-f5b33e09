@@ -96,29 +96,22 @@ const CustomerOrder = () => {
 
   const loadTableAndMenu = async () => {
     setLoading(true);
-    const { data: tableData, error: tableError } = await supabase
-      .from("restaurant_tables")
-      .select("id, table_number, hotel_id, status")
-      .eq("id", tableId)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase.functions.invoke("qr-order", {
+        body: { action: "get_table_menu", table_id: tableId },
+      });
 
-    if (tableError || !tableData) {
-      toast.error("Invalid table. Please scan a valid QR code.");
-      setLoading(false);
-      return;
+      if (error || !data?.table) {
+        toast.error("Invalid table. Please scan a valid QR code.");
+        setLoading(false);
+        return;
+      }
+
+      setTable(data.table);
+      setMenu(data.menu || []);
+    } catch {
+      toast.error("Failed to load menu.");
     }
-
-    setTable(tableData);
-
-    const { data: menuData } = await supabase
-      .from("menu_items")
-      .select("*")
-      .eq("hotel_id", tableData.hotel_id)
-      .eq("is_available", true)
-      .order("category")
-      .order("name");
-
-    setMenu(menuData || []);
     setLoading(false);
   };
 
