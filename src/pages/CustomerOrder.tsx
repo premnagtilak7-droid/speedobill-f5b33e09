@@ -96,29 +96,22 @@ const CustomerOrder = () => {
 
   const loadTableAndMenu = async () => {
     setLoading(true);
-    const { data: tableData, error: tableError } = await supabase
-      .from("restaurant_tables")
-      .select("id, table_number, hotel_id, status")
-      .eq("id", tableId)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase.functions.invoke("qr-order", {
+        body: { action: "get_table_menu", table_id: tableId },
+      });
 
-    if (tableError || !tableData) {
-      toast.error("Invalid table. Please scan a valid QR code.");
-      setLoading(false);
-      return;
+      if (error || !data?.table) {
+        toast.error("Invalid table. Please scan a valid QR code.");
+        setLoading(false);
+        return;
+      }
+
+      setTable(data.table);
+      setMenu(data.menu || []);
+    } catch {
+      toast.error("Failed to load menu.");
     }
-
-    setTable(tableData);
-
-    const { data: menuData } = await supabase
-      .from("menu_items")
-      .select("*")
-      .eq("hotel_id", tableData.hotel_id)
-      .eq("is_available", true)
-      .order("category")
-      .order("name");
-
-    setMenu(menuData || []);
     setLoading(false);
   };
 
@@ -130,25 +123,26 @@ const CustomerOrder = () => {
       return;
     }
     setLookingUp(true);
-    const { data } = await supabase
-      .from("customers")
-      .select("name, phone, total_visits, loyalty_points, loyalty_tier")
-      .eq("hotel_id", table.hotel_id)
-      .eq("phone", phone)
-      .maybeSingle();
+    try {
+      const { data } = await supabase.functions.invoke("qr-order", {
+        body: { action: "lookup_customer", hotel_id: table.hotel_id, phone },
+      });
 
-    if (data) {
-      setCustomerProfile(data as CustomerProfile);
-      if (!customerName && data.name) setCustomerName(data.name);
-      // 10th order = 50% off
-      const visits = data.total_visits || 0;
-      if ((visits + 1) % 10 === 0 && visits > 0) {
-        setLoyaltyDiscount(50);
-        toast.success("🎉 Congratulations! Your 10th visit — 50% OFF this order!", { duration: 5000 });
+      if (data?.customer) {
+        setCustomerProfile(data.customer as CustomerProfile);
+        if (!customerName && data.customer.name) setCustomerName(data.customer.name);
+        const visits = data.customer.total_visits || 0;
+        if ((visits + 1) % 10 === 0 && visits > 0) {
+          setLoyaltyDiscount(50);
+          toast.success("🎉 Congratulations! Your 10th visit — 50% OFF this order!", { duration: 5000 });
+        } else {
+          setLoyaltyDiscount(0);
+        }
       } else {
+        setCustomerProfile(null);
         setLoyaltyDiscount(0);
       }
-    } else {
+    } catch {
       setCustomerProfile(null);
       setLoyaltyDiscount(0);
     }
@@ -166,20 +160,26 @@ const CustomerOrder = () => {
   const sendServiceCall = async (callType: string) => {
     if (!table) return;
     setServiceCallSending(callType);
-    const { error } = await supabase.from("service_calls").insert({
-      hotel_id: table.hotel_id,
-      table_id: table.id,
-      table_number: table.table_number,
-      call_type: callType,
-      status: "active",
-    });
-    if (error) {
+    try {
+      const { data, error } = await supabase.functions.invoke("qr-order", {
+        body: {
+          action: "service_call",
+          table_id: table.id,
+          hotel_id: table.hotel_id,
+          table_number: table.table_number,
+          call_type: callType,
+        },
+      });
+      if (error || !data?.success) {
+        toast.error("Failed to send request. Please try again.");
+      } else {
+        toast.success(
+          callType === "water" ? "💧 Water request sent!" : "🔔 Waiter has been notified!",
+          { duration: 3000 }
+        );
+      }
+    } catch {
       toast.error("Failed to send request. Please try again.");
-    } else {
-      toast.success(
-        callType === "water" ? "💧 Water request sent!" : "🔔 Waiter has been notified!",
-        { duration: 3000 }
-      );
     }
     setServiceCallSending(null);
   };
@@ -236,29 +236,32 @@ const CustomerOrder = () => {
     if (!table || cart.length === 0) return;
     setSubmitting(true);
 
-    const orderPayload = {
-      hotel_id: table.hotel_id,
-      table_id: table.id,
-      table_number: table.table_number,
-      items: cart.map((c) => ({ name: c.name, price: c.price, quantity: c.quantity })),
-      total_amount: cartTotal,
-      customer_name: customerName || null,
-      customer_phone: customerPhone || null,
-      status: "incoming",
-      payment_status: "pending",
-    };
+    try {
+      const { data, error } = await supabase.functions.invoke("qr-order", {
+        body: {
+          action: "place_order",
+          table_id: table.id,
+          hotel_id: table.hotel_id,
+          table_number: table.table_number,
+          items: cart.map((c) => ({ name: c.name, price: c.price, quantity: c.quantity })),
+          total_amount: cartTotal,
+          customer_name: customerName || null,
+          customer_phone: customerPhone || null,
+        },
+      });
 
-    const { error } = await supabase.from("customer_orders").insert(orderPayload);
+      if (error || !data?.success) {
+        console.error("Order error:", error);
+        toast.error("Failed to place order. Please try again.");
+        setSubmitting(false);
+        return;
+      }
 
-    if (error) {
-      console.error("Order error:", error);
+      setOrderPlaced(true);
+      setCart([]);
+    } catch {
       toast.error("Failed to place order. Please try again.");
-      setSubmitting(false);
-      return;
     }
-
-    setOrderPlaced(true);
-    setCart([]);
     setSubmitting(false);
   };
 
