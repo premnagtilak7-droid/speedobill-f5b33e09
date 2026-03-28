@@ -141,6 +141,13 @@ const Tables = () => {
 
   useEffect(() => { void fetchSetupData(); }, [fetchSetupData]);
 
+  // Fetch counter billing setting
+  useEffect(() => {
+    if (!hotelId) return;
+    supabase.from("hotels").select("counter_billing_enabled").eq("id", hotelId).maybeSingle()
+      .then(({ data }) => { if (data) setCounterBillingEnabled(data.counter_billing_enabled); });
+  }, [hotelId]);
+
   useEffect(() => {
     if (!hotelId) return;
     const ch = supabase
