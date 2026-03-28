@@ -413,12 +413,30 @@ const MenuPage = () => {
             )}
           </div>
         ) : (
-          <DenseMenuGrid
-            items={filtered}
-            renderItem={renderMenuCard}
-            className="gap-2"
-            size={density}
-          />
+          filterCat === "all" ? (
+            uniqueCategories.filter(cat => filtered.some(i => i.category === cat)).map(cat => (
+              <div key={cat} className="mb-4">
+                <h2 className="text-xs font-bold text-foreground mb-1.5 flex items-center gap-1.5">
+                  <span className="h-1 w-3 rounded-full bg-primary" />
+                  {cat}
+                  <span className="text-[9px] text-muted-foreground font-normal">({filtered.filter(i => i.category === cat).length})</span>
+                </h2>
+                <DenseMenuGrid
+                  items={filtered.filter(i => i.category === cat)}
+                  renderItem={renderMenuCard}
+                  className="gap-2"
+                  size={density}
+                />
+              </div>
+            ))
+          ) : (
+            <DenseMenuGrid
+              items={filtered}
+              renderItem={renderMenuCard}
+              className="gap-2"
+              size={density}
+            />
+          )
         )}
       </div>
 
