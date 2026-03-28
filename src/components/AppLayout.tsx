@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import {
   LayoutDashboard, UtensilsCrossed, Grid3X3, ChefHat, BarChart3,
-  Settings, LogOut, ScrollText, Menu, X, Wallet, Users, Package,
+  Settings, LogOut, ScrollText, Menu, X, Wallet, Users, Package, ShoppingBag,
   CalendarCheck, Store, Zap, CreditCard, ShieldCheck, Sun, Moon,
   Bell, FileText, TrendingUp, QrCode, Layers, Link2, UserCheck,
   HelpCircle, ChevronLeft
