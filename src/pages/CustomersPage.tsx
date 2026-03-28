@@ -200,13 +200,15 @@ const CustomersPage = () => {
           <Input placeholder="Search by name or phone..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Customers</SelectItem>
             <SelectItem value="vip">⭐ VIP Only</SelectItem>
             <SelectItem value="gold+">🏆 Gold & Platinum</SelectItem>
+            <SelectItem value="loyal_fans">🔥 Loyal Fans (50%+)</SelectItem>
+            <SelectItem value="new">🆕 New Customers</SelectItem>
+            <SelectItem value="at_risk">⚠️ At Risk (30d)</SelectItem>
             <SelectItem value="birthday">🎂 Birthday This Month</SelectItem>
-            <SelectItem value="new">🆕 New (7 days)</SelectItem>
             <SelectItem value="blacklist">🚫 Blacklisted</SelectItem>
           </SelectContent>
         </Select>
