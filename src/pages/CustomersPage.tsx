@@ -40,6 +40,7 @@ const CustomersPage = () => {
   const [feedbackDialog, setFeedbackDialog] = useState(false);
   const [addForm, setAddForm] = useState({ name: "", phone: "", email: "", birthday: "", dietary_preferences: "", notes: "" });
   const [feedbackForm, setFeedbackForm] = useState({ rating: "5", comment: "" });
+  const [loyaltyConfig, setLoyaltyConfig] = useState<any>(null);
 
   useEffect(() => {
     if (!hotelId) return;
@@ -48,12 +49,14 @@ const CustomersPage = () => {
 
   const loadData = async () => {
     if (!hotelId) return;
-    const [custRes, fbRes] = await Promise.all([
+    const [custRes, fbRes, loyaltyRes] = await Promise.all([
       supabase.from("customers").select("*").eq("hotel_id", hotelId).order("created_at", { ascending: false }),
       supabase.from("customer_feedback" as any).select("*").eq("hotel_id", hotelId).order("created_at", { ascending: false }),
+      supabase.from("hotel_loyalty_configs" as any).select("*").eq("hotel_id", hotelId).maybeSingle(),
     ]);
     setCustomers(custRes.data || []);
     setFeedback((fbRes.data as any[]) || []);
+    if (loyaltyRes.data) setLoyaltyConfig(loyaltyRes.data);
     setLoading(false);
   };
 
@@ -130,10 +133,19 @@ const CustomersPage = () => {
     if (filter === "vip") list = list.filter(c => (c.tags || []).includes("VIP"));
     if (filter === "blacklist") list = list.filter(c => (c.tags || []).includes("Blacklist"));
     if (filter === "birthday") list = list.filter(c => { try { return c.birthday && isThisMonth(parseISO(c.birthday)); } catch { return false; } });
-    if (filter === "new") list = list.filter(c => differenceInDays(new Date(), parseISO(c.created_at)) <= 7);
+    if (filter === "new") list = list.filter(c => (c.total_visits || 0) <= 1);
     if (filter === "gold+") list = list.filter(c => ["gold", "platinum"].includes(c.loyalty_tier || getTier(Number(c.total_spend || 0))));
+    if (filter === "loyal_fans" && loyaltyConfig?.visit_goal) {
+      list = list.filter(c => ((c.visit_count || 0) / loyaltyConfig.visit_goal) > 0.5);
+    }
+    if (filter === "at_risk") {
+      list = list.filter(c => {
+        if (!c.last_visit_at) return (c.total_visits || 0) > 0;
+        return differenceInDays(new Date(), parseISO(c.last_visit_at)) > 30;
+      });
+    }
     return list;
-  }, [customers, search, filter]);
+  }, [customers, search, filter, loyaltyConfig]);
 
   const avgRating = useMemo(() => {
     if (feedback.length === 0) return "0";
@@ -188,13 +200,15 @@ const CustomersPage = () => {
           <Input placeholder="Search by name or phone..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Customers</SelectItem>
             <SelectItem value="vip">⭐ VIP Only</SelectItem>
             <SelectItem value="gold+">🏆 Gold & Platinum</SelectItem>
+            <SelectItem value="loyal_fans">🔥 Loyal Fans (50%+)</SelectItem>
+            <SelectItem value="new">🆕 New Customers</SelectItem>
+            <SelectItem value="at_risk">⚠️ At Risk (30d)</SelectItem>
             <SelectItem value="birthday">🎂 Birthday This Month</SelectItem>
-            <SelectItem value="new">🆕 New (7 days)</SelectItem>
             <SelectItem value="blacklist">🚫 Blacklisted</SelectItem>
           </SelectContent>
         </Select>
@@ -231,6 +245,11 @@ const CustomersPage = () => {
                     <div>
                       <p className="font-semibold">{c.loyalty_points || 0} pts</p>
                       <p className="text-[10px] text-muted-foreground">{c.total_visits || 0} visits</p>
+                      {loyaltyConfig?.enabled && loyaltyConfig.visit_goal > 0 && (
+                        <p className="text-[10px] text-primary font-medium">
+                          {(c.visit_count || 0) % loyaltyConfig.visit_goal}/{loyaltyConfig.visit_goal} progress
+                        </p>
+                      )}
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>

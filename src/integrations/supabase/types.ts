@@ -299,10 +299,12 @@ export type Database = {
           name: string
           notes: string | null
           phone: string
+          rewards_claimed: number
           tags: string[] | null
           total_spend: number | null
           total_visits: number | null
           updated_at: string
+          visit_count: number
         }
         Insert: {
           birthday?: string | null
@@ -317,10 +319,12 @@ export type Database = {
           name: string
           notes?: string | null
           phone: string
+          rewards_claimed?: number
           tags?: string[] | null
           total_spend?: number | null
           total_visits?: number | null
           updated_at?: string
+          visit_count?: number
         }
         Update: {
           birthday?: string | null
@@ -335,10 +339,12 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string
+          rewards_claimed?: number
           tags?: string[] | null
           total_spend?: number | null
           total_visits?: number | null
           updated_at?: string
+          visit_count?: number
         }
         Relationships: [
           {
@@ -482,6 +488,53 @@ export type Database = {
             columns: ["table_id"]
             isOneToOne: false
             referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hotel_loyalty_configs: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          hotel_id: string
+          id: string
+          min_bill_value: number
+          reward_description: string
+          reward_type: string
+          reward_value: number
+          updated_at: string
+          visit_goal: number
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          hotel_id: string
+          id?: string
+          min_bill_value?: number
+          reward_description?: string
+          reward_type?: string
+          reward_value?: number
+          updated_at?: string
+          visit_goal?: number
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          hotel_id?: string
+          id?: string
+          min_bill_value?: number
+          reward_description?: string
+          reward_type?: string
+          reward_value?: number
+          updated_at?: string
+          visit_goal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotel_loyalty_configs_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: true
+            referencedRelation: "hotels"
             referencedColumns: ["id"]
           },
         ]

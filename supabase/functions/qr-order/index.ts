@@ -47,9 +47,17 @@ Deno.serve(async (req) => {
         .order("category")
         .order("name");
 
+      // Fetch loyalty config
+      const { data: loyaltyConfig } = await admin
+        .from("hotel_loyalty_configs")
+        .select("enabled, visit_goal, reward_type, reward_description, reward_value, min_bill_value")
+        .eq("hotel_id", table.hotel_id)
+        .maybeSingle();
+
       return json({
         table: { id: table.id, table_number: table.table_number, hotel_id: table.hotel_id, status: table.status },
         menu: menu || [],
+        loyalty_config: loyaltyConfig || null,
       });
     }
 
@@ -62,7 +70,7 @@ Deno.serve(async (req) => {
 
       const { data } = await admin
         .from("customers")
-        .select("name, phone, total_visits, loyalty_points, loyalty_tier")
+        .select("name, phone, total_visits, loyalty_points, loyalty_tier, visit_count, rewards_claimed")
         .eq("hotel_id", hotel_id)
         .eq("phone", phone)
         .maybeSingle();

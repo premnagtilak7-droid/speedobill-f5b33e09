@@ -11,6 +11,7 @@ import {
   User, Gift, Star
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import CustomerVIPCard from "@/components/loyalty/CustomerVIPCard";
 
 interface MenuItem {
   id: string;
@@ -36,6 +37,17 @@ interface CustomerProfile {
   total_visits: number;
   loyalty_points: number;
   loyalty_tier: string;
+  visit_count: number;
+  rewards_claimed: number;
+}
+
+interface LoyaltyConfig {
+  enabled: boolean;
+  visit_goal: number;
+  reward_type: string;
+  reward_description: string;
+  reward_value: number;
+  min_bill_value: number;
 }
 
 // Mood → category mapping
@@ -88,6 +100,7 @@ const CustomerOrder = () => {
   const [lookingUp, setLookingUp] = useState(false);
   const [loyaltyDiscount, setLoyaltyDiscount] = useState(0);
   const [serviceCallSending, setServiceCallSending] = useState<string | null>(null);
+  const [loyaltyConfig, setLoyaltyConfig] = useState<LoyaltyConfig | null>(null);
 
   useEffect(() => {
     if (!tableId) return;
@@ -109,6 +122,7 @@ const CustomerOrder = () => {
 
       setTable(data.table);
       setMenu(data.menu || []);
+      if (data.loyalty_config) setLoyaltyConfig(data.loyalty_config);
     } catch {
       toast.error("Failed to load menu.");
     }
@@ -583,8 +597,18 @@ const CustomerOrder = () => {
                         )}
                       </div>
 
+                      {/* VIP Loyalty Card */}
+                      {customerProfile && loyaltyConfig?.enabled && (
+                        <CustomerVIPCard
+                          customerName={customerProfile.name}
+                          visitCount={customerProfile.visit_count || 0}
+                          loyaltyConfig={loyaltyConfig}
+                          rewardsClaimed={customerProfile.rewards_claimed || 0}
+                        />
+                      )}
+
                       {/* Loyalty Profile Card */}
-                      {customerProfile && (
+                      {customerProfile && !loyaltyConfig?.enabled && (
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -613,11 +637,6 @@ const CustomerOrder = () => {
                               </div>
                             )}
                           </div>
-                          {loyaltyDiscount === 0 && (
-                            <p className="text-[10px] text-muted-foreground mt-2 text-center">
-                              {10 - (((customerProfile.total_visits || 0) + 1) % 10)} more visits until your next reward! 🎁
-                            </p>
-                          )}
                         </motion.div>
                       )}
                     </div>
