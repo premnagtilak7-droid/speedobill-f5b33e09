@@ -98,6 +98,9 @@ const Tables = () => {
   const [tableSplit, setTableSplit] = useState("none");
   const [showUpiQr, setShowUpiQr] = useState(false);
 
+  /* ── variant picker ── */
+  const [variantPickerItem, setVariantPickerItem] = useState<MenuItem | null>(null);
+
   /* ── split payment ── */
   const [splitPayOpen, setSplitPayOpen] = useState(false);
   const [splitCash, setSplitCash] = useState("");
