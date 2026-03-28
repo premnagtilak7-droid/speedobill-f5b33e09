@@ -112,11 +112,11 @@ const MenuItemForm = ({ open, onOpenChange, editItem, hotelId, categories, onSav
         toast.success("Item updated");
       } else {
         if (currentCount >= menuLimit) { toast.error("Menu limit reached"); setSaving(false); return; }
-        const { error } = await supabase.from("menu_items").insert({
+        const { error } = await supabase.from("menu_items").insert([{
           hotel_id: hotelId, name: name.trim(), price: basePrice, category,
           image_url: imageUrl || "",
-          price_variants: validVariants.length > 0 ? validVariants : [],
-        });
+          price_variants: (validVariants.length > 0 ? validVariants : []) as any,
+        }]);
         if (error) throw error;
         toast.success("Item added");
       }
