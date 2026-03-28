@@ -538,7 +538,14 @@ const Tables = () => {
 
   /* ────────── render menu card ────────── */
   const renderMenuCard = (item: MenuItem) => {
-    const qty = orderItems.find((l) => l.key === `menu-${item.id}`)?.quantity || 0;
+    const variants = (item.price_variants as PriceVariant[] | null)?.filter(v => v.label && v.price > 0) || [];
+    const hasVariants = variants.length > 0;
+    // Sum qty across all variant keys for this item
+    const qty = orderItems.filter(l => l.key.startsWith(`menu-${item.id}`)).reduce((s, l) => s + l.quantity, 0);
+    const priceLabel = hasVariants
+      ? `₹${Math.min(...variants.map(v => v.price))}+`
+      : formatCurrency(Number(item.price));
+
     if (density === "compact") {
       return (
         <button key={item.id} onClick={() => addMenuItemToOrder(item)}
@@ -548,7 +555,7 @@ const Tables = () => {
             {item.image_url ? <img src={item.image_url} alt="" className="h-full w-full object-cover" /> : <UtensilsCrossed className="h-5 w-5 text-muted-foreground/50" />}
           </div>
           <p className="w-full text-xs font-semibold text-foreground leading-tight line-clamp-2">{item.name}</p>
-          <p className="text-sm font-bold text-primary">{formatCurrency(Number(item.price))}</p>
+          <p className="text-sm font-bold text-primary">{priceLabel}</p>
         </button>
       );
     }
@@ -560,7 +567,7 @@ const Tables = () => {
           {item.image_url ? <img src={item.image_url} alt="" className="h-full w-full object-cover" /> : <UtensilsCrossed className="h-7 w-7 text-muted-foreground/40" />}
         </div>
         <p className="w-full text-sm font-semibold text-foreground leading-tight line-clamp-2">{item.name}</p>
-        <p className="text-base font-bold text-primary">{formatCurrency(Number(item.price))}</p>
+        <p className="text-base font-bold text-primary">{priceLabel}</p>
       </button>
     );
   };
