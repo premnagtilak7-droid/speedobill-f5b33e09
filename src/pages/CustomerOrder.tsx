@@ -597,8 +597,18 @@ const CustomerOrder = () => {
                         )}
                       </div>
 
+                      {/* VIP Loyalty Card */}
+                      {customerProfile && loyaltyConfig?.enabled && (
+                        <CustomerVIPCard
+                          customerName={customerProfile.name}
+                          visitCount={customerProfile.visit_count || 0}
+                          loyaltyConfig={loyaltyConfig}
+                          rewardsClaimed={customerProfile.rewards_claimed || 0}
+                        />
+                      )}
+
                       {/* Loyalty Profile Card */}
-                      {customerProfile && (
+                      {customerProfile && !loyaltyConfig?.enabled && (
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -627,11 +637,6 @@ const CustomerOrder = () => {
                               </div>
                             )}
                           </div>
-                          {loyaltyDiscount === 0 && (
-                            <p className="text-[10px] text-muted-foreground mt-2 text-center">
-                              {10 - (((customerProfile.total_visits || 0) + 1) % 10)} more visits until your next reward! 🎁
-                            </p>
-                          )}
                         </motion.div>
                       )}
                     </div>
