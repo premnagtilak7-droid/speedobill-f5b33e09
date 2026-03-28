@@ -49,12 +49,14 @@ const CustomersPage = () => {
 
   const loadData = async () => {
     if (!hotelId) return;
-    const [custRes, fbRes] = await Promise.all([
+    const [custRes, fbRes, loyaltyRes] = await Promise.all([
       supabase.from("customers").select("*").eq("hotel_id", hotelId).order("created_at", { ascending: false }),
       supabase.from("customer_feedback" as any).select("*").eq("hotel_id", hotelId).order("created_at", { ascending: false }),
+      supabase.from("hotel_loyalty_configs" as any).select("*").eq("hotel_id", hotelId).maybeSingle(),
     ]);
     setCustomers(custRes.data || []);
     setFeedback((fbRes.data as any[]) || []);
+    if (loyaltyRes.data) setLoyaltyConfig(loyaltyRes.data);
     setLoading(false);
   };
 
