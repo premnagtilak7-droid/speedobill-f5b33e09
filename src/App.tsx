@@ -2,13 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RoleGuard from "@/components/RoleGuard";
 import AppLayout from "@/components/AppLayout";
-import { lazy } from "react";
+import { lazy, useEffect } from "react";
 import SpeedoBot from "@/components/SpeedoBot";
 import PinLockGate from "@/components/PinLockGate";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -88,14 +88,8 @@ const queryClient = new QueryClient({
 
 const AppRoutes = () => {
   const { user, role, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
-  }
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const isCreator = user?.email === "speedobill7@gmail.com";
   const defaultAuthenticatedRoute = isCreator && role === "owner"
@@ -107,6 +101,29 @@ const AppRoutes = () => {
         : role === "manager" || role === "owner"
           ? "/dashboard"
           : "/tables";
+
+  useEffect(() => {
+    if (
+      !loading &&
+      user &&
+      isCreator &&
+      role === "owner" &&
+      location.pathname !== "/creator-admin" &&
+      location.pathname !== "/auth" &&
+      location.pathname !== "/reset-password" &&
+      !location.pathname.startsWith("/order/")
+    ) {
+      navigate("/creator-admin", { replace: true });
+    }
+  }, [loading, user, isCreator, role, location.pathname, navigate]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <>
