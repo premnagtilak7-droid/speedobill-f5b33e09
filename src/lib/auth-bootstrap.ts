@@ -79,7 +79,7 @@ export async function ensureUserAccessContext(
   const metadataFullName = readMetadataValue(_currentUser, "full_name") ?? "";
   const metadataEmail = typeof _currentUser?.email === "string" ? _currentUser.email : null;
 
-  resolvedRole = resolveRole(resolvedRole, profile?.role ?? metadataRole) as AppRole;
+  resolvedRole = (resolveRole(resolvedRole, profile?.role ?? metadataRole) ?? "owner") as AppRole;
   const bootstrapRole = resolvedRole as DbAppRole;
 
   if (!userRoleResult.data?.role) {
