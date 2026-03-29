@@ -37,9 +37,11 @@ const ownerSections: NavSection[] = [
     items: [
       { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
       { label: "Tables", icon: Grid3X3, path: "/tables" },
+      { label: "Counter", icon: Store, path: "/counter" },
       { label: "Incoming", icon: Bell, path: "/incoming-orders" },
       { label: "Online Orders", icon: ShoppingBag, path: "/online-orders" },
       { label: "Kitchen", icon: ChefHat, path: "/kitchen" },
+      { label: "KDS", icon: ChefHat, path: "/kds" },
       { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
     ],
   },
@@ -55,12 +57,14 @@ const ownerSections: NavSection[] = [
     title: "FINANCE",
     items: [
       { label: "Order History", icon: ScrollText, path: "/order-history" },
+      { label: "Data Export", icon: FileText, path: "/download-data-export" },
     ],
   },
   {
     title: "MANAGE",
     items: [
       { label: "Staff", icon: Users, path: "/staff" },
+      { label: "Staff Performance", icon: TrendingUp, path: "/staff-performance" },
       { label: "Customers", icon: UserCheck, path: "/customers" },
       { label: "Voids", icon: FileText, path: "/void-reports" },
       { label: "Close Day", icon: CalendarCheck, path: "/daily-closing" },
