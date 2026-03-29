@@ -320,6 +320,18 @@ const StaffPage = () => {
           </div>
         </TabsContent>
 
+        {/* PINs Tab */}
+        <TabsContent value="pins" className="space-y-4">
+          <Card className="glass-card">
+            <CardContent className="p-4">
+              <StaffPinManager />
+            </CardContent>
+          </Card>
+          <p className="text-xs text-muted-foreground">
+            Staff can use their PIN for quick login without email/password. Assign a 4-digit PIN to each staff member.
+          </p>
+        </TabsContent>
+
         {/* Salary Tab */}
         <TabsContent value="salary" className="space-y-4">
           <div className="flex items-center justify-between">
