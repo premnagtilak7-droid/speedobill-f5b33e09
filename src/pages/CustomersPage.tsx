@@ -64,7 +64,7 @@ const CustomersPage = () => {
     setSelectedCustomer(customer);
     const [ordersRes, fbRes] = await Promise.all([
       supabase.from("orders").select("*, order_items(*)").eq("hotel_id", hotelId!).eq("customer_id", customer.id).order("created_at", { ascending: false }).limit(50),
-      supabase.from("customer_feedback" as any).select("*").eq("customer_id", customer.id).order("created_at", { ascending: false }),
+      supabase.from("customer_feedback").select("*").eq("customer_id", customer.id).order("created_at", { ascending: false }),
     ]);
     setCustomerOrders(ordersRes.data || []);
     setCustomerFeedback((fbRes.data as any[]) || []);
