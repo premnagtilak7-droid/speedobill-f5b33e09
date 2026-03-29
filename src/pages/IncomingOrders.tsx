@@ -86,9 +86,13 @@ const IncomingOrders = () => {
     if (status === "preparing" && user) {
       updates.claimed_by = user.id;
       updates.claimed_at = new Date().toISOString();
+      updates.started_at = new Date().toISOString();
     }
     if (status === "ready") {
       updates.ready_at = new Date().toISOString();
+    }
+    if (status === "served") {
+      updates.completed_at = new Date().toISOString();
     }
     const { error } = await supabase.from("kot_tickets").update(updates).eq("id", id);
     if (error) toast.error("Update failed: " + error.message);
