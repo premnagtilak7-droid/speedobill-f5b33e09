@@ -116,9 +116,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const requiresHotelLink = newRole === "waiter" || newRole === "chef" || newRole === "manager";
 
       if (requiresHotelLink && !newHotelId) {
-        toast.error("Valid hotel code required for waiter, chef, and manager accounts.", {
+        // Try one more time: read hotel code from localStorage (may have been entered on login form)
+        const email = currentUser?.email ?? "";
+        const cacheKey = getScopedStorageKey(`qb_staff_hotel_code:${email.trim().toLowerCase()}`);
+        let fallbackCode: string | null = null;
+        try { fallbackCode = localStorage.getItem(cacheKey)?.trim().toUpperCase() || null; } catch {}
+
+        if (fallbackCode) {
+          try {
+            const { data: linkedId } = await supabase.rpc("link_waiter_to_hotel", {
+              _user_id: userId,
+              _hotel_code: fallbackCode,
+            });
+            if (linkedId) {
+              setRole(newRole);
+              setHotelId(linkedId);
+              writeAuthCache(currentUser, newRole, linkedId);
+              setLoading(false);
+              return;
+            }
+          } catch (linkErr: any) {
+            console.warn("Retry hotel link failed:", linkErr?.message);
+          }
+        }
+
+        toast.error("Could not link your account to a hotel. Please sign up again with a valid hotel code, or ask your owner for the correct code.", {
           id: AUTH_ERROR_TOAST_ID,
-          duration: 7000,
+          duration: 9000,
         });
         await supabase.auth.signOut();
         setUser(null);
