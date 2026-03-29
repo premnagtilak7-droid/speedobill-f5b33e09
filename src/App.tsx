@@ -19,6 +19,8 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import MenuPage from "./pages/MenuPage";
 import Dashboard from "./pages/Dashboard";
+import VoidReports from "./pages/VoidReports";
+import DailyClosing from "./pages/DailyClosing";
 
 // Lazy load remaining app pages — prefetch after initial render
 const Tables = lazy(() => import("./pages/Tables"));
@@ -26,7 +28,6 @@ const Analytics = lazy(() => import("./pages/Analytics"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const DataExportDownload = lazy(() => import("./pages/DataExportDownload"));
 const KitchenView = lazy(() => import("./pages/KitchenView"));
-const VoidReports = lazy(() => import("./pages/VoidReports"));
 const StaffPage = lazy(() => import("./pages/StaffPage"));
 const StaffPerformance = lazy(() => import("./pages/StaffPerformance"));
 const AuditLog = lazy(() => import("./pages/AuditLog"));
@@ -36,7 +37,6 @@ const OrderHistory = lazy(() => import("./pages/OrderHistory"));
 const BillingHistory = lazy(() => import("./pages/BillingHistory"));
 const CreatorAdmin = lazy(() => import("./pages/CreatorAdmin"));
 const ChefKDS = lazy(() => import("./pages/ChefKDS"));
-const DailyClosing = lazy(() => import("./pages/DailyClosing"));
 const CustomerOrder = lazy(() => import("./pages/CustomerOrder"));
 const IncomingOrders = lazy(() => import("./pages/IncomingOrders"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
