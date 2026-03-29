@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { APP_VERSION, APP_NAME, COMPANY_NAME } from "@/constants/version";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

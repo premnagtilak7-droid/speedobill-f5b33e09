@@ -1,4 +1,5 @@
 import { HelpCircle, MessageCircle, Mail, ExternalLink } from "lucide-react";
+import { APP_VERSION, APP_NAME, COMPANY_NAME } from "@/constants/version";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
