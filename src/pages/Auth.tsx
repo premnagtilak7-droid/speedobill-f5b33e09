@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Eye, EyeOff, Zap, ChefHat, BarChart3, Grid3X3, UtensilsCrossed, ScrollText } from "lucide-react";
+import { getScopedStorageKey } from "@/lib/backend-cache";
 
 type AuthMode = "login" | "signup";
 type RoleChoice = "owner" | "waiter" | "chef";
@@ -36,6 +37,27 @@ const slides = [
   },
 ];
 
+const getStaffHotelCodeCacheKey = (email: string) =>
+  getScopedStorageKey(`qb_staff_hotel_code:${email.trim().toLowerCase()}`);
+
+const cacheStaffHotelCode = (email: string, hotelCode: string) => {
+  if (!email.trim() || !hotelCode.trim()) return;
+
+  try {
+    localStorage.setItem(getStaffHotelCodeCacheKey(email), hotelCode.trim().toUpperCase());
+  } catch {}
+};
+
+const readCachedHotelCode = (email: string) => {
+  if (!email.trim()) return "";
+
+  try {
+    return localStorage.getItem(getStaffHotelCodeCacheKey(email)) ?? "";
+  } catch {
+    return "";
+  }
+};
+
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
@@ -55,8 +77,21 @@ const Auth = () => {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (mode !== "login" || !email.trim()) return;
+
+    const cachedCode = readCachedHotelCode(email);
+    if (cachedCode) {
+      setHotelCode(cachedCode);
+    }
+  }, [mode, email]);
+
   const handleLogin = async () => {
+    const normalizedHotelCode = hotelCode.trim().toUpperCase();
+
     if (!email || !password) { toast.error("Enter email and password"); return; }
+    if (normalizedHotelCode) cacheStaffHotelCode(email, normalizedHotelCode);
+
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) toast.error(error.message);
@@ -70,6 +105,7 @@ const Auth = () => {
     if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
     if (role !== "owner" && !normalizedHotelCode) { toast.error("Hotel code is required for staff accounts"); return; }
     if (role !== "owner" && !/^QB-\d{4}$/.test(normalizedHotelCode)) { toast.error("Enter a valid hotel code like QB-1234"); return; }
+
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -79,9 +115,14 @@ const Auth = () => {
         emailRedirectTo: window.location.origin,
       },
     });
+
     if (error) {
       toast.error(error.message);
     } else {
+      if (role !== "owner" && normalizedHotelCode) {
+        cacheStaffHotelCode(email, normalizedHotelCode);
+      }
+
       if (role !== "owner" && normalizedHotelCode && data.user) {
         try {
           const { error: linkError } = await supabase.rpc("link_waiter_to_hotel", {
@@ -120,21 +161,17 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Left side — Feature carousel (hidden on mobile) */}
       <div className="hidden md:flex md:w-1/2 lg:w-[55%] relative items-center justify-center overflow-hidden">
-        {/* Decorative glows */}
         <div className="absolute top-[10%] left-[20%] w-[400px] h-[400px] rounded-full opacity-[0.08]" style={{ background: "radial-gradient(circle, #F97316, transparent 70%)" }} />
         <div className="absolute bottom-[10%] right-[10%] w-[300px] h-[300px] rounded-full opacity-[0.05]" style={{ background: "radial-gradient(circle, #F97316, transparent 70%)" }} />
 
         <div className="relative z-10 max-w-md px-8 text-center space-y-8">
-          {/* Logo */}
           <div className="mx-auto w-28 h-28 rounded-3xl bg-card border border-border flex items-center justify-center shadow-2xl">
             <div className="w-16 h-16 rounded-2xl gradient-btn-primary flex items-center justify-center">
               <Zap className="h-8 w-8 text-white" />
             </div>
           </div>
 
-          {/* Slide content */}
           <div className="space-y-3 min-h-[120px]" key={activeSlide}>
             <div className="animate-pop-in">
               <h2 className="text-2xl font-bold text-foreground">{currentSlide.title}</h2>
@@ -142,7 +179,6 @@ const Auth = () => {
             </div>
           </div>
 
-          {/* Dots */}
           <div className="flex items-center justify-center gap-2">
             {slides.map((_, i) => (
               <button
@@ -157,10 +193,8 @@ const Auth = () => {
         </div>
       </div>
 
-      {/* Right side — Login form */}
       <div className="flex-1 flex items-center justify-center px-4 py-8 md:border-l md:border-border relative">
         <div className="w-full max-w-sm space-y-6 animate-pop-in">
-          {/* Header */}
           <div className="text-center space-y-1">
             <h1 className="text-2xl font-bold gradient-text-orange" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               SpeedoBill
@@ -183,7 +217,6 @@ const Auth = () => {
             </div>
           ) : (
             <>
-              {/* Tabs */}
               <div className="flex rounded-lg border border-border overflow-hidden">
                 <button
                   className={`flex-1 py-2.5 text-sm font-semibold transition-all ${
@@ -232,6 +265,19 @@ const Auth = () => {
                     </button>
                   </div>
                 </div>
+
+                {mode === "login" && (
+                  <div className="space-y-1">
+                    <label className="text-sm font-bold text-foreground">Hotel Code (staff only)</label>
+                    <Input
+                      placeholder="Enter once if waiter/chef login asks again"
+                      value={hotelCode}
+                      onChange={e => setHotelCode(e.target.value.toUpperCase())}
+                      className="h-11 bg-secondary/50 border-border"
+                    />
+                    <p className="text-xs text-muted-foreground">Owners can leave this blank. Waiters, chefs, and managers can enter their valid hotel code here to reconnect older accounts.</p>
+                  </div>
+                )}
 
                 {mode === "signup" && (
                   <>
@@ -282,7 +328,6 @@ const Auth = () => {
                 )}
               </div>
 
-              {/* Footer links */}
               <div className="text-center space-y-3 pt-2">
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                   <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
