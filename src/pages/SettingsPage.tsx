@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
-import { Settings, Copy, Key, Shield, FileText, ExternalLink } from "lucide-react";
+import { Settings, Copy, Key, Shield, FileText, ExternalLink, Volume2 } from "lucide-react";
 import InstallAppPrompt from "@/components/InstallAppPrompt";
 import { useNavigate } from "react-router-dom";
+import { setNotificationVolume, getNotificationVolume, playLoudBell } from "@/lib/notification-sounds";
 
 const SettingsPage = () => {
   const { user, hotelId } = useAuth();
@@ -28,6 +30,7 @@ const SettingsPage = () => {
   const [easyVoid, setEasyVoid] = useState(false);
   const [counterBilling, setCounterBilling] = useState(false);
   const [autoCleanup, setAutoCleanup] = useState(true);
+  const [volume, setVolume] = useState(getNotificationVolume());
 
   useEffect(() => {
     if (!hotelId) return;
@@ -209,6 +212,30 @@ const SettingsPage = () => {
               </span>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Notification Volume */}
+      <Card>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><Volume2 className="h-4 w-4" /> Notification Volume</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-4">
+            <Slider
+              value={[volume * 100]}
+              max={100}
+              step={5}
+              onValueChange={([v]) => {
+                const newVol = v / 100;
+                setVolume(newVol);
+                setNotificationVolume(newVol);
+              }}
+              className="flex-1"
+            />
+            <span className="text-sm font-mono w-10 text-right">{Math.round(volume * 100)}%</span>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => playLoudBell()}>
+            Test Sound
+          </Button>
         </CardContent>
       </Card>
 

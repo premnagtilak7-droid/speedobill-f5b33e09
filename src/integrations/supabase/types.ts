@@ -1112,6 +1112,7 @@ export type Database = {
           id: string
           is_active: boolean
           join_date: string | null
+          notification_volume: number | null
           phone: string | null
           photo_url: string | null
           reminder_sent_day5: boolean | null
@@ -1133,6 +1134,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           join_date?: string | null
+          notification_volume?: number | null
           phone?: string | null
           photo_url?: string | null
           reminder_sent_day5?: boolean | null
@@ -1154,6 +1156,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           join_date?: string | null
+          notification_volume?: number | null
           phone?: string | null
           photo_url?: string | null
           reminder_sent_day5?: boolean | null
@@ -1540,6 +1543,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "staff_leaves_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_pins: {
+        Row: {
+          created_at: string
+          failed_attempts: number
+          hotel_id: string
+          id: string
+          locked_until: string | null
+          pin_hash: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          failed_attempts?: number
+          hotel_id: string
+          id?: string
+          locked_until?: string | null
+          pin_hash: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          failed_attempts?: number
+          hotel_id?: string
+          id?: string
+          locked_until?: string | null
+          pin_hash?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_pins_hotel_id_fkey"
             columns: ["hotel_id"]
             isOneToOne: false
             referencedRelation: "hotels"

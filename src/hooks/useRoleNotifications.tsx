@@ -2,7 +2,7 @@
  * Role-based real-time notification system.
  * - Chef: new KOT tickets → loud bell + browser notification
  * - Waiter: order marked "ready" → soft ding + browser notification
- * - Owner: high-value bills (>₹500) + void requests → warning tone + browser notification
+ * - Owner: payment received → payment sound, voids → warning, license expiry → info
  */
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import {
   playLoudBell,
   playSoftDing,
   playWarningTone,
+  playPaymentSound,
   sendBrowserNotif,
 } from "@/lib/notification-sounds";
 
@@ -245,7 +246,7 @@ export function useRoleNotifications() {
       )
       .subscribe();
 
-    // High-value bills (>₹500)
+    // Bills / Payments
     const billChannel = supabase
       .channel(`owner-bills-${hotelId}`)
       .on(
@@ -253,16 +254,16 @@ export function useRoleNotifications() {
         { event: "UPDATE", schema: "public", table: "orders", filter: `hotel_id=eq.${hotelId}` },
         (payload) => {
           const o = payload.new as any;
-          if (o.status === "billed" && o.total >= 500) {
-            playSoftDing();
+          if (o.status === "billed") {
+            playPaymentSound();
             sendBrowserNotif(
-              "💰 High-Value Bill",
-              `₹${Number(o.total).toFixed(0)} bill saved`,
+              "💰 Payment Received",
+              `₹${Number(o.total).toFixed(0)} bill completed`,
               `bill-${o.id}`
             );
             pushNotification({
               id: o.id,
-              title: "Bill Saved",
+              title: "Payment Received",
               body: `₹${Number(o.total).toFixed(0)} bill completed`,
               type: "bill",
               createdAt: Date.now(),
@@ -304,5 +305,28 @@ export function useRoleNotifications() {
       supabase.removeChannel(billChannel);
       supabase.removeChannel(customerOrderChannel);
     };
+  }, [hotelId, role]);
+
+  // ── License expiry warning (owner only, one-time check) ──
+  useEffect(() => {
+    if (!hotelId || role !== "owner") return;
+    (async () => {
+      const { data: hotel } = await supabase
+        .from("hotels")
+        .select("subscription_expiry, subscription_tier")
+        .eq("id", hotelId)
+        .maybeSingle();
+      if (!hotel?.subscription_expiry) return;
+      const daysLeft = Math.ceil((new Date(hotel.subscription_expiry).getTime() - Date.now()) / 86400000);
+      if (daysLeft <= 7 && daysLeft > 0) {
+        pushNotification({
+          id: `license-expiry-${hotelId}`,
+          title: "⚠️ License Expiring Soon",
+          body: `Your ${hotel.subscription_tier} plan expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
+          type: "info",
+          createdAt: Date.now(),
+        });
+      }
+    })();
   }, [hotelId, role]);
 }
