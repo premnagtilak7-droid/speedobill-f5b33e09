@@ -55,7 +55,7 @@ export async function ensureUserAccessContext(
   const [profilesResult, userRoleResult] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, role, hotel_id, created_at")
+      .select("id, role, hotel_id, full_name, email, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false }),
     supabase
