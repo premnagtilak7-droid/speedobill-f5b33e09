@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
-import { Settings, Copy, Key, Shield, FileText, ExternalLink } from "lucide-react";
+import { Settings, Copy, Key, Shield, FileText, ExternalLink, Volume2 } from "lucide-react";
 import InstallAppPrompt from "@/components/InstallAppPrompt";
 import { useNavigate } from "react-router-dom";
+import { setNotificationVolume, getNotificationVolume, playLoudBell } from "@/lib/notification-sounds";
 
 const SettingsPage = () => {
   const { user, hotelId } = useAuth();
