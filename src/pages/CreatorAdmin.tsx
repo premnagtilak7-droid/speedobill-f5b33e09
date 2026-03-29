@@ -197,12 +197,52 @@ const CreatorAdmin = () => {
   const trialHotels = hotels.filter(h => getHotelStatus(h) === "trial").length;
   const expiredHotels = hotels.filter(h => getHotelStatus(h) === "expired").length;
   const lifetimeRevenue = usedKeys.reduce((s, l) => s + (l.tier === "premium" ? 399 : 199), 0);
-  const mrr = activeHotels * 250;
+  const basicSubs = hotels.filter(h => h.subscription_tier === "basic" && getHotelStatus(h) === "active").length;
+  const premiumSubs = hotels.filter(h => h.subscription_tier === "premium" && getHotelStatus(h) === "active").length;
+  const mrr = (basicSubs * 199) + (premiumSubs * 399);
   const churnRate = hotels.length > 0 ? ((expiredHotels / hotels.length) * 100).toFixed(1) : "0";
 
   const ownerCount = profiles.filter(p => p.role === "owner").length;
   const waiterCount = profiles.filter(p => p.role === "waiter").length;
   const chefCount = profiles.filter(p => p.role === "chef").length;
+  const managerCount = profiles.filter(p => p.role === "manager").length;
+  const totalStaff = waiterCount + chefCount + managerCount;
+
+  const newSignupsThisWeek = useMemo(() => {
+    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+    return profiles.filter(p => p.created_at >= weekAgo).length;
+  }, [profiles]);
+
+  const expiringIn7Days = useMemo(() => {
+    const now = new Date();
+    const in7 = new Date(now.getTime() + 7 * 86400000);
+    return hotels.filter(h => {
+      if (!h.subscription_expiry) return false;
+      const exp = new Date(h.subscription_expiry);
+      return exp > now && exp <= in7;
+    }).length;
+  }, [hotels]);
+
+  // Hotel management table data
+  const hotelTableData = useMemo(() => {
+    return hotels.map(h => {
+      const owner = profiles.find(p => p.hotel_id === h.id && p.role === "owner");
+      const staffInHotel = profiles.filter(p => p.hotel_id === h.id);
+      const waiters = staffInHotel.filter(p => p.role === "waiter").length;
+      const chefs = staffInHotel.filter(p => p.role === "chef").length;
+      const owners = staffInHotel.filter(p => p.role === "owner").length;
+      const status = getHotelStatus(h);
+      return {
+        ...h,
+        ownerName: owner?.full_name || "—",
+        status,
+        waiterCount: waiters,
+        chefCount: chefs,
+        ownerCount: owners,
+        totalStaff: staffInHotel.length,
+      };
+    }).filter(h => !hotelSearch || h.name.toLowerCase().includes(hotelSearch.toLowerCase()) || h.ownerName.toLowerCase().includes(hotelSearch.toLowerCase()));
+  }, [hotels, profiles, hotelSearch]);
 
   const signupData = useMemo(() => {
     const days: Record<string, number> = {};
