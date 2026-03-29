@@ -3,11 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChefHat, Clock, CheckCircle2, Flame, AlertTriangle, RefreshCw, Package, XCircle } from "lucide-react";
+import { ChefHat, Clock, CheckCircle2, Flame, AlertTriangle, RefreshCw, Package, XCircle, LogOut, User, Sun, Moon } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { useTheme } from "@/hooks/useTheme";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface KotTicket {
   id: string;
@@ -53,6 +55,8 @@ const URGENT_THRESHOLD_MS = 15 * 60 * 1000;
 
 const ChefKDS = () => {
   const { hotelId, user } = useAuth();
+  const { signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [tickets, setTickets] = useState<KotTicket[]>([]);
   const [items, setItems] = useState<Record<string, KotItem[]>>({});
   const [tables, setTables] = useState<Record<string, number>>({});
@@ -66,10 +70,8 @@ const ChefKDS = () => {
   const [waiters, setWaiters] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const iv = setInterval(() => setNow(Date.now()), 30000);
-    // Use 1-second timer for live cooking timer
-    const fastIv = setInterval(() => setNow(Date.now()), 1000);
-    return () => { clearInterval(iv); clearInterval(fastIv); };
+    const iv = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(iv);
   }, []);
 
   // Fetch waiter names for display
@@ -283,6 +285,9 @@ const ChefKDS = () => {
   const lowStockIngredients = ingredients.filter(i => i.current_stock <= i.min_threshold);
   const oosMenuItems = menuItems.filter(m => !m.is_available);
 
+  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Chef";
+  const userInitials = userName.slice(0, 2).toUpperCase();
+
   return (
     <div className="min-h-screen mesh-gradient-bg p-4 md:p-6">
       {/* Header */}
@@ -296,9 +301,30 @@ const ChefKDS = () => {
             <p className="text-xs text-muted-foreground">{tickets.length} active ticket{tickets.length !== 1 ? "s" : ""}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => activeTab === "orders" ? fetchData() : fetchIngredients()} className="glass-card">
-          <RefreshCw className="h-4 w-4 mr-1" /> Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => activeTab === "orders" ? fetchData() : fetchIngredients()} className="glass-card">
+            <RefreshCw className="h-4 w-4 mr-1" /> Refresh
+          </Button>
+          <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-secondary/60 transition-colors">
+            {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
+          </button>
+          <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
+            <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">{userInitials}</AvatarFallback>
+          </Avatar>
+          <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={signOut}>
+            <LogOut className="h-4 w-4 mr-1" /> Sign Out
+          </Button>
+        </div>
+      </div>
+
+      {/* Profile Bar */}
+      <div className="glass-card p-3 mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <User className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium text-foreground">{userName}</span>
+          <Badge variant="outline" className="text-[10px]">Chef</Badge>
+        </div>
+        <span className="text-xs text-muted-foreground">{user?.email}</span>
       </div>
 
       {/* Tabs */}

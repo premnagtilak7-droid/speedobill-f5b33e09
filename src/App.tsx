@@ -11,6 +11,7 @@ import AppLayout from "@/components/AppLayout";
 import { lazy, Suspense } from "react";
 import SpeedoBot from "@/components/SpeedoBot";
 import PinLockGate from "@/components/PinLockGate";
+import ScrollToTop from "@/components/ScrollToTop";
 
 // Eager load auth pages + critical entry routes for stability
 import Auth from "./pages/Auth";
@@ -110,6 +111,7 @@ const AppRoutes = () => {
 
   return (
     <Suspense fallback={<LazyFallback />}>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Navigate to={user ? defaultAuthenticatedRoute : "/auth"} replace />} />
         <Route path="/auth" element={user ? <Navigate to={defaultAuthenticatedRoute} replace /> : <Auth />} />
@@ -137,7 +139,7 @@ const AppRoutes = () => {
           <Route path="/dashboard" element={<RoleGuard allowed={["owner", "manager"]}><Dashboard /></RoleGuard>} />
           <Route path="/incoming-orders" element={<RoleGuard allowed={["owner", "manager"]}><IncomingOrders /></RoleGuard>} />
           <Route path="/analytics" element={<RoleGuard allowed={["owner", "manager"]}><Analytics /></RoleGuard>} />
-          <Route path="/order-history" element={<RoleGuard allowed={["owner", "manager"]}><OrderHistory /></RoleGuard>} />
+          <Route path="/order-history" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><OrderHistory /></RoleGuard>} />
           <Route path="/void-reports" element={<RoleGuard allowed={["owner", "manager"]}><VoidReports /></RoleGuard>} />
           <Route path="/staff" element={<RoleGuard allowed={["owner", "manager"]}><StaffPage /></RoleGuard>} />
           <Route path="/staff-performance" element={<RoleGuard allowed={["owner", "manager"]}><StaffPerformance /></RoleGuard>} />
