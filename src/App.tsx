@@ -155,7 +155,7 @@ const AppRoutes = () => {
 
           {/* Owner + Manager shared routes */}
           <Route path="/dashboard" element={<RoleGuard allowed={["owner", "manager"]}><Dashboard /></RoleGuard>} />
-          <Route path="/incoming-orders" element={<RoleGuard allowed={["owner", "manager"]}><IncomingOrders /></RoleGuard>} />
+          <Route path="/incoming-orders" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><IncomingOrders /></RoleGuard>} />
           <Route path="/analytics" element={<RoleGuard allowed={["owner", "manager"]}><Analytics /></RoleGuard>} />
           <Route path="/order-history" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><OrderHistory /></RoleGuard>} />
           <Route path="/void-reports" element={<RoleGuard allowed={["owner", "manager"]}><VoidReports /></RoleGuard>} />
