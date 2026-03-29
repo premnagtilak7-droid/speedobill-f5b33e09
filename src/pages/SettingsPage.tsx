@@ -30,6 +30,7 @@ const SettingsPage = () => {
   const [easyVoid, setEasyVoid] = useState(false);
   const [counterBilling, setCounterBilling] = useState(false);
   const [autoCleanup, setAutoCleanup] = useState(true);
+  const [volume, setVolume] = useState(getNotificationVolume());
 
   useEffect(() => {
     if (!hotelId) return;
