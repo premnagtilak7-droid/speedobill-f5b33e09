@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Sparkles, Crown, Zap, UtensilsCrossed, X, Search as SearchIcon, LayoutGrid, Grid3X3 } from "lucide-react";
 import { toast } from "sonner";
 import BulkMenuUpload from "@/components/menu/BulkMenuUpload";
+import MenuPageSkeleton from "@/components/skeletons/MenuPageSkeleton";
 import AiMenuScanner from "@/components/menu/AiMenuScanner";
 import MenuSearch from "@/components/menu/MenuSearch";
 import MenuCategoryTabs from "@/components/menu/MenuCategoryTabs";
@@ -54,10 +55,12 @@ const MenuPage = () => {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const { density, setDensity } = useGridDensity();
+  const [menuLoading, setMenuLoading] = useState(true);
 
   const allCategories = useMemo(() => [...DEFAULT_CATEGORIES, ...customCategories], [customCategories]);
   const fetchItems = useCallback(async () => {
     if (!hotelId) return;
+    setMenuLoading(true);
     try {
       const [menuRes, hotelRes, catRes] = await Promise.all([
         supabase.from("menu_items").select("*").eq("hotel_id", hotelId).order("category"),
@@ -84,6 +87,8 @@ const MenuPage = () => {
       }
     } catch (err: any) {
       toast.error(`Failed to fetch menu: ${err.message}`);
+    } finally {
+      setMenuLoading(false);
     }
   }, [hotelId]);
 
@@ -340,7 +345,9 @@ const MenuPage = () => {
                 </Badge>
               </div>
 
-              {filtered.length === 0 ? (
+              {menuLoading ? (
+                <MenuPageSkeleton />
+              ) : filtered.length === 0 ? (
                 <div className="text-center py-16 text-muted-foreground">
                   {searchQuery ? (
                     <>
