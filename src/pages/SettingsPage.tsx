@@ -215,6 +215,30 @@ const SettingsPage = () => {
         </CardContent>
       </Card>
 
+      {/* Notification Volume */}
+      <Card>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><Volume2 className="h-4 w-4" /> Notification Volume</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-4">
+            <Slider
+              value={[volume * 100]}
+              max={100}
+              step={5}
+              onValueChange={([v]) => {
+                const newVol = v / 100;
+                setVolume(newVol);
+                setNotificationVolume(newVol);
+              }}
+              className="flex-1"
+            />
+            <span className="text-sm font-mono w-10 text-right">{Math.round(volume * 100)}%</span>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => playLoudBell()}>
+            Test Sound
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Install App */}
       <InstallAppPrompt />
 
