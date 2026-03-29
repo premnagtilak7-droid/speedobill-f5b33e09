@@ -52,7 +52,7 @@ class ErrorBoundary extends Component<Props, State> {
                 Try to Recover
               </button>
             </div>
-            <p className="text-[11px] text-slate-600">Speedo Bill v2.0 • Alpha</p>
+            <p className="text-[11px] text-slate-600">Speedo Bill v8.0.0 • © 2026 Mangal Multiproduct</p>
           </div>
         </div>
       );

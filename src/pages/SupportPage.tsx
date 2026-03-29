@@ -1,4 +1,5 @@
 import { HelpCircle, MessageCircle, Mail, ExternalLink } from "lucide-react";
+import { APP_VERSION, APP_NAME, COMPANY_NAME } from "@/constants/version";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -42,7 +43,7 @@ const SupportPage = () => (
       </CardContent>
     </Card>
 
-    <p className="text-center text-xs text-muted-foreground">Speedo Bill v8.0 · © {new Date().getFullYear()}</p>
+    <p className="text-center text-xs text-muted-foreground">{APP_NAME} v{APP_VERSION} · © {new Date().getFullYear()} {COMPANY_NAME}</p>
   </div>
 );
 

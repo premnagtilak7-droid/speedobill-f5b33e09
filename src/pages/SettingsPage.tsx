@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { APP_VERSION, APP_NAME, COMPANY_NAME } from "@/constants/version";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -271,7 +272,7 @@ const SettingsPage = () => {
       </Card>
 
       <p className="text-center text-[10px] text-muted-foreground pb-4">
-        Speedo Bill v8.0 · © {new Date().getFullYear()} Speedo Bill
+        {APP_NAME} v{APP_VERSION} · © {new Date().getFullYear()} {COMPANY_NAME}
       </p>
     </div>
   );

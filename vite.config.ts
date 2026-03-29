@@ -108,9 +108,9 @@ export default defineConfig(({ mode }) => {
         devOptions: { enabled: false },
         includeAssets: ["favicon.ico", "robots.txt"],
         manifest: {
-          name: "Speedo Bill - Canteen Management",
+          name: "Speedo Bill v8.0 – Smart Canteen Management",
           short_name: "Speedo Bill",
-          description: "Smart Canteen Management System",
+          description: "Smart Canteen Management by Mangal Multiproduct. Manage tables, orders, kitchen, staff & billing.",
           theme_color: "#F97316",
           background_color: "#F8F8F8",
           display: "standalone",

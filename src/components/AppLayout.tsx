@@ -1,4 +1,5 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { APP_VERSION } from "@/constants/version";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import {
@@ -457,7 +458,7 @@ const AppLayout = () => {
         {renderSidebarContent()}
         {!collapsed && (
           <div className="px-4 py-2 text-[10px] text-muted-foreground text-center border-t border-border">
-            v2.0
+            v{APP_VERSION}
           </div>
         )}
       </aside>
