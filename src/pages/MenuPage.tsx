@@ -60,6 +60,7 @@ const MenuPage = () => {
   const allCategories = useMemo(() => [...DEFAULT_CATEGORIES, ...customCategories], [customCategories]);
   const fetchItems = useCallback(async () => {
     if (!hotelId) return;
+    setMenuLoading(true);
     try {
       const [menuRes, hotelRes, catRes] = await Promise.all([
         supabase.from("menu_items").select("*").eq("hotel_id", hotelId).order("category"),
