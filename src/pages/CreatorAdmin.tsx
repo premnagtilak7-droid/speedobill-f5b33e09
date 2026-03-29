@@ -529,12 +529,65 @@ const CreatorAdmin = () => {
             {activeTab === "command" && (
               <TabPanel key="command">
                 <div className="space-y-6">
-                  {/* Metric Cards */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <GradientMetricCard label="Monthly MRR" value={`₹${mrr.toLocaleString()}`} change="+12%" changeUp icon={TrendingUp} gradient="bg-gradient-to-br from-orange-500/40 via-orange-500/10 to-transparent dark:from-orange-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="Active Users" value={activeHotels} change="+8%" changeUp icon={Users} gradient="bg-gradient-to-br from-emerald-500/40 via-emerald-500/10 to-transparent dark:from-emerald-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="Churn Rate" value={`${churnRate}%`} change="-2.1%" changeUp={false} icon={Activity} gradient="bg-gradient-to-br from-red-500/30 via-red-500/10 to-transparent dark:from-red-500/20 dark:to-transparent" />
-                    <GradientMetricCard label="Lifetime Revenue" value={`₹${lifetimeRevenue.toLocaleString()}`} change="+15%" changeUp icon={IndianRupee} gradient="bg-gradient-to-br from-indigo-500/40 via-indigo-500/10 to-transparent dark:from-indigo-500/25 dark:to-transparent" />
+                  {/* Metric Cards - 6 cards */}
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <GradientMetricCard label="Total Hotels" value={hotels.length} icon={Hotel} gradient="bg-gradient-to-br from-orange-500/40 via-orange-500/10 to-transparent dark:from-orange-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="Active Subscriptions" value={activeHotels} change={`${premiumSubs} premium`} changeUp icon={ShieldCheck} gradient="bg-gradient-to-br from-emerald-500/40 via-emerald-500/10 to-transparent dark:from-emerald-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="Monthly MRR" value={`₹${mrr.toLocaleString()}`} icon={TrendingUp} gradient="bg-gradient-to-br from-indigo-500/40 via-indigo-500/10 to-transparent dark:from-indigo-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="New Signups (7d)" value={newSignupsThisWeek} icon={UserPlus} gradient="bg-gradient-to-br from-cyan-500/40 via-cyan-500/10 to-transparent dark:from-cyan-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="Lifetime Revenue" value={`₹${lifetimeRevenue.toLocaleString()}`} change="+15%" changeUp icon={IndianRupee} gradient="bg-gradient-to-br from-amber-500/40 via-amber-500/10 to-transparent dark:from-amber-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="Churn Rate" value={`${churnRate}%`} icon={Activity} gradient="bg-gradient-to-br from-red-500/30 via-red-500/10 to-transparent dark:from-red-500/20 dark:to-transparent" />
+                  </div>
+
+                  {/* User Analytics + Subscription Analytics side by side */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <GlassCard className="p-5">
+                      <h3 className="text-sm font-semibold text-foreground mb-4">👥 User Analytics</h3>
+                      <div className="space-y-2.5">
+                        {[
+                          { label: "Hotel Owners", value: ownerCount, dot: "bg-orange-500", emoji: "👑" },
+                          { label: "Waiters", value: waiterCount, dot: "bg-indigo-500", emoji: "🍽️" },
+                          { label: "Chefs", value: chefCount, dot: "bg-emerald-500", emoji: "👨‍🍳" },
+                          { label: "Managers", value: managerCount, dot: "bg-cyan-500", emoji: "📋" },
+                          { label: "Total Staff (non-owner)", value: totalStaff, dot: "bg-purple-500", emoji: "👥" },
+                          { label: "Total Users", value: profiles.length, dot: "bg-foreground", emoji: "📊" },
+                        ].map(s => (
+                          <div key={s.label} className="flex items-center justify-between py-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs">{s.emoji}</span>
+                              <span className="text-xs text-muted-foreground">{s.label}</span>
+                            </div>
+                            <span className="text-sm font-semibold text-foreground tabular-nums">{s.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </GlassCard>
+
+                    <GlassCard className="p-5">
+                      <h3 className="text-sm font-semibold text-foreground mb-4">📊 Subscription Analytics</h3>
+                      <div className="space-y-2.5">
+                        {[
+                          { label: "Active Subscriptions", value: activeHotels, dot: "bg-emerald-500" },
+                          { label: "Basic Plans", value: basicSubs, dot: "bg-blue-500" },
+                          { label: "Premium Plans", value: premiumSubs, dot: "bg-purple-500" },
+                          { label: "Trial Users", value: trialHotels, dot: "bg-amber-500" },
+                          { label: "Expired", value: expiredHotels, dot: "bg-red-500" },
+                        ].map(s => (
+                          <div key={s.label} className="flex items-center justify-between py-1">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${s.dot}`} />
+                              <span className="text-xs text-muted-foreground">{s.label}</span>
+                            </div>
+                            <span className="text-sm font-semibold text-foreground tabular-nums">{s.value}</span>
+                          </div>
+                        ))}
+                        {expiringIn7Days > 0 && (
+                          <div className="mt-2 p-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                            <p className="text-xs font-semibold text-red-600 dark:text-red-400">⚠️ {expiringIn7Days} subscription(s) expiring in 7 days</p>
+                          </div>
+                        )}
+                      </div>
+                    </GlassCard>
                   </div>
 
                   {/* Revenue Area Chart + Activity Feed */}
@@ -565,7 +618,7 @@ const CreatorAdmin = () => {
                         <h3 className="text-sm font-semibold text-foreground">Live Activity</h3>
                         <div className="flex items-center gap-1.5">
                           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                          <span className="text-[10px] text-muted-foreground">Live</span>
+                          <span className="text-[10px] text-muted-foreground">Auto-refresh 30s</span>
                         </div>
                       </div>
                       <div className="space-y-2.5 max-h-[230px] overflow-y-auto">
@@ -585,8 +638,8 @@ const CreatorAdmin = () => {
                     </GlassCard>
                   </div>
 
-                  {/* Donut Charts: Subscriptions + User Distribution + Active Tables */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Donut Charts */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <GlassCard className="p-5">
                       <h3 className="text-sm font-semibold text-foreground mb-3">Subscription Split</h3>
                       <div className="h-[180px]">
@@ -628,29 +681,60 @@ const CreatorAdmin = () => {
                         ))}
                       </div>
                     </GlassCard>
-
-                    <GlassCard className="p-5">
-                      <h3 className="text-sm font-semibold text-foreground mb-3">Platform Overview</h3>
-                      <div className="space-y-2.5">
-                        {[
-                          { label: "Total Hotels", value: hotels.length, dot: "bg-orange-500" },
-                          { label: "Total Profiles", value: profiles.length, dot: "bg-indigo-500" },
-                          { label: "Active Subs", value: activeHotels, dot: "bg-emerald-500" },
-                          { label: "Trial Users", value: trialHotels, dot: "bg-amber-500" },
-                          { label: "Expired", value: expiredHotels, dot: "bg-red-500" },
-                          { label: "Unused Keys", value: unusedKeys.length, dot: "bg-cyan-500" },
-                        ].map(s => (
-                          <div key={s.label} className="flex items-center justify-between py-1">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full ${s.dot}`} />
-                              <span className="text-xs text-muted-foreground">{s.label}</span>
-                            </div>
-                            <span className="text-sm font-semibold text-foreground tabular-nums">{s.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </GlassCard>
                   </div>
+
+                  {/* Hotel Management Table */}
+                  <GlassCard className="overflow-hidden">
+                    <div className="p-5 border-b border-border/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-semibold text-foreground">🏨 Hotel Management</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">{hotels.length} hotels registered</p>
+                      </div>
+                      <div className="relative w-full sm:w-56">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                        <Input placeholder="Search hotels..." value={hotelSearch} onChange={e => setHotelSearch(e.target.value)} className="pl-9 h-8 rounded-xl text-xs" />
+                      </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[700px]">
+                        <thead>
+                          <tr className="text-[11px] text-muted-foreground border-b border-border/40 uppercase tracking-wider">
+                            <th className="text-left px-4 py-3 font-medium">Hotel</th>
+                            <th className="text-left px-4 py-3 font-medium">Owner</th>
+                            <th className="text-left px-4 py-3 font-medium">Plan</th>
+                            <th className="text-left px-4 py-3 font-medium">Status</th>
+                            <th className="text-center px-4 py-3 font-medium">Staff</th>
+                            <th className="text-left px-4 py-3 font-medium">Expiry</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/30">
+                          {hotelTableData.map(h => (
+                            <tr key={h.id} className="hover:bg-white/40 dark:hover:bg-white/[0.02] transition-colors">
+                              <td className="px-4 py-3 text-sm font-medium text-foreground">{h.name}</td>
+                              <td className="px-4 py-3 text-xs text-muted-foreground">{h.ownerName}</td>
+                              <td className="px-4 py-3">
+                                <Badge variant="outline" className={`text-[10px] capitalize ${h.subscription_tier === "premium" ? "text-purple-600 border-purple-200 dark:text-purple-400 dark:border-purple-500/20" : "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/20"}`}>
+                                  {h.subscription_tier}
+                                </Badge>
+                              </td>
+                              <td className="px-4 py-3">{statusBadge(h.status)}</td>
+                              <td className="px-4 py-3 text-center">
+                                <div className="flex items-center justify-center gap-2 text-[10px]">
+                                  <span title="Owners">👑{h.ownerCount}</span>
+                                  <span title="Waiters">🍽️{h.waiterCount}</span>
+                                  <span title="Chefs">👨‍🍳{h.chefCount}</span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-xs text-muted-foreground">
+                                {h.subscription_expiry ? new Date(h.subscription_expiry).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" }) : "—"}
+                              </td>
+                            </tr>
+                          ))}
+                          {hotelTableData.length === 0 && <tr><td colSpan={6} className="text-center py-10 text-muted-foreground text-sm">No hotels found</td></tr>}
+                        </tbody>
+                      </table>
+                    </div>
+                  </GlassCard>
                 </div>
               </TabPanel>
             )}
