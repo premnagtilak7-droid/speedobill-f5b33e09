@@ -57,6 +57,7 @@ const OnlineOrders = lazy(() => import("./pages/OnlineOrders"));
 const SupplyStore = lazy(() => import("./pages/SupplyStore"));
 const LoyaltySettings = lazy(() => import("./pages/LoyaltySettings"));
 const StaffProfile = lazy(() => import("./pages/StaffProfile"));
+const WaiterOrders = lazy(() => import("./pages/WaiterOrders"));
 
 // Prefetch critical routes after first paint
 if (typeof window !== "undefined") {
