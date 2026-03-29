@@ -85,28 +85,42 @@ const SettingsPage = () => {
 
     const now = new Date();
     const expiry = new Date(now.getTime() + lic.duration_days * 86400000);
+    const planLabel = lic.tier === "premium" ? "Premium" : "Basic";
+    const expiryStr = expiry.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 
-    const [licUpdate, hotelUpdate, profileUpdate] = await Promise.all([
-      supabase.from("licenses").update({
-        is_used: true, used_at: now.toISOString(), used_by_hotel_id: hotelId,
-      }).eq("id", lic.id),
-      supabase.from("hotels").update({
-        subscription_tier: lic.tier === "premium" ? "premium" : "basic",
-        subscription_start_date: now.toISOString(),
-        subscription_expiry: expiry.toISOString(),
-      }).eq("id", hotelId),
-      supabase.from("profiles").update({
-        subscription_status: "active",
-        subscription_plan: lic.tier,
-        subscription_expires_at: expiry.toISOString(),
-      }).eq("user_id", user?.id),
-    ]);
+    try {
+      const [licUpdate, hotelUpdate, profileUpdate] = await Promise.all([
+        supabase.from("licenses").update({
+          is_used: true, used_at: now.toISOString(), used_by_hotel_id: hotelId,
+        }).eq("id", lic.id),
+        supabase.from("hotels").update({
+          subscription_tier: lic.tier === "premium" ? "premium" : "basic",
+          subscription_start_date: now.toISOString(),
+          subscription_expiry: expiry.toISOString(),
+        }).eq("id", hotelId),
+        supabase.from("profiles").update({
+          subscription_status: "active",
+          subscription_plan: lic.tier,
+          subscription_expires_at: expiry.toISOString(),
+        }).eq("user_id", user?.id),
+      ]);
 
-    if (licUpdate.error || hotelUpdate.error || profileUpdate.error) {
-      toast.error("Activation failed");
-    } else {
-      toast.success(`License activated! ${lic.tier} plan for ${lic.duration_days} days`);
+      if (licUpdate.error || hotelUpdate.error || profileUpdate.error) {
+        const errMsg = licUpdate.error?.message || hotelUpdate.error?.message || profileUpdate.error?.message || "Unknown error";
+        throw new Error(errMsg);
+      }
+
+      toast.success(`✅ ${planLabel} plan activated! Valid until ${expiryStr}`, { duration: 6000 });
       setLicenseKey("");
+      // Refresh hotel data
+      const { data: refreshed } = await supabase.from("hotels").select("*").eq("id", hotelId).single();
+      if (refreshed) {
+        setHotel(refreshed);
+      }
+    } catch (err: any) {
+      toast.error("Activation failed: " + err.message, {
+        action: { label: "Retry", onClick: () => activateLicense() },
+      });
     }
     setActivating(false);
   };

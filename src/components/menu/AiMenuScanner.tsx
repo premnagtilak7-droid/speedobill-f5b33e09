@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Sparkles, Camera, Loader2, Check, X, Trash2, Edit2 } from "lucide-react";
+import { Sparkles, Camera, Loader2, Check, X, Trash2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface PriceVariant { label: string; price: number; }
@@ -22,6 +22,8 @@ interface Props {
   onComplete: () => void;
 }
 
+const MAX_FILE_SIZE = 1024 * 1024; // 1MB
+
 const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
   const [open, setOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -31,7 +33,7 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
   const [scanStatus, setScanStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const compressImage = (file: File, maxDim = 1200, quality = 0.7): Promise<string> =>
+  const compressImage = (file: File, maxDim = 1200, quality = 0.6): Promise<string> =>
     new Promise((resolve, reject) => {
       const img = new Image();
       const url = URL.createObjectURL(file);
@@ -46,7 +48,14 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
         const ctx = canvas.getContext("2d");
         if (!ctx) return reject(new Error("Canvas not supported"));
         ctx.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL("image/jpeg", quality));
+        let q = quality;
+        let result = canvas.toDataURL("image/jpeg", q);
+        // Ensure under 1MB
+        while (result.length > MAX_FILE_SIZE * 1.37 && q > 0.2) {
+          q -= 0.1;
+          result = canvas.toDataURL("image/jpeg", q);
+        }
+        resolve(result);
       };
       img.onerror = () => reject(new Error("Failed to load image"));
       img.src = url;
@@ -98,7 +107,7 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
         }));
         setItems(mapped);
         setScanStatus("success");
-        toast.success(`Extraction Successful — ${mapped.length} items found!`);
+        toast.success(`${mapped.length} items found!`);
       } else {
         setScanStatus("error");
         toast.error("Could not extract menu items. Try a clearer photo.");
@@ -106,7 +115,7 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
     } catch (err: any) {
       console.error("AI scan error:", err);
       setScanStatus("error");
-      toast.error("Upload Failed: " + err.message);
+      toast.error("Scan failed: " + err.message);
     }
     setScanning(false);
   };
@@ -189,126 +198,126 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
       </Button>
 
       <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetScanner(); }}>
-        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" /> AI Menu Scanner
+        <DialogContent className="max-w-lg w-[95vw] max-h-[92vh] flex flex-col p-3 sm:p-6">
+          <DialogHeader className="pb-1">
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Sparkles className="h-4 w-4 text-primary" /> AI Menu Scanner
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
+          <div className="space-y-2 flex-1 overflow-hidden flex flex-col min-h-0">
             <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
 
             {/* Upload Area */}
             {!preview ? (
               <button
                 onClick={() => fileRef.current?.click()}
-                className="w-full aspect-video rounded-xl border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 hover:border-primary/50 transition-colors"
+                className="w-full aspect-[16/9] max-h-32 rounded-xl border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-1.5 hover:border-primary/50 transition-colors active:scale-[0.98]"
               >
-                <Camera className="h-8 w-8 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Take photo or upload menu image</span>
+                <Camera className="h-7 w-7 text-muted-foreground" />
+                <span className="text-xs sm:text-sm text-muted-foreground px-4 text-center">Take photo or upload menu image</span>
               </button>
             ) : (
               <div className="relative rounded-xl overflow-hidden shrink-0">
-                <img src={preview} alt="Menu" className="w-full max-h-28 object-cover" />
+                <img src={preview} alt="Menu" className="w-full max-h-24 object-cover" />
                 {scanning && (
                   <div className="absolute inset-0 bg-background/70 flex items-center justify-center">
                     <div className="text-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-                      <p className="text-sm mt-2 font-medium">Processing with AI...</p>
+                      <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
+                      <p className="text-xs mt-1.5 font-medium">Scanning with AI...</p>
                     </div>
                   </div>
                 )}
                 {!scanning && (
                   <button onClick={() => { resetScanner(); fileRef.current?.click(); }}
-                    className="absolute top-2 right-2 bg-background/80 rounded-full p-1">
-                    <X className="h-4 w-4" />
+                    className="absolute top-1.5 right-1.5 bg-background/80 rounded-full p-1">
+                    <X className="h-3.5 w-3.5" />
                   </button>
                 )}
               </div>
             )}
 
-            {/* Status Badge */}
+            {/* Error state */}
             {scanStatus === "error" && !scanning && (
-              <div className="text-center space-y-2">
-                <p className="text-sm text-destructive font-medium">❌ Upload Failed — No items detected</p>
-                <Button variant="outline" size="sm" onClick={() => { resetScanner(); fileRef.current?.click(); }}>
+              <div className="text-center space-y-2 py-2">
+                <p className="text-xs text-destructive font-medium">❌ No items detected</p>
+                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => { resetScanner(); fileRef.current?.click(); }}>
                   Try another image
                 </Button>
               </div>
             )}
 
-            {/* Results: Editable Review List */}
+            {/* Results */}
             {items.length > 0 && (
-              <div className="space-y-2 flex-1 overflow-hidden flex flex-col">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold">{items.length} items · {selectedCount} selected</p>
+              <div className="space-y-2 flex-1 overflow-hidden flex flex-col min-h-0">
+                <div className="flex items-center justify-between px-1 shrink-0">
+                  <p className="text-xs sm:text-sm font-semibold">{items.length} items · {selectedCount} selected</p>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={selectAll}>All</Button>
-                    <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={deselectAll}>None</Button>
+                    <Button variant="ghost" size="sm" className="h-6 text-[10px] sm:text-xs px-2" onClick={selectAll}>All</Button>
+                    <Button variant="ghost" size="sm" className="h-6 text-[10px] sm:text-xs px-2" onClick={deselectAll}>None</Button>
                   </div>
                 </div>
 
-                <ScrollArea className="flex-1 max-h-[45vh] border rounded-lg">
-                  <div className="p-2 space-y-4">
+                <ScrollArea className="flex-1 min-h-0 border rounded-lg">
+                  <div className="p-1.5 sm:p-2 space-y-3">
                     {Object.entries(groupedByCategory).map(([category, entries]) => (
                       <div key={category}>
-                        <p className="text-xs font-bold text-primary uppercase tracking-wide mb-2 px-1 flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full bg-primary" />
+                        <p className="text-[10px] sm:text-xs font-bold text-primary uppercase tracking-wide mb-1.5 px-1 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                           {category} ({entries.length})
                         </p>
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                           {entries.map(({ item, globalIdx }) => (
                             <div
                               key={globalIdx}
-                              className={`p-2 rounded-lg border transition-all ${
+                              className={`p-1.5 sm:p-2 rounded-lg border transition-all ${
                                 item.selected
                                   ? "bg-primary/5 border-primary/20"
                                   : "bg-muted/30 border-transparent opacity-50"
                               }`}
                             >
-                              <div className="flex items-start gap-2">
+                              <div className="flex items-start gap-1.5 sm:gap-2">
                                 {/* Checkbox */}
                                 <button
                                   onClick={() => toggleItem(globalIdx)}
-                                  className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 mt-1 ${
+                                  className={`w-4 h-4 sm:w-5 sm:h-5 rounded border-2 flex items-center justify-center shrink-0 mt-1 ${
                                     item.selected ? "border-primary bg-primary" : "border-muted-foreground/30"
                                   }`}
                                 >
-                                  {item.selected && <Check className="h-3 w-3 text-primary-foreground" />}
+                                  {item.selected && <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-primary-foreground" />}
                                 </button>
 
-                                {/* Editable Fields */}
+                                {/* Fields */}
                                 <div className="flex-1 min-w-0 space-y-1">
                                   <Input
                                     value={item.name}
                                     onChange={(e) => updateItem(globalIdx, "name", e.target.value)}
-                                    className="h-7 text-sm font-medium px-2"
+                                    className="h-6 sm:h-7 text-xs sm:text-sm font-medium px-1.5 sm:px-2"
                                     placeholder="Item name"
                                   />
                                   {item.price_variants && item.price_variants.length > 0 ? (
-                                    <div className="flex flex-wrap gap-1.5">
+                                    <div className="flex flex-wrap gap-1">
                                       {item.price_variants.map((v, vi) => (
-                                        <div key={vi} className="flex items-center gap-1 text-xs bg-muted rounded-full px-2 py-0.5">
-                                          <span>{v.label}:</span>
+                                        <div key={vi} className="flex items-center gap-0.5 text-[10px] sm:text-xs bg-muted rounded-full px-1.5 py-0.5">
+                                          <span className="font-medium">{v.label}:</span>
                                           <span className="text-primary font-semibold">₹</span>
                                           <Input
                                             type="number"
                                             value={v.price}
                                             onChange={(e) => updateVariantPrice(globalIdx, vi, Number(e.target.value))}
-                                            className="h-5 w-14 text-xs px-1 border-0 bg-transparent font-semibold text-primary"
+                                            className="h-4 sm:h-5 w-12 sm:w-14 text-[10px] sm:text-xs px-0.5 border-0 bg-transparent font-semibold text-primary"
                                           />
                                         </div>
                                       ))}
                                     </div>
                                   ) : (
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-xs text-muted-foreground">₹</span>
+                                    <div className="flex items-center gap-0.5">
+                                      <span className="text-[10px] sm:text-xs text-muted-foreground">₹</span>
                                       <Input
                                         type="number"
                                         value={item.price}
                                         onChange={(e) => updateItem(globalIdx, "price", Number(e.target.value))}
-                                        className="h-7 w-20 text-sm font-semibold text-primary px-2"
+                                        className="h-6 sm:h-7 w-16 sm:w-20 text-xs sm:text-sm font-semibold text-primary px-1.5"
                                         placeholder="Price"
                                       />
                                     </div>
@@ -318,9 +327,9 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
                                 {/* Delete */}
                                 <button
                                   onClick={() => removeItem(globalIdx)}
-                                  className="text-muted-foreground hover:text-destructive p-1 shrink-0"
+                                  className="text-muted-foreground hover:text-destructive p-0.5 shrink-0"
                                 >
-                                  <Trash2 className="h-3.5 w-3.5" />
+                                  <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                 </button>
                               </div>
                             </div>
@@ -331,7 +340,13 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
                   </div>
                 </ScrollArea>
 
-                <Button onClick={saveAll} disabled={saving || selectedCount === 0} className="w-full gap-1.5 shrink-0">
+                {/* Prominent Confirm Button */}
+                <Button
+                  onClick={saveAll}
+                  disabled={saving || selectedCount === 0}
+                  className="w-full gap-1.5 shrink-0 h-11 sm:h-10 text-sm font-semibold"
+                  size="lg"
+                >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                   Confirm & Add {selectedCount} Items to Menu
                 </Button>
