@@ -184,7 +184,46 @@ export function useRoleNotifications() {
     return () => { supabase.removeChannel(channel); };
   }, [hotelId, role, user]);
 
-  // ── Waiter: service calls (Call Waiter / Request Water) from QR menu ──
+  // ── Chef/Owner: order marked "served" by waiter ──
+  useEffect(() => {
+    if (!hotelId || (role !== "chef" && role !== "owner" && role !== "manager")) return;
+    const channel = supabase
+      .channel(`served-notif-${hotelId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` },
+        async (payload) => {
+          const newRow = payload.new as any;
+          const oldRow = payload.old as any;
+          if (newRow.status === "served" && oldRow?.status === "ready") {
+            const { data: tbl } = await supabase
+              .from("restaurant_tables")
+              .select("table_number")
+              .eq("id", newRow.table_id)
+              .maybeSingle();
+            const tableNum = tbl?.table_number || "?";
+
+            playSoftDing();
+            sendBrowserNotif(
+              "✅ Order Served",
+              `Table ${tableNum} — food has been delivered`,
+              `served-${newRow.id}`
+            );
+            pushNotification({
+              id: `served-${newRow.id}`,
+              title: "Order Served",
+              body: `Table ${tableNum} — food delivered to guest`,
+              type: "ready",
+              createdAt: Date.now(),
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [hotelId, role]);
+
   useEffect(() => {
     if (!hotelId || (role !== "waiter" && role !== "owner" && role !== "manager")) return;
     const channel = supabase
