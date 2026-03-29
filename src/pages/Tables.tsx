@@ -677,9 +677,7 @@ const Tables = () => {
 
       {/* table grid */}
       {loading ? (
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-          {Array.from({ length: 12 }).map((_, i) => <div key={i} className="h-28 animate-pulse rounded-2xl bg-secondary" />)}
-        </div>
+        <TableMapSkeleton />
       ) : tables.length === 0 ? (
         <div className="py-16 text-center text-muted-foreground">
           <Users className="mx-auto mb-3 h-12 w-12 opacity-30" />

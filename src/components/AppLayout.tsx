@@ -342,6 +342,7 @@ const AppLayout = () => {
       </nav>
 
       <div className="border-t border-border pt-3 mt-3 px-2 space-y-1 pb-2">
+        <BugReportButton collapsed={collapsed} />
         <button
           onClick={toggleTheme}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors min-h-[44px] active:scale-[0.97]"
