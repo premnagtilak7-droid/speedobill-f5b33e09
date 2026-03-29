@@ -57,6 +57,7 @@ const OnlineOrders = lazy(() => import("./pages/OnlineOrders"));
 const SupplyStore = lazy(() => import("./pages/SupplyStore"));
 const LoyaltySettings = lazy(() => import("./pages/LoyaltySettings"));
 const StaffProfile = lazy(() => import("./pages/StaffProfile"));
+const WaiterOrders = lazy(() => import("./pages/WaiterOrders"));
 
 // Prefetch critical routes after first paint
 if (typeof window !== "undefined") {
@@ -147,6 +148,7 @@ const AppRoutes = () => {
           {/* Shared routes — all roles */}
           <Route path="/tables" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><Tables /></RoleGuard>} />
           <Route path="/counter" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><CounterOrderPage /></RoleGuard>} />
+          <Route path="/my-orders" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><WaiterOrders /></RoleGuard>} />
           <Route path="/kitchen" element={<RoleGuard allowed={["owner", "manager"]}><KitchenView /></RoleGuard>} />
           <Route path="/menu" element={<RoleGuard allowed={["owner", "manager", "waiter", "chef"]}><MenuPage /></RoleGuard>} />
           <Route path="/kds" element={<RoleGuard allowed={["owner", "manager", "chef"]}><ChefKDS /></RoleGuard>} />
