@@ -156,6 +156,13 @@ const CreatorAdmin = () => {
 
   useEffect(() => { if (isCreator) fetchData(); }, [isCreator]);
 
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (!isCreator) return;
+    const iv = setInterval(() => fetchData(), 30000);
+    return () => clearInterval(iv);
+  }, [isCreator]);
+
   const addWholesaleProduct = async () => {
     if (!wsNewName || !wsNewPrice) return;
     const { error } = await supabase.from("wholesale_products" as any).insert({
