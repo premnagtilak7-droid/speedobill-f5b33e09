@@ -229,8 +229,29 @@ const AppLayout = () => {
       .then(({ data }) => { if (data) setCounterBillingEnabled(data.counter_billing_enabled); });
   }, [hotelId]);
 
+  const isCreator = user?.email === "speedobill7@gmail.com";
+  const creatorSections: NavSection[] = isCreator
+    ? [
+        {
+          title: "CREATOR",
+          items: [{ label: "Creator Admin", icon: ShieldCheck, path: "/creator-admin" }],
+        },
+        ...ownerSections,
+      ]
+    : ownerSections;
+
+  const creatorBottomNav: NavItem[] = isCreator
+    ? [
+        { label: "Admin", icon: ShieldCheck, path: "/creator-admin" },
+        { label: "Tables", icon: Grid3X3, path: "/tables" },
+        { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
+        { label: "Orders", icon: ScrollText, path: "/order-history" },
+        { label: "More", icon: Menu, path: "__more__" },
+      ]
+    : ownerBottomNav;
+
   const navSections = role === "owner"
-    ? ownerSections
+    ? creatorSections
     : role === "manager"
       ? managerSections
       : role === "waiter"
@@ -240,7 +261,7 @@ const AppLayout = () => {
           : [];
 
   const bottomNavItems = role === "owner"
-    ? ownerBottomNav
+    ? creatorBottomNav
     : role === "manager"
       ? ownerBottomNav
       : role === "waiter"
@@ -249,7 +270,7 @@ const AppLayout = () => {
           ? chefBottomNav
           : [];
 
-  const roleLabel = role ? role.charAt(0).toUpperCase() + role.slice(1) : "Staff";
+  const roleLabel = isCreator ? "Creator Admin" : role ? role.charAt(0).toUpperCase() + role.slice(1) : "Staff";
 
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
   const userInitials = userName.slice(0, 2).toUpperCase();
