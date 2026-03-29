@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Enums } from "@/integrations/supabase/types";
 
 export type AppRole = "owner" | "waiter" | "chef" | "manager" | string;
 
@@ -6,6 +7,8 @@ interface AccessContext {
   role: AppRole | null;
   hotelId: string | null;
 }
+
+type DbAppRole = Enums<"app_role">;
 
 const resolveRole = (primaryRole: string | null | undefined, fallbackRole?: string | null): AppRole => {
   return (primaryRole ?? fallbackRole ?? "owner") as AppRole;
@@ -40,7 +43,7 @@ export async function ensureUserAccessContext(
   const metadataRole = _currentUser?.user_metadata?.role as string | undefined;
 
   if (!profile) {
-    const bootstrapRole = resolveRole(resolvedRole, metadataRole);
+    const bootstrapRole = resolveRole(resolvedRole, metadataRole) as DbAppRole;
     const { error: insertError } = await supabase
       .from("profiles")
       .insert({ user_id: userId, role: bootstrapRole });
@@ -60,7 +63,7 @@ export async function ensureUserAccessContext(
   }
 
   if (!resolvedRole) {
-    const fallbackRole = resolveRole(profile.role, metadataRole);
+    const fallbackRole = resolveRole(profile.role, metadataRole) as DbAppRole;
     const { error: userRoleInsertError } = await supabase
       .from("user_roles")
       .insert({ user_id: userId, role: fallbackRole });
