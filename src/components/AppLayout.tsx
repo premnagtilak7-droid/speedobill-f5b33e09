@@ -188,7 +188,8 @@ const ownerBottomNav: NavItem[] = [
 
 const waiterBottomNav: NavItem[] = [
   { label: "Tables", icon: Grid3X3, path: "/tables" },
-  { label: "Orders", icon: Store, path: "/counter" },
+  { label: "My Orders", icon: ScrollText, path: "/my-orders" },
+  { label: "Counter", icon: Store, path: "/counter" },
   { label: "More", icon: Menu, path: "__more__" },
 ];
 
