@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   IndianRupee, ShoppingBag, Grid3X3, AlertTriangle,
   Plus, UtensilsCrossed, BarChart3, Wallet, ChefHat, Clock, Crown,
-  TrendingUp, TrendingDown, Bell, Check as CheckIcon, Package, Flame
+  TrendingUp, TrendingDown, Bell, Check as CheckIcon, Package, Flame, Receipt, Users
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +27,12 @@ interface LowStockIngredient {
   unit: string;
 }
 
+interface CounterWaiterStat {
+  name: string;
+  total: number;
+  bills: number;
+}
+
 const metricGradients = [
   { bar: "gradient-bar-violet", iconBg: "gradient-bar-violet" },
   { bar: "gradient-bar-cyan", iconBg: "gradient-bar-cyan" },
@@ -36,6 +42,7 @@ const metricGradients = [
   { bar: "gradient-bar-teal", iconBg: "gradient-bar-teal" },
   { bar: "gradient-bar-cyan", iconBg: "gradient-bar-cyan" },
   { bar: "gradient-bar-amber", iconBg: "gradient-bar-amber" },
+  { bar: "gradient-bar-emerald", iconBg: "gradient-bar-emerald" },
 ];
 
 const Dashboard = () => {
@@ -55,6 +62,9 @@ const Dashboard = () => {
   const [lowStockIngredients, setLowStockIngredients] = useState<LowStockIngredient[]>([]);
   const [totalIngredients, setTotalIngredients] = useState(0);
   const [wastageCount30d, setWastageCount30d] = useState(0);
+  const [counterSalesToday, setCounterSalesToday] = useState(0);
+  const [counterBillsToday, setCounterBillsToday] = useState(0);
+  const [topCounterWaiter, setTopCounterWaiter] = useState<CounterWaiterStat | null>(null);
 
   useEffect(() => {
     if (!hotelId) return;
@@ -62,7 +72,7 @@ const Dashboard = () => {
       const now = new Date();
       const istDate = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
       const today = istDate.toISOString().split("T")[0];
-      const [salesRes, ordersRes, tablesRes, menuRes, kotRes, hotelRes, totalRevenueRes, ingredientsRes] = await Promise.all([
+      const [salesRes, ordersRes, tablesRes, menuRes, kotRes, hotelRes, totalRevenueRes, ingredientsRes, counterRes] = await Promise.all([
         supabase.from("sales").select("amount").eq("hotel_id", hotelId).eq("sale_date", today),
         supabase.from("orders").select("id").eq("hotel_id", hotelId).eq("status", "billed").gte("created_at", `${today}T00:00:00`).lt("created_at", `${today}T23:59:59.999`),
         supabase.from("restaurant_tables").select("id, status").eq("hotel_id", hotelId),
@@ -71,6 +81,12 @@ const Dashboard = () => {
         supabase.from("hotels").select("subscription_tier, subscription_expiry").eq("id", hotelId).maybeSingle(),
         supabase.from("orders").select("total").eq("hotel_id", hotelId).eq("status", "billed"),
         supabase.from("ingredients").select("name, current_stock, min_threshold, unit").eq("hotel_id", hotelId),
+        supabase
+          .from("counter_orders")
+          .select("waiter_id, waiter_name, total_amount, created_at")
+          .eq("hotel_id", hotelId)
+          .gte("created_at", `${today}T00:00:00`)
+          .lt("created_at", `${today}T23:59:59.999`),
       ]);
       if (salesRes.data) setTodayEarnings(salesRes.data.reduce((sum, s) => sum + Number(s.amount), 0));
       if (ordersRes.data) setTotalOrders(ordersRes.data.length);
@@ -92,8 +108,29 @@ const Dashboard = () => {
         const lowIng = allIngs.filter(i => i.min_threshold > 0 && i.current_stock <= i.min_threshold);
         setLowStockIngredients(lowIng);
       }
+      if (counterRes.data) {
+        const waiterMap = new Map<string, CounterWaiterStat>();
+        const totalCounter = counterRes.data.reduce((sum, order) => {
+          const amount = Number(order.total_amount);
+          const waiterKey = order.waiter_id || order.waiter_name || "unknown";
+          const current = waiterMap.get(waiterKey) ?? { name: order.waiter_name || "Staff", total: 0, bills: 0 };
+          waiterMap.set(waiterKey, {
+            name: current.name,
+            total: current.total + amount,
+            bills: current.bills + 1,
+          });
+          return sum + amount;
+        }, 0);
+        setCounterSalesToday(totalCounter);
+        setCounterBillsToday(counterRes.data.length);
+        const topWaiter = Array.from(waiterMap.values()).sort((a, b) => b.total - a.total)[0] ?? null;
+        setTopCounterWaiter(topWaiter);
+      } else {
+        setCounterSalesToday(0);
+        setCounterBillsToday(0);
+        setTopCounterWaiter(null);
+      }
 
-      // Wastage count (30d)
       if (role === "owner") {
         const thirtyAgo = new Date();
         thirtyAgo.setDate(thirtyAgo.getDate() - 30);
@@ -102,7 +139,6 @@ const Dashboard = () => {
         setWastageCount30d(wRes.count || 0);
       }
 
-      // Table Turnover Rate (avg time occupied today)
       const billedToday = await supabase
         .from("orders")
         .select("created_at, billed_at")
@@ -121,7 +157,6 @@ const Dashboard = () => {
         setTableTurnover("—");
       }
 
-      // Reservation No-Shows (last 7 days)
       const weekAgo = new Date(istDate);
       weekAgo.setDate(weekAgo.getDate() - 7);
       const noShowRes = await supabase
@@ -140,15 +175,18 @@ const Dashboard = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "restaurant_tables" }, () => fetchStats())
       .on("postgres_changes", { event: "*", schema: "public", table: "kot_tickets" }, () => fetchStats())
       .on("postgres_changes", { event: "*", schema: "public", table: "sales" }, () => fetchStats())
+      .on("postgres_changes", { event: "*", schema: "public", table: "counter_orders" }, () => fetchStats())
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [hotelId]);
+  }, [hotelId, role]);
 
   const userName = "there";
 
   const quickStats = [
     { label: "Today's Sale", value: `₹${todayEarnings.toFixed(0)}`, icon: IndianRupee, trend: "+12%" as string | null, up: true },
+    { label: "Counter Sales", value: `₹${counterSalesToday.toFixed(0)}`, icon: Receipt, trend: counterBillsToday > 0 ? `${counterBillsToday} bills` : null, up: true },
+    { label: "Top Counter Waiter", value: topCounterWaiter?.name ?? "—", icon: Users, trend: topCounterWaiter ? `₹${topCounterWaiter.total.toFixed(0)}` : null, up: true },
     { label: "Total Revenue", value: `₹${totalRevenue.toFixed(0)}`, icon: IndianRupee, trend: null, up: true },
     { label: "Active Tables", value: `${activeTables}/${totalTables}`, icon: Grid3X3, trend: null, up: true },
     { label: "Pending KOT", value: String(pendingKOT), icon: Clock, trend: null, up: false },

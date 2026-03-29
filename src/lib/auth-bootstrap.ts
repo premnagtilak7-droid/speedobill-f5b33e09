@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Enums } from "@/integrations/supabase/types";
+import { getScopedStorageKey } from "@/lib/backend-cache";
 
 export type AppRole = "owner" | "waiter" | "chef" | "manager" | string;
 
@@ -20,6 +21,20 @@ const resolveRole = (primaryRole: string | null | undefined, fallbackRole?: stri
 const readMetadataValue = (currentUser: any, key: string): string | null => {
   const value = currentUser?.user_metadata?.[key];
   return typeof value === "string" && value.trim() ? value.trim() : null;
+};
+
+const getStaffHotelCodeCacheKey = (email: string) =>
+  getScopedStorageKey(`qb_staff_hotel_code:${email.trim().toLowerCase()}`);
+
+const readCachedHotelCode = (email: string | null): string | null => {
+  if (!email || typeof window === "undefined") return null;
+
+  try {
+    const value = window.localStorage.getItem(getStaffHotelCodeCacheKey(email));
+    return typeof value === "string" && value.trim() ? value.trim().toUpperCase() : null;
+  } catch {
+    return null;
+  }
 };
 
 async function ensureOwnerHotel(userId: string): Promise<string | null> {
@@ -75,9 +90,11 @@ export async function ensureUserAccessContext(
   const profile = profileRows.find((row) => row.hotel_id) ?? profileRows[0] ?? null;
   let resolvedRole = userRoleResult.data?.role as AppRole | null;
   const metadataRole = readMetadataValue(_currentUser, "role");
-  const metadataHotelCode = readMetadataValue(_currentUser, "hotel_code")?.toUpperCase() ?? null;
   const metadataFullName = readMetadataValue(_currentUser, "full_name") ?? "";
   const metadataEmail = typeof _currentUser?.email === "string" ? _currentUser.email : null;
+  const metadataHotelCode = (
+    readMetadataValue(_currentUser, "hotel_code") ?? readCachedHotelCode(metadataEmail)
+  )?.toUpperCase() ?? null;
 
   resolvedRole = (resolveRole(resolvedRole, profile?.role ?? metadataRole) ?? "owner") as AppRole;
   const bootstrapRole = resolvedRole as DbAppRole;
@@ -120,7 +137,7 @@ export async function ensureUserAccessContext(
   const profileUpdates: Record<string, unknown> = {};
 
   if (profile?.role !== bootstrapRole) profileUpdates.role = bootstrapRole;
-  if (bootstrapRole === "owner" && resolvedHotelId && profile?.hotel_id !== resolvedHotelId) profileUpdates.hotel_id = resolvedHotelId;
+  if (resolvedHotelId && profile?.hotel_id !== resolvedHotelId) profileUpdates.hotel_id = resolvedHotelId;
   if ((!profile?.full_name || !profile.full_name.trim()) && metadataFullName) profileUpdates.full_name = metadataFullName;
   if ((!profile?.email || !profile.email.trim()) && metadataEmail) profileUpdates.email = metadataEmail;
 
