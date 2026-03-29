@@ -1,16 +1,19 @@
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChefHat, Clock, CheckCircle2, Flame, AlertTriangle, RefreshCw, Package, XCircle, LogOut, User, Sun, Moon } from "lucide-react";
+import { ChefHat, Clock, CheckCircle2, Flame, AlertTriangle, RefreshCw, Package, XCircle, LogOut, User, Sun, Moon, Volume2, VolumeX, Filter } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "@/hooks/useTheme";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { playLoudBell } from "@/lib/notification-sounds";
+import { playLoudBell, getNotificationVolume, setNotificationVolume } from "@/lib/notification-sounds";
+import { NotificationBell } from "@/components/NotificationBell";
+import { useRoleNotifications } from "@/hooks/useRoleNotifications";
+import { Slider } from "@/components/ui/slider";
 
 interface KotTicket {
   id: string;
@@ -50,13 +53,10 @@ interface MenuItem {
   is_available: boolean;
 }
 
-interface WaiterInfo { user_id: string; full_name: string | null; }
-
 const URGENT_THRESHOLD_MS = 15 * 60 * 1000;
 
 const ChefKDS = () => {
-  const { hotelId, user } = useAuth();
-  const { signOut } = useAuth();
+  const { hotelId, user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [tickets, setTickets] = useState<KotTicket[]>([]);
   const [items, setItems] = useState<Record<string, KotItem[]>>({});
@@ -64,18 +64,22 @@ const ChefKDS = () => {
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(Date.now());
   const [activeTab, setActiveTab] = useState("orders");
+  const [orderFilter, setOrderFilter] = useState<"all" | "pending" | "preparing" | "ready">("all");
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [ingredientsLoading, setIngredientsLoading] = useState(false);
   const [togglingItem, setTogglingItem] = useState<string | null>(null);
   const [waiters, setWaiters] = useState<Record<string, string>>({});
+  const [volume, setVolume] = useState(getNotificationVolume());
+  const prevTicketIdsRef = useRef<Set<string>>(new Set());
+
+  useRoleNotifications();
 
   useEffect(() => {
     const iv = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(iv);
   }, []);
 
-  // Fetch waiter names for display
   useEffect(() => {
     if (!hotelId) return;
     supabase.from("profiles").select("user_id, full_name").eq("hotel_id", hotelId).in("role", ["waiter", "owner", "manager"])
@@ -88,7 +92,6 @@ const ChefKDS = () => {
 
   const fetchData = useCallback(async () => {
     if (!hotelId) return;
-    setLoading(true);
     const { data: kots } = await supabase
       .from("kot_tickets")
       .select("*")
@@ -97,8 +100,18 @@ const ChefKDS = () => {
       .order("created_at", { ascending: true });
 
     const kotList = (kots || []) as KotTicket[];
-    // Show tickets assigned to this chef OR unassigned
     const myTickets = kotList.filter(k => !k.assigned_chef_id || k.assigned_chef_id === user?.id);
+
+    // Detect new tickets for sound
+    const newIds = new Set(myTickets.map(t => t.id));
+    const prevIds = prevTicketIdsRef.current;
+    const brandNewTickets = myTickets.filter(t => !prevIds.has(t.id) && t.status === "pending");
+    if (brandNewTickets.length > 0 && prevIds.size > 0) {
+      playLoudBell();
+      toast.info(`🔔 ${brandNewTickets.length} new order${brandNewTickets.length > 1 ? "s" : ""} received!`, { duration: 4000 });
+    }
+    prevTicketIdsRef.current = newIds;
+
     setTickets(myTickets);
 
     if (myTickets.length > 0) {
@@ -113,6 +126,8 @@ const ChefKDS = () => {
         grouped[item.kot_id].push(item as KotItem);
       });
       setItems(grouped);
+    } else {
+      setItems({});
     }
 
     const tableIds = [...new Set(kotList.map(k => k.table_id))];
@@ -143,7 +158,7 @@ const ChefKDS = () => {
 
   useEffect(() => { void fetchData(); }, [fetchData]);
 
-  // Auto-refresh every 10 seconds as backup
+  // Auto-refresh every 10 seconds
   useEffect(() => {
     const iv = setInterval(() => {
       if (activeTab === "orders") void fetchData();
@@ -156,37 +171,18 @@ const ChefKDS = () => {
     if (activeTab === "inventory") void fetchIngredients();
   }, [activeTab, fetchIngredients]);
 
+  // Real-time subscriptions
   useEffect(() => {
     if (!hotelId) return;
     const ch = supabase
       .channel("kds-rt")
-      // Listen to kot_tickets changes
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` }, (payload) => {
-        const newTicket = payload.new as any;
-        if (!newTicket.assigned_chef_id || newTicket.assigned_chef_id === user?.id) {
-          playLoudBell();
-          try { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play(); } catch {}
-          toast.info("🔔 New order received!", { duration: 4000 });
-        }
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` }, () => {
         void fetchData();
       })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` }, (payload) => {
-        const nextRow = payload.new as any;
-        const previousRow = payload.old as any;
-        const becameAssignedToMe = nextRow.assigned_chef_id === user?.id && previousRow?.assigned_chef_id !== user?.id;
-        const becameUnassigned = !nextRow.assigned_chef_id && previousRow?.assigned_chef_id;
-
-        if (nextRow.status === "pending" && (becameAssignedToMe || becameUnassigned)) {
-          playLoudBell();
-          toast.info("🔔 Order assigned to kitchen!", { duration: 3000 });
-        }
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` }, () => {
         void fetchData();
       })
-      // Also listen to orders table for new orders
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders", filter: `hotel_id=eq.${hotelId}` }, () => {
-        playLoudBell();
-        try { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play(); } catch {}
-        toast.info("🔔 New order placed!", { duration: 4000 });
         void fetchData();
       })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `hotel_id=eq.${hotelId}` }, () => {
@@ -194,7 +190,7 @@ const ChefKDS = () => {
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [hotelId, fetchData, user?.id]);
+  }, [hotelId, fetchData]);
 
   const updateStatus = async (kotId: string, newStatus: string) => {
     const updates: any = { status: newStatus };
@@ -220,10 +216,7 @@ const ChefKDS = () => {
       .from("kot_tickets")
       .update({ status: "served", completed_at: new Date().toISOString() })
       .eq("id", kotId);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+    if (error) { toast.error(error.message); return; }
     toast.success("Served & dismissed");
     await fetchData();
   };
@@ -232,7 +225,7 @@ const ChefKDS = () => {
     setTogglingItem(itemId);
     const { error } = await supabase.from("menu_items").update({ is_available: !currentlyAvailable }).eq("id", itemId);
     if (error) {
-      toast.error("Failed to update. Only owners can change availability.");
+      toast.error("Failed to update availability.");
     } else {
       toast.success(!currentlyAvailable ? "Item back in stock" : "Item marked Out of Stock");
       setMenuItems(prev => prev.map(m => m.id === itemId ? { ...m, is_available: !currentlyAvailable } : m));
@@ -240,9 +233,20 @@ const ChefKDS = () => {
     setTogglingItem(null);
   };
 
+  const handleVolumeChange = (val: number[]) => {
+    const v = val[0];
+    setVolume(v);
+    setNotificationVolume(v);
+  };
+
   const pending = tickets.filter(t => t.status === "pending");
   const preparing = tickets.filter(t => t.status === "preparing");
   const ready = tickets.filter(t => t.status === "ready");
+
+  const filteredTickets = orderFilter === "all" ? tickets
+    : orderFilter === "pending" ? pending
+    : orderFilter === "preparing" ? preparing
+    : ready;
 
   const getElapsedMin = (createdAt: string) => Math.floor((now - new Date(createdAt).getTime()) / 60000);
   const isUrgent = (createdAt: string) => (now - new Date(createdAt).getTime()) > URGENT_THRESHOLD_MS;
@@ -260,72 +264,101 @@ const ChefKDS = () => {
     const tableNum = tables[ticket.table_id] || "?";
     const waiterName = ticket.assigned_waiter_id ? (waiters[ticket.assigned_waiter_id] || "Waiter") : "";
 
-    const borderClass = ticket.status === "ready"
-      ? "glow-border-ready"
+    const statusColor = ticket.status === "ready"
+      ? "border-l-4 border-l-emerald-500"
       : ticket.status === "preparing"
-        ? "glow-border-preparing"
+        ? "border-l-4 border-l-amber-500"
         : urgent
-          ? "animate-pulse-glow border-destructive"
-          : "glow-border-pending";
+          ? "border-l-4 border-l-destructive animate-pulse"
+          : "border-l-4 border-l-red-400";
 
     return (
       <motion.div
         layout
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className={`glass-card p-4 space-y-3 ${borderClass} ${urgent && ticket.status === "pending" ? "animate-pulse-glow" : ""}`}
+        className={`bg-card rounded-2xl p-5 shadow-lg space-y-3 ${statusColor}`}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-foreground">T-{tableNum}</span>
-            {waiterName && <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">by {waiterName}</span>}
-            {urgent && ticket.status !== "ready" && (
-              <Badge className="bg-destructive text-destructive-foreground text-[10px] animate-pulse gap-1">
-                <AlertTriangle className="h-3 w-3" /> URGENT
+        {/* Table number - VERY LARGE */}
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="text-4xl md:text-5xl font-black text-foreground leading-none">
+              T-{tableNum}
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              {waiterName && (
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  by {waiterName}
+                </span>
+              )}
+              <Badge
+                className={`text-xs ${
+                  ticket.status === "pending" ? "bg-red-500/10 text-red-500 border-red-500/30" :
+                  ticket.status === "preparing" ? "bg-amber-500/10 text-amber-600 border-amber-500/30" :
+                  "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                }`}
+                variant="outline"
+              >
+                {ticket.status.toUpperCase()}
               </Badge>
-            )}
+              {urgent && ticket.status === "pending" && (
+                <Badge className="bg-destructive text-destructive-foreground text-xs animate-pulse gap-1">
+                  <AlertTriangle className="h-3 w-3" /> URGENT
+                </Badge>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock className="h-3.5 w-3.5" />
-            <span className={`font-mono ${urgent ? "text-destructive font-bold" : ""}`}>
+
+          {/* Timer */}
+          <div className={`text-right ${urgent ? "text-destructive" : "text-muted-foreground"}`}>
+            <Clock className="h-5 w-5 inline-block mb-0.5" />
+            <div className={`text-2xl font-mono font-bold ${urgent ? "text-destructive" : ""}`}>
               {ticket.status === "preparing" && ticket.started_at
-                ? `🔥 ${formatTimer(ticket.started_at)}`
+                ? formatTimer(ticket.started_at)
                 : `${elapsed}m`}
-            </span>
+            </div>
+            {ticket.status === "preparing" && (
+              <span className="text-[10px] text-amber-500">🔥 cooking</span>
+            )}
           </div>
         </div>
 
-        <div className="space-y-1.5">
+        {/* Items list */}
+        <div className="space-y-1.5 border-t border-border pt-3">
           {kotItems.map(item => (
             <div key={item.id} className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-foreground">{item.quantity}×</span>
-                  <span className="text-sm text-foreground truncate">{item.name}</span>
+                  <span className="text-lg font-bold text-primary">{item.quantity}×</span>
+                  <span className="text-base font-medium text-foreground">{item.name}</span>
                 </div>
                 {item.special_instructions && (
-                  <p className="text-[11px] text-warning italic ml-6">⚠ {item.special_instructions}</p>
+                  <p className="text-sm text-amber-600 italic ml-8 font-medium">⚠ {item.special_instructions}</p>
                 )}
               </div>
             </div>
           ))}
+          {kotItems.length === 0 && (
+            <p className="text-sm text-muted-foreground">Loading items...</p>
+          )}
         </div>
 
+        {/* Action buttons */}
         <div className="flex gap-2 pt-1">
           {ticket.status === "pending" && (
-            <Button size="sm" className="flex-1 h-9 gradient-btn-primary" onClick={() => updateStatus(ticket.id, "preparing")}>
-              <Flame className="h-4 w-4 mr-1" /> Start Cooking
+            <Button size="lg" className="flex-1 h-12 text-base font-bold bg-amber-500 hover:bg-amber-600 text-white" onClick={() => updateStatus(ticket.id, "preparing")}>
+              <Flame className="h-5 w-5 mr-2" /> START COOKING
             </Button>
           )}
           {ticket.status === "preparing" && (
-            <Button size="sm" className="flex-1 h-9 bg-success hover:bg-success/90 text-success-foreground" onClick={() => updateStatus(ticket.id, "ready")}>
-              <CheckCircle2 className="h-4 w-4 mr-1" /> Mark Ready
+            <Button size="lg" className="flex-1 h-12 text-base font-bold bg-emerald-500 hover:bg-emerald-600 text-white" onClick={() => updateStatus(ticket.id, "ready")}>
+              <CheckCircle2 className="h-5 w-5 mr-2" /> MARK READY
             </Button>
           )}
           {ticket.status === "ready" && (
-            <Button size="sm" variant="outline" className="flex-1 h-9" onClick={() => dismissReady(ticket.id)}>
-              <CheckCircle2 className="h-4 w-4 mr-1" /> Served
+            <Button size="lg" variant="outline" className="flex-1 h-12 text-base font-bold" onClick={() => dismissReady(ticket.id)}>
+              <CheckCircle2 className="h-5 w-5 mr-2" /> SERVED
             </Button>
           )}
         </div>
@@ -340,20 +373,35 @@ const ChefKDS = () => {
   const userInitials = userName.slice(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-screen mesh-gradient-bg p-4 md:p-6">
+    <div className="min-h-screen bg-background p-3 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl gradient-btn-primary flex items-center justify-center">
-            <ChefHat className="h-5 w-5 text-white" />
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+            <ChefHat className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-foreground">Kitchen Display</h1>
-            <p className="text-xs text-muted-foreground">{tickets.length} active ticket{tickets.length !== 1 ? "s" : ""}</p>
+            <p className="text-xs text-muted-foreground">
+              {pending.length} pending · {preparing.length} cooking · {ready.length} ready
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => activeTab === "orders" ? fetchData() : fetchIngredients()} className="glass-card">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Volume control */}
+          <div className="flex items-center gap-2 bg-card rounded-xl px-3 py-1.5 border border-border">
+            {volume === 0 ? <VolumeX className="h-4 w-4 text-muted-foreground" /> : <Volume2 className="h-4 w-4 text-muted-foreground" />}
+            <Slider
+              value={[volume]}
+              min={0} max={1} step={0.1}
+              onValueChange={handleVolumeChange}
+              className="w-20"
+            />
+          </div>
+
+          <NotificationBell />
+
+          <Button variant="outline" size="sm" onClick={() => activeTab === "orders" ? fetchData() : fetchIngredients()}>
             <RefreshCw className="h-4 w-4 mr-1" /> Refresh
           </Button>
           <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-secondary/60 transition-colors">
@@ -369,7 +417,7 @@ const ChefKDS = () => {
       </div>
 
       {/* Profile Bar */}
-      <div className="glass-card p-3 mb-4 flex items-center justify-between">
+      <div className="bg-card border border-border rounded-xl p-3 mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <User className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium text-foreground">{userName}</span>
@@ -380,7 +428,7 @@ const ChefKDS = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="glass-card">
+        <TabsList className="bg-card border border-border">
           <TabsTrigger value="orders" className="gap-1.5">
             <ChefHat className="h-4 w-4" /> Orders
             {tickets.length > 0 && <Badge variant="secondary" className="text-[10px] ml-1">{tickets.length}</Badge>}
@@ -395,53 +443,47 @@ const ChefKDS = () => {
 
         {/* Orders Tab */}
         <TabsContent value="orders">
+          {/* Filter bar */}
+          <div className="flex items-center gap-2 mb-4 flex-wrap">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            {(["all", "pending", "preparing", "ready"] as const).map(f => (
+              <button
+                key={f}
+                onClick={() => setOrderFilter(f)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  orderFilter === f
+                    ? f === "pending" ? "bg-red-500 text-white"
+                    : f === "preparing" ? "bg-amber-500 text-white"
+                    : f === "ready" ? "bg-emerald-500 text-white"
+                    : "bg-primary text-primary-foreground"
+                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                }`}
+              >
+                {f.charAt(0).toUpperCase() + f.slice(1)}
+                {f === "pending" && pending.length > 0 && ` (${pending.length})`}
+                {f === "preparing" && preparing.length > 0 && ` (${preparing.length})`}
+                {f === "ready" && ready.length > 0 && ` (${ready.length})`}
+                {f === "all" && tickets.length > 0 && ` (${tickets.length})`}
+              </button>
+            ))}
+          </div>
+
           {loading ? (
             <div className="flex min-h-[40vh] items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
             </div>
+          ) : filteredTickets.length === 0 ? (
+            <div className="text-center py-20">
+              <ChefHat className="h-16 w-16 mx-auto mb-4 text-muted-foreground/20" />
+              <p className="text-lg text-muted-foreground">
+                {orderFilter === "all" ? "No active orders. Kitchen is clear!" : `No ${orderFilter} orders`}
+              </p>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 px-1">
-                  <div className="w-3 h-3 rounded-full bg-warning" />
-                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Pending</h2>
-                  <Badge variant="secondary" className="text-[10px]">{pending.length}</Badge>
-                </div>
-                <AnimatePresence>
-                  {pending.map(t => <KotCard key={t.id} ticket={t} />)}
-                </AnimatePresence>
-                {pending.length === 0 && (
-                  <div className="glass-card p-8 text-center text-sm text-muted-foreground">No pending orders</div>
-                )}
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 px-1">
-                  <div className="w-3 h-3 rounded-full bg-primary" />
-                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Preparing</h2>
-                  <Badge variant="secondary" className="text-[10px]">{preparing.length}</Badge>
-                </div>
-                <AnimatePresence>
-                  {preparing.map(t => <KotCard key={t.id} ticket={t} />)}
-                </AnimatePresence>
-                {preparing.length === 0 && (
-                  <div className="glass-card p-8 text-center text-sm text-muted-foreground">None cooking</div>
-                )}
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 px-1">
-                  <div className="w-3 h-3 rounded-full bg-success" />
-                  <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">Ready</h2>
-                  <Badge variant="secondary" className="text-[10px]">{ready.length}</Badge>
-                </div>
-                <AnimatePresence>
-                  {ready.map(t => <KotCard key={t.id} ticket={t} />)}
-                </AnimatePresence>
-                {ready.length === 0 && (
-                  <div className="glass-card p-8 text-center text-sm text-muted-foreground">Nothing ready yet</div>
-                )}
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <AnimatePresence>
+                {filteredTickets.map(t => <KotCard key={t.id} ticket={t} />)}
+              </AnimatePresence>
             </div>
           )}
         </TabsContent>
@@ -454,19 +496,18 @@ const ChefKDS = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Ingredient Stock Levels */}
               <div className="space-y-3">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2 px-1">
                   <Package className="h-4 w-4 text-primary" /> Ingredient Stock
                 </h2>
                 {ingredients.length === 0 ? (
-                  <div className="glass-card p-8 text-center text-sm text-muted-foreground">No ingredients configured</div>
+                  <div className="bg-card border border-border rounded-xl p-8 text-center text-sm text-muted-foreground">No ingredients configured</div>
                 ) : (
                   <div className="space-y-2">
                     {ingredients.map(ing => {
                       const isLow = ing.current_stock <= ing.min_threshold;
                       return (
-                        <div key={ing.id} className={`glass-card p-3 flex items-center justify-between ${isLow ? "border-destructive/50 border" : ""}`}>
+                        <div key={ing.id} className={`bg-card border rounded-xl p-3 flex items-center justify-between ${isLow ? "border-destructive/50" : "border-border"}`}>
                           <div>
                             <p className="text-sm font-medium text-foreground">{ing.name}</p>
                             <p className="text-xs text-muted-foreground">{ing.current_stock} {ing.unit} remaining</p>
@@ -483,18 +524,17 @@ const ChefKDS = () => {
                 )}
               </div>
 
-              {/* Menu Item OOS Toggle */}
               <div className="space-y-3">
                 <h2 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2 px-1">
                   <XCircle className="h-4 w-4 text-destructive" /> Menu Availability
                   {oosMenuItems.length > 0 && <Badge className="bg-destructive text-destructive-foreground text-[10px]">{oosMenuItems.length} OOS</Badge>}
                 </h2>
                 {menuItems.length === 0 ? (
-                  <div className="glass-card p-8 text-center text-sm text-muted-foreground">No menu items found</div>
+                  <div className="bg-card border border-border rounded-xl p-8 text-center text-sm text-muted-foreground">No menu items found</div>
                 ) : (
                   <div className="space-y-2 max-h-[60vh] overflow-y-auto">
                     {menuItems.map(item => (
-                      <div key={item.id} className={`glass-card p-3 flex items-center justify-between ${!item.is_available ? "border-destructive/40 border opacity-70" : ""}`}>
+                      <div key={item.id} className={`bg-card border rounded-xl p-3 flex items-center justify-between ${!item.is_available ? "border-destructive/40 opacity-70" : "border-border"}`}>
                         <div className="flex items-center gap-2 min-w-0">
                           <span className={`text-sm font-medium truncate ${!item.is_available ? "line-through text-muted-foreground" : "text-foreground"}`}>
                             {item.name}
