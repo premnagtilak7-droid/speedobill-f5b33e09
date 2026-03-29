@@ -150,11 +150,23 @@ const Tables = () => {
 
   useEffect(() => { void fetchSetupData(); }, [fetchSetupData]);
 
-  // Fetch chefs for KDS assignment
+  // Fetch chefs for KDS assignment — use user_roles as source of truth
   useEffect(() => {
     if (!hotelId) return;
-    supabase.from("profiles").select("user_id, full_name").eq("hotel_id", hotelId).eq("role", "chef").eq("is_active", true)
-      .then(({ data }) => { if (data) setChefs(data as ChefProfile[]); });
+    (async () => {
+      // 1. Get all user_ids with chef role
+      const { data: roleRows } = await supabase.from("user_roles").select("user_id").eq("role", "chef");
+      if (!roleRows || roleRows.length === 0) { setChefs([]); return; }
+      const chefUserIds = roleRows.map(r => r.user_id);
+      // 2. Get their profiles that belong to this hotel and are active
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .eq("hotel_id", hotelId)
+        .eq("is_active", true)
+        .in("user_id", chefUserIds);
+      setChefs((profiles || []) as ChefProfile[]);
+    })();
   }, [hotelId]);
 
   // Fetch counter billing setting
