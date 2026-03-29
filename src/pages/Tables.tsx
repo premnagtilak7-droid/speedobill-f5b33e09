@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { ChefHat } from "lucide-react";
 import { toast } from "sonner";
+import TableMapSkeleton from "@/components/skeletons/TableMapSkeleton";
 
 /* ────────── types ────────── */
 interface Table { id: string; table_number: number; capacity: number; status: string; section_name: string; }
