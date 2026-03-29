@@ -51,8 +51,8 @@ const CustomersPage = () => {
     if (!hotelId) return;
     const [custRes, fbRes, loyaltyRes] = await Promise.all([
       supabase.from("customers").select("*").eq("hotel_id", hotelId).order("created_at", { ascending: false }),
-      supabase.from("customer_feedback" as any).select("*").eq("hotel_id", hotelId).order("created_at", { ascending: false }),
-      supabase.from("hotel_loyalty_configs" as any).select("*").eq("hotel_id", hotelId).maybeSingle(),
+      supabase.from("customer_feedback").select("*").eq("hotel_id", hotelId).order("created_at", { ascending: false }),
+      supabase.from("hotel_loyalty_configs").select("*").eq("hotel_id", hotelId).maybeSingle(),
     ]);
     setCustomers(custRes.data || []);
     setFeedback((fbRes.data as any[]) || []);
@@ -64,7 +64,7 @@ const CustomersPage = () => {
     setSelectedCustomer(customer);
     const [ordersRes, fbRes] = await Promise.all([
       supabase.from("orders").select("*, order_items(*)").eq("hotel_id", hotelId!).eq("customer_id", customer.id).order("created_at", { ascending: false }).limit(50),
-      supabase.from("customer_feedback" as any).select("*").eq("customer_id", customer.id).order("created_at", { ascending: false }),
+      supabase.from("customer_feedback").select("*").eq("customer_id", customer.id).order("created_at", { ascending: false }),
     ]);
     setCustomerOrders(ordersRes.data || []);
     setCustomerFeedback((fbRes.data as any[]) || []);
@@ -87,7 +87,7 @@ const CustomersPage = () => {
 
   const addFeedback = async () => {
     if (!selectedCustomer || !hotelId) return;
-    const { error } = await supabase.from("customer_feedback" as any).insert({
+    const { error } = await supabase.from("customer_feedback").insert({
       hotel_id: hotelId,
       customer_id: selectedCustomer.id,
       rating: Number(feedbackForm.rating),

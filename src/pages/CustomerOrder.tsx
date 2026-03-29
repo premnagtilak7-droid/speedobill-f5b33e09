@@ -227,11 +227,14 @@ const CustomerOrder = () => {
     return new Set(menu.filter((m) => lowerMoodCats.includes(m.category.toLowerCase())).map((m) => m.id));
   }, [selectedMood, menu]);
 
-  const addToCart = (item: MenuItem) => {
+  const addToCart = (item: MenuItem, variantLabel?: string, variantPrice?: number) => {
+    const cartId = variantLabel ? `${item.id}_${variantLabel}` : item.id;
+    const cartName = variantLabel ? `${item.name} (${variantLabel})` : item.name;
+    const cartPrice = variantPrice ?? item.price;
     setCart((prev) => {
-      const existing = prev.find((c) => c.id === item.id);
-      if (existing) return prev.map((c) => c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c);
-      return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1 }];
+      const existing = prev.find((c) => c.id === cartId);
+      if (existing) return prev.map((c) => c.id === cartId ? { ...c, quantity: c.quantity + 1 } : c);
+      return [...prev, { id: cartId, name: cartName, price: cartPrice, quantity: 1 }];
     });
   };
 
@@ -443,13 +446,13 @@ const CustomerOrder = () => {
             </div>
           ) : (
             filteredMenu.map((item) => {
-              const cartItem = cart.find((c) => c.id === item.id);
+              const variants = Array.isArray(item.price_variants) && item.price_variants.length > 0 ? item.price_variants : null;
               const isMoodHighlighted = moodHighlightedIds.has(item.id);
               return (
                 <motion.div
                   key={item.id}
                   layout
-                  className={`flex items-center gap-3 p-3 rounded-2xl border shadow-sm transition-all ${
+                  className={`relative p-3 rounded-2xl border shadow-sm transition-all ${
                     isMoodHighlighted
                       ? "bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-orange-300 dark:border-orange-700 ring-1 ring-orange-200 dark:ring-orange-800"
                       : "bg-white dark:bg-gray-800 border-orange-100 dark:border-gray-700"
@@ -460,38 +463,81 @@ const CustomerOrder = () => {
                       <span className="text-xs">⭐</span>
                     </div>
                   )}
-                  {item.image_url ? (
-                    <img src={item.image_url} alt={item.name} className="w-16 h-16 rounded-xl object-cover" />
-                  ) : (
-                    <div className="w-16 h-16 rounded-xl bg-orange-100 dark:bg-gray-700 flex items-center justify-center">
-                      <UtensilsCrossed className="h-6 w-6 text-orange-400" />
+                  <div className="flex items-center gap-3">
+                    {item.image_url ? (
+                      <img src={item.image_url} alt={item.name} className="w-16 h-16 rounded-xl object-cover" />
+                    ) : (
+                      <div className="w-16 h-16 rounded-xl bg-orange-100 dark:bg-gray-700 flex items-center justify-center shrink-0">
+                        <UtensilsCrossed className="h-6 w-6 text-orange-400" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{item.name}</p>
+                      <p className="text-xs text-muted-foreground">{item.category}</p>
+                      {!variants && (
+                        <p className="text-sm font-bold text-orange-600 dark:text-orange-400 mt-0.5">₹{item.price}</p>
+                      )}
+                    </div>
+                    {/* No-variant: simple ADD / qty buttons */}
+                    {!variants && (() => {
+                      const cartItem = cart.find((c) => c.id === item.id);
+                      return (
+                        <div className="flex items-center gap-1">
+                          {cartItem ? (
+                            <div className="flex items-center gap-1 bg-orange-50 dark:bg-orange-900/30 rounded-xl px-1">
+                              <button onClick={() => updateQty(item.id, -1)} className="p-1.5 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-800 active:scale-90">
+                                <Minus className="h-4 w-4 text-orange-600" />
+                              </button>
+                              <span className="w-6 text-center text-sm font-bold">{cartItem.quantity}</span>
+                              <button onClick={() => updateQty(item.id, 1)} className="p-1.5 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-800 active:scale-90">
+                                <Plus className="h-4 w-4 text-orange-600" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => addToCart(item)}
+                              className="px-3 py-1.5 text-xs font-semibold bg-orange-500 text-white rounded-xl hover:bg-orange-600 active:scale-95 transition-all"
+                            >
+                              ADD
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                  {/* Price variants: show Half/Full buttons */}
+                  {variants && (
+                    <div className="flex gap-2 mt-2 pl-[76px]">
+                      {variants.map((v: any) => {
+                        const variantCartId = `${item.id}_${v.label}`;
+                        const cartItem = cart.find((c) => c.id === variantCartId);
+                        return (
+                          <div key={v.label} className="flex flex-col items-center gap-1">
+                            <span className="text-[10px] text-muted-foreground font-medium">{v.label}</span>
+                            <span className="text-xs font-bold text-orange-600 dark:text-orange-400">₹{v.price}</span>
+                            {cartItem ? (
+                              <div className="flex items-center gap-0.5 bg-orange-50 dark:bg-orange-900/30 rounded-lg px-0.5">
+                                <button onClick={() => updateQty(variantCartId, -1)} className="p-1 active:scale-90">
+                                  <Minus className="h-3 w-3 text-orange-600" />
+                                </button>
+                                <span className="w-4 text-center text-xs font-bold">{cartItem.quantity}</span>
+                                <button onClick={() => updateQty(variantCartId, 1)} className="p-1 active:scale-90">
+                                  <Plus className="h-3 w-3 text-orange-600" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => addToCart(item, v.label, v.price)}
+                                className="px-2.5 py-1 text-[10px] font-semibold bg-orange-500 text-white rounded-lg hover:bg-orange-600 active:scale-95 transition-all"
+                              >
+                                ADD
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate">{item.name}</p>
-                    <p className="text-xs text-muted-foreground">{item.category}</p>
-                    <p className="text-sm font-bold text-orange-600 dark:text-orange-400 mt-0.5">₹{item.price}</p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {cartItem ? (
-                      <div className="flex items-center gap-1 bg-orange-50 dark:bg-orange-900/30 rounded-xl px-1">
-                        <button onClick={() => updateQty(item.id, -1)} className="p-1.5 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-800 active:scale-90">
-                          <Minus className="h-4 w-4 text-orange-600" />
-                        </button>
-                        <span className="w-6 text-center text-sm font-bold">{cartItem.quantity}</span>
-                        <button onClick={() => updateQty(item.id, 1)} className="p-1.5 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-800 active:scale-90">
-                          <Plus className="h-4 w-4 text-orange-600" />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => addToCart(item)}
-                        className="px-3 py-1.5 text-xs font-semibold bg-orange-500 text-white rounded-xl hover:bg-orange-600 active:scale-95 transition-all"
-                      >
-                        ADD
-                      </button>
-                    )}
-                  </div>
                 </motion.div>
               );
             })
