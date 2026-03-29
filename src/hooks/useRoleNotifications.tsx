@@ -2,7 +2,7 @@
  * Role-based real-time notification system.
  * - Chef: new KOT tickets → loud bell + browser notification
  * - Waiter: order marked "ready" → soft ding + browser notification
- * - Owner: high-value bills (>₹500) + void requests → warning tone + browser notification
+ * - Owner: payment received → payment sound, voids → warning, license expiry → info
  */
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import {
   playLoudBell,
   playSoftDing,
   playWarningTone,
+  playPaymentSound,
   sendBrowserNotif,
 } from "@/lib/notification-sounds";
 
