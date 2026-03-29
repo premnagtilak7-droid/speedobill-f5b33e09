@@ -514,7 +514,15 @@ const Tables = () => {
           if (insertKotItemsError) throw insertKotItemsError;
         }
       }
-      toast.success(sendToKds ? "Sent to KDS ✓" : "Order saved ✓");
+      if (sendToKds && !assignedChefId && chefs.length === 0) {
+        toast.warning("No chef is linked to this hotel yet. Order was sent as unassigned KDS.");
+      }
+
+      const assignedChefName = assignedChefId
+        ? chefs.find((chef) => chef.user_id === assignedChefId)?.full_name || "Chef"
+        : null;
+
+      toast.success(sendToKds ? (assignedChefName ? `Sent to ${assignedChefName} ✓` : "Sent to KDS ✓") : "Order saved ✓");
       // Update seat flags
       setSeatFlags((prev) => ({ ...prev, [tableSplit]: true }));
       await fetchTables();
@@ -958,7 +966,10 @@ const Tables = () => {
                             </Button>
                             <Button size="sm" variant="outline" className="h-9" onClick={() => {
                               if (chefs.length > 0) setChefPickerOpen(true);
-                              else void persistOrder(true);
+                              else {
+                                toast.warning("No active chef is linked to this hotel. Sending order as unassigned.");
+                                void persistOrder(true);
+                              }
                             }} disabled={savingMode !== null || !orderItems.length}>
                               <Send className="mr-1 h-3.5 w-3.5" /> KDS
                             </Button>

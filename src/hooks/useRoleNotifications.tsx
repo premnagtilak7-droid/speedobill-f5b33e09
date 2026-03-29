@@ -4,9 +4,10 @@
  * - Waiter: order marked "ready" → soft ding + browser notification
  * - Owner: high-value bills (>₹500) + void requests → warning tone + browser notification
  */
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 import {
   playLoudBell,
   playSoftDing,
@@ -34,9 +35,24 @@ function emit(notif: AppNotification) {
   notifListeners.forEach((cb) => cb(notif));
 }
 
+function pushNotification(notif: AppNotification) {
+  emit(notif);
+
+  if (notif.type === "ready") {
+    toast.success(notif.title, { description: notif.body, duration: 4000 });
+    return;
+  }
+
+  if (notif.type === "void" || notif.type === "bill") {
+    toast.warning(notif.title, { description: notif.body, duration: 4500 });
+    return;
+  }
+
+  toast.info(notif.title, { description: notif.body, duration: 4000 });
+}
+
 export function useRoleNotifications() {
   const { hotelId, role, user } = useAuth();
-  const initialLoadDone = useRef(false);
 
   // ── Chef: new KOT tickets ──
   useEffect(() => {
@@ -63,7 +79,7 @@ export function useRoleNotifications() {
               `Table ${tableNum} has a new order!`,
               `kot-${kot.id}`
             );
-            emit({
+            pushNotification({
               id: kot.id,
               title: "New Order",
               body: `Table ${tableNum} — new order received`,
@@ -98,7 +114,7 @@ export function useRoleNotifications() {
             `Table ${tableNum} was assigned to you!`,
             `kot-assigned-${nextRow.id}`
           );
-          emit({
+          pushNotification({
             id: nextRow.id,
             title: "Assigned Order",
             body: `Table ${tableNum} was assigned to you`,
@@ -151,7 +167,7 @@ export function useRoleNotifications() {
                 `Table ${tableNum} — food is ready for pickup`,
                 `ready-${newRow.id}`
               );
-              emit({
+              pushNotification({
                 id: newRow.id,
                 title: "Order Ready",
                 body: `Table ${tableNum} — food is ready!`,
@@ -185,7 +201,7 @@ export function useRoleNotifications() {
               `Table ${sc.table_number} needs ${isWater ? "water" : "assistance"}!`,
               `service-${sc.id}`
             );
-            emit({
+            pushNotification({
               id: sc.id,
               title: isWater ? "Water Request" : "Call Waiter",
               body: `Table ${sc.table_number} needs ${isWater ? "water" : "assistance"}`,
@@ -218,7 +234,7 @@ export function useRoleNotifications() {
             `${v.item_name} (₹${v.item_price}) voided — ${v.reason}`,
             `void-${v.id}`
           );
-          emit({
+          pushNotification({
             id: v.id,
             title: "Void Request",
             body: `${v.item_name} (₹${v.item_price}) — ${v.reason}`,
@@ -244,7 +260,7 @@ export function useRoleNotifications() {
               `₹${Number(o.total).toFixed(0)} bill saved`,
               `bill-${o.id}`
             );
-            emit({
+            pushNotification({
               id: o.id,
               title: "Bill Saved",
               body: `₹${Number(o.total).toFixed(0)} bill completed`,
@@ -271,7 +287,7 @@ export function useRoleNotifications() {
               `Table ${co.table_number} — ₹${Number(co.total_amount).toFixed(0)}`,
               `cust-order-${co.id}`
             );
-            emit({
+            pushNotification({
               id: co.id,
               title: "Customer QR Order",
               body: `Table ${co.table_number} placed ₹${Number(co.total_amount).toFixed(0)} order`,

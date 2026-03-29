@@ -80,12 +80,15 @@ function resolveSubscription(
   if (hotel && hotel.subscription_tier && hotel.subscription_tier !== "free") {
     const tier = hotel.subscription_tier;
     const expiry = hotel.subscription_expiry;
-    const daysLeft = expiry
-      ? Math.max(0, Math.ceil((new Date(expiry).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
-      : null;
 
-    if (daysLeft === null || daysLeft > 0) {
-      return { status: "active", daysLeft, plan: tier, expiresAt: expiry };
+    if (expiry) {
+      const daysLeft = Math.max(0, Math.ceil((new Date(expiry).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+
+      if (daysLeft > 0) {
+        return { status: "active", daysLeft, plan: tier, expiresAt: expiry };
+      }
+
+      return { status: "free", daysLeft: 0, plan: null, expiresAt: null };
     }
   }
 
