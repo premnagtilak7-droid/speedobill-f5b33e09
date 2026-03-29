@@ -268,14 +268,14 @@ const Auth = () => {
 
                 {mode === "login" && (
                   <div className="space-y-1">
-                    <label className="text-sm font-bold text-foreground">Hotel Code (staff only)</label>
+                    <label className="text-sm font-bold text-foreground">Hotel Code <span className="text-xs font-normal text-muted-foreground">(required for staff)</span></label>
                     <Input
-                      placeholder="Enter once if waiter/chef login asks again"
+                      placeholder="e.g. QB-1234"
                       value={hotelCode}
                       onChange={e => setHotelCode(e.target.value.toUpperCase())}
                       className="h-11 bg-secondary/50 border-border"
                     />
-                    <p className="text-xs text-muted-foreground">Owners can leave this blank. Waiters, chefs, and managers can enter their valid hotel code here to reconnect older accounts.</p>
+                    <p className="text-xs text-muted-foreground">Owners leave blank. Waiters, chefs & managers must enter their hotel code.</p>
                   </div>
                 )}
 
