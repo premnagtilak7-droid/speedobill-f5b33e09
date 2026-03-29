@@ -174,6 +174,8 @@ const chefBottomNav: NavItem[] = [
   { label: "Kitchen", icon: ChefHat, path: "/kitchen" },
 ];
 
+const SIDEBAR_SCROLL_KEY = "qb-sidebar-scroll";
+
 const AppLayout = () => {
   const { signOut, role, user, hotelId } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -184,9 +186,19 @@ const AppLayout = () => {
   const [counterBillingEnabled, setCounterBillingEnabled] = useState(false);
   const navScrollRef = useRef<HTMLDivElement>(null);
   const sidebarScrollTopRef = useRef(0);
+  const sidebarScrollStorageKey = `${SIDEBAR_SCROLL_KEY}:${role ?? "guest"}`;
 
   useRoleNotifications();
   useIncomingOrders();
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(sidebarScrollStorageKey);
+      sidebarScrollTopRef.current = saved ? Number(saved) || 0 : 0;
+    } catch {
+      sidebarScrollTopRef.current = 0;
+    }
+  }, [sidebarScrollStorageKey]);
 
   // Fetch counter billing setting once
   useEffect(() => {
@@ -223,16 +235,40 @@ const AppLayout = () => {
   const handleNav = useCallback((path: string, onClick?: () => void) => {
     if (navScrollRef.current) {
       sidebarScrollTopRef.current = navScrollRef.current.scrollTop;
+      try {
+        sessionStorage.setItem(sidebarScrollStorageKey, String(sidebarScrollTopRef.current));
+      } catch {}
     }
     navigate(path);
     onClick?.();
-  }, [navigate]);
+  }, [navigate, sidebarScrollStorageKey]);
 
   useEffect(() => {
-    if (navScrollRef.current) {
-      navScrollRef.current.scrollTop = sidebarScrollTopRef.current;
-    }
-  }, [location.pathname]);
+    const navElement = navScrollRef.current;
+    if (!navElement) return;
+
+    const persistScroll = () => {
+      sidebarScrollTopRef.current = navElement.scrollTop;
+      try {
+        sessionStorage.setItem(sidebarScrollStorageKey, String(navElement.scrollTop));
+      } catch {}
+    };
+
+    persistScroll();
+    navElement.addEventListener("scroll", persistScroll, { passive: true });
+    return () => navElement.removeEventListener("scroll", persistScroll);
+  }, [sidebarOpen, collapsed, sidebarScrollStorageKey]);
+
+  useEffect(() => {
+    if (!navScrollRef.current) return;
+
+    const savedScroll = sidebarScrollTopRef.current;
+    requestAnimationFrame(() => {
+      if (navScrollRef.current) {
+        navScrollRef.current.scrollTop = savedScroll;
+      }
+    });
+  }, [location.pathname, sidebarOpen, collapsed]);
 
   const renderNavButton = (item: NavItem, onClick: (() => void) | undefined, isActive: boolean, isCollapsed: boolean) => (
     <button

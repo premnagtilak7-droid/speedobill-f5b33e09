@@ -18,14 +18,12 @@ export async function ensureUserAccessContext(
   userId: string,
   _currentUser: any
 ): Promise<AccessContext> {
-  const [profileResult, userRoleResult] = await Promise.all([
+  const [profilesResult, userRoleResult] = await Promise.all([
     supabase
       .from("profiles")
-      .select("role, hotel_id")
+      .select("id, role, hotel_id, created_at")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle(),
+      .order("created_at", { ascending: false }),
     supabase
       .from("user_roles")
       .select("role")
@@ -35,10 +33,11 @@ export async function ensureUserAccessContext(
       .maybeSingle(),
   ]);
 
-  if (profileResult.error) throw profileResult.error;
+  if (profilesResult.error) throw profilesResult.error;
   if (userRoleResult.error) throw userRoleResult.error;
 
-  const profile = profileResult.data;
+  const profileRows = profilesResult.data ?? [];
+  const profile = profileRows.find((row) => row.hotel_id) ?? profileRows[0] ?? null;
   let resolvedRole = userRoleResult.data?.role as AppRole | null;
   const metadataRole = _currentUser?.user_metadata?.role as string | undefined;
 

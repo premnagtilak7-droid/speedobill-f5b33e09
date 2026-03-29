@@ -48,7 +48,7 @@ export function useRoleNotifications() {
         { event: "INSERT", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` },
         async (payload) => {
           const kot = payload.new as any;
-          if (kot.status === "pending") {
+          if (kot.status === "pending" && (!kot.assigned_chef_id || kot.assigned_chef_id === user?.id)) {
             // Get table number
             const { data: tbl } = await supabase
               .from("restaurant_tables")
@@ -73,10 +73,44 @@ export function useRoleNotifications() {
           }
         }
       )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` },
+        async (payload) => {
+          const nextRow = payload.new as any;
+          const prevRow = payload.old as any;
+          const becameVisibleToMe = nextRow.status === "pending"
+            && nextRow.assigned_chef_id === user?.id
+            && prevRow?.assigned_chef_id !== user?.id;
+
+          if (!becameVisibleToMe) return;
+
+          const { data: tbl } = await supabase
+            .from("restaurant_tables")
+            .select("table_number")
+            .eq("id", nextRow.table_id)
+            .maybeSingle();
+          const tableNum = tbl?.table_number || "?";
+
+          playLoudBell();
+          sendBrowserNotif(
+            "🔔 Assigned Order — Kitchen",
+            `Table ${tableNum} was assigned to you!`,
+            `kot-assigned-${nextRow.id}`
+          );
+          emit({
+            id: nextRow.id,
+            title: "Assigned Order",
+            body: `Table ${tableNum} was assigned to you`,
+            type: "order",
+            createdAt: Date.now(),
+          });
+        }
+      )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [hotelId, role]);
+  }, [hotelId, role, user?.id]);
 
   // ── Waiter: order marked "ready" ──
   useEffect(() => {
