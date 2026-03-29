@@ -136,7 +136,6 @@ const AppRoutes = () => {
         <Route path="/terms" element={<TermsConditions />} />
         <Route path="/support" element={<SupportPage />} />
         <Route path="/order/:tableId" element={<CustomerOrder />} />
-        <Route path="/kds" element={<ProtectedRoute requireActiveSubscription><RoleGuard allowed={["owner", "manager", "chef"]}><ChefKDS /></RoleGuard></ProtectedRoute>} />
         <Route path="/creator-admin" element={<ProtectedRoute><RoleGuard allowed={["owner"]} redirectTo="/tables"><CreatorAdmin /></RoleGuard></ProtectedRoute>} />
 
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
@@ -149,7 +148,8 @@ const AppRoutes = () => {
           <Route path="/tables" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><Tables /></RoleGuard>} />
           <Route path="/counter" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><CounterOrderPage /></RoleGuard>} />
           <Route path="/kitchen" element={<RoleGuard allowed={["owner", "manager"]}><KitchenView /></RoleGuard>} />
-          <Route path="/menu" element={<RoleGuard allowed={["owner", "manager"]}><MenuPage /></RoleGuard>} />
+          <Route path="/menu" element={<RoleGuard allowed={["owner", "manager", "waiter", "chef"]}><MenuPage /></RoleGuard>} />
+          <Route path="/kds" element={<RoleGuard allowed={["owner", "manager", "chef"]}><ChefKDS /></RoleGuard>} />
 
           {/* Owner + Manager shared routes */}
           <Route path="/dashboard" element={<RoleGuard allowed={["owner", "manager"]}><Dashboard /></RoleGuard>} />

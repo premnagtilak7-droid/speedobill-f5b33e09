@@ -144,6 +144,7 @@ const waiterSections: NavSection[] = [
     items: [
       { label: "Table Map", icon: Grid3X3, path: "/tables" },
       { label: "Order Entry", icon: Store, path: "/counter" },
+      { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
     ],
   },
   {
@@ -158,7 +159,13 @@ const chefSections: NavSection[] = [
   {
     title: "KITCHEN",
     items: [
-      { label: "Orders & Stock", icon: ChefHat, path: "/kds" },
+      { label: "Kitchen Display", icon: ChefHat, path: "/kds" },
+      { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
+    ],
+  },
+  {
+    title: "ACCOUNT",
+    items: [
       { label: "My Profile", icon: Users, path: "/staff-profile" },
     ],
   },
