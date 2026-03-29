@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   IndianRupee, ShoppingBag, Grid3X3, AlertTriangle,
   Plus, UtensilsCrossed, BarChart3, Wallet, ChefHat, Clock, Crown,
-  TrendingUp, TrendingDown, Bell, Check as CheckIcon, Package, Flame
+  TrendingUp, TrendingDown, Bell, Check as CheckIcon, Package, Flame, Receipt, Users
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
