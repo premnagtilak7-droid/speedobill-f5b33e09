@@ -55,6 +55,7 @@ const MenuPage = () => {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const { density, setDensity } = useGridDensity();
+  const [menuLoading, setMenuLoading] = useState(true);
 
   const allCategories = useMemo(() => [...DEFAULT_CATEGORIES, ...customCategories], [customCategories]);
   const fetchItems = useCallback(async () => {
