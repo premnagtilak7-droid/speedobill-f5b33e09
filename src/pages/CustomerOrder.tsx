@@ -227,11 +227,14 @@ const CustomerOrder = () => {
     return new Set(menu.filter((m) => lowerMoodCats.includes(m.category.toLowerCase())).map((m) => m.id));
   }, [selectedMood, menu]);
 
-  const addToCart = (item: MenuItem) => {
+  const addToCart = (item: MenuItem, variantLabel?: string, variantPrice?: number) => {
+    const cartId = variantLabel ? `${item.id}_${variantLabel}` : item.id;
+    const cartName = variantLabel ? `${item.name} (${variantLabel})` : item.name;
+    const cartPrice = variantPrice ?? item.price;
     setCart((prev) => {
-      const existing = prev.find((c) => c.id === item.id);
-      if (existing) return prev.map((c) => c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c);
-      return [...prev, { id: item.id, name: item.name, price: item.price, quantity: 1 }];
+      const existing = prev.find((c) => c.id === cartId);
+      if (existing) return prev.map((c) => c.id === cartId ? { ...c, quantity: c.quantity + 1 } : c);
+      return [...prev, { id: cartId, name: cartName, price: cartPrice, quantity: 1 }];
     });
   };
 
