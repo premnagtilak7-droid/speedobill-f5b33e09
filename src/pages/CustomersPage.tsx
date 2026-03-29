@@ -51,8 +51,8 @@ const CustomersPage = () => {
     if (!hotelId) return;
     const [custRes, fbRes, loyaltyRes] = await Promise.all([
       supabase.from("customers").select("*").eq("hotel_id", hotelId).order("created_at", { ascending: false }),
-      supabase.from("customer_feedback" as any).select("*").eq("hotel_id", hotelId).order("created_at", { ascending: false }),
-      supabase.from("hotel_loyalty_configs" as any).select("*").eq("hotel_id", hotelId).maybeSingle(),
+      supabase.from("customer_feedback").select("*").eq("hotel_id", hotelId).order("created_at", { ascending: false }),
+      supabase.from("hotel_loyalty_configs").select("*").eq("hotel_id", hotelId).maybeSingle(),
     ]);
     setCustomers(custRes.data || []);
     setFeedback((fbRes.data as any[]) || []);
