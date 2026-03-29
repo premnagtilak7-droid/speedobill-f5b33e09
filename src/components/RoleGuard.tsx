@@ -13,9 +13,18 @@ interface RoleGuardProps {
  * Waiters → /tables, Chefs → /kds, otherwise /dashboard.
  */
 const RoleGuard = ({ allowed, children, redirectTo }: RoleGuardProps) => {
-  const { role } = useAuth();
+  const { role, loading } = useAuth();
 
-  if (!role || !allowed.includes(role)) {
+  // Wait for role to resolve before deciding access
+  if (loading || !role) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!allowed.includes(role)) {
     const fallback =
       redirectTo ||
       (role === "waiter" ? "/tables" : role === "chef" ? "/kds" : role === "manager" || role === "owner" ? "/dashboard" : "/tables");
