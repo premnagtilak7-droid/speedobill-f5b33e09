@@ -17,7 +17,7 @@ const AUTH_CACHE_KEY = getScopedStorageKey("qb_auth_cache");
 const SUBSCRIPTION_CACHE_PREFIX = getScopedStoragePrefix("qb_sub_cache");
 const LEGACY_AUTH_CACHE_KEY = "qb_auth_cache";
 const LEGACY_SUBSCRIPTION_CACHE_PREFIX = "qb_sub_cache";
-const AUTH_CACHE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+const AUTH_CACHE_MAX_AGE = 12 * 60 * 60 * 1000; // 12 hours
 const AUTH_ERROR_TOAST_ID = "auth-account-load-error";
 
 interface CachedAuthData {

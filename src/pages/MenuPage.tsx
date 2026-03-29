@@ -87,6 +87,8 @@ const MenuPage = () => {
       }
     } catch (err: any) {
       toast.error(`Failed to fetch menu: ${err.message}`);
+    } finally {
+      setMenuLoading(false);
     }
   }, [hotelId]);
 
