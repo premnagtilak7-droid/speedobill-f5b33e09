@@ -149,13 +149,13 @@ const AppRoutes = () => {
           <Route path="/tables" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><Tables /></RoleGuard>} />
           <Route path="/counter" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><CounterOrderPage /></RoleGuard>} />
           <Route path="/my-orders" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><WaiterOrders /></RoleGuard>} />
-          <Route path="/kitchen" element={<RoleGuard allowed={["owner", "manager"]}><KitchenView /></RoleGuard>} />
+          {/* /kitchen removed — KDS is the single kitchen display */}
           <Route path="/menu" element={<RoleGuard allowed={["owner", "manager", "waiter", "chef"]}><MenuPage /></RoleGuard>} />
           <Route path="/kds" element={<RoleGuard allowed={["owner", "manager", "chef"]}><ChefKDS /></RoleGuard>} />
 
           {/* Owner + Manager shared routes */}
           <Route path="/dashboard" element={<RoleGuard allowed={["owner", "manager"]}><Dashboard /></RoleGuard>} />
-          <Route path="/incoming-orders" element={<RoleGuard allowed={["owner", "manager"]}><IncomingOrders /></RoleGuard>} />
+          <Route path="/incoming-orders" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><IncomingOrders /></RoleGuard>} />
           <Route path="/analytics" element={<RoleGuard allowed={["owner", "manager"]}><Analytics /></RoleGuard>} />
           <Route path="/order-history" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><OrderHistory /></RoleGuard>} />
           <Route path="/void-reports" element={<RoleGuard allowed={["owner", "manager"]}><VoidReports /></RoleGuard>} />
