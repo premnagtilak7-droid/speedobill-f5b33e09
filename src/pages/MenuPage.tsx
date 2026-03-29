@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Sparkles, Crown, Zap, UtensilsCrossed, X, Search as SearchIcon, LayoutGrid, Grid3X3 } from "lucide-react";
 import { toast } from "sonner";
 import BulkMenuUpload from "@/components/menu/BulkMenuUpload";
+import MenuPageSkeleton from "@/components/skeletons/MenuPageSkeleton";
 import AiMenuScanner from "@/components/menu/AiMenuScanner";
 import MenuSearch from "@/components/menu/MenuSearch";
 import MenuCategoryTabs from "@/components/menu/MenuCategoryTabs";
