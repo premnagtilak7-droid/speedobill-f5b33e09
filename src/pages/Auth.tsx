@@ -66,6 +66,7 @@ const Auth = () => {
   const handleSignup = async () => {
     if (!email || !password || !fullName) { toast.error("Fill all fields"); return; }
     if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
+    if (role !== "owner" && !hotelCode.trim()) { toast.error("Hotel code is required for staff accounts"); return; }
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email,
@@ -78,12 +79,12 @@ const Auth = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      if (role === "waiter" && hotelCode) {
+      if (role !== "owner" && hotelCode.trim()) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const { error: linkError } = await supabase.rpc("link_waiter_to_hotel", {
             _user_id: user.id,
-            _hotel_code: hotelCode,
+            _hotel_code: hotelCode.trim().toUpperCase(),
           });
           if (linkError) toast.error("Could not link to hotel: " + linkError.message);
         }

@@ -472,10 +472,47 @@ const Tables = () => {
       await supabase.from("order_items").insert(orderItems.map((i) => ({ order_id: orderId, name: i.name, price: i.price, quantity: i.quantity, is_custom: i.source === "custom" })));
       await supabase.from("restaurant_tables").update({ status: "occupied" }).eq("id", selectedTable.id);
       if (sendToKds && orderId) {
-        const kotPayload: any = { hotel_id: hotelId, order_id: orderId, table_id: selectedTable.id, status: "pending", assigned_waiter_id: user.id };
-        if (assignedChefId) kotPayload.assigned_chef_id = assignedChefId;
-        const { data: kot } = await supabase.from("kot_tickets").insert(kotPayload).select("id").single();
-        if (kot) await supabase.from("kot_items").insert(orderItems.map((i) => ({ kot_id: kot.id, name: i.name, price: i.price, quantity: i.quantity })));
+        const { data: existingKot } = await supabase
+          .from("kot_tickets")
+          .select("id")
+          .eq("order_id", orderId)
+          .in("status", ["pending", "preparing", "ready"])
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const kotPayload: any = {
+          hotel_id: hotelId,
+          order_id: orderId,
+          table_id: selectedTable.id,
+          status: "pending",
+          assigned_waiter_id: user.id,
+          assigned_chef_id: assignedChefId ?? null,
+          claimed_by: null,
+          claimed_at: null,
+          started_at: null,
+          ready_at: null,
+          completed_at: null,
+        };
+
+        let kotId = existingKot?.id ?? null;
+
+        if (kotId) {
+          const { error: updateKotError } = await supabase.from("kot_tickets").update(kotPayload).eq("id", kotId);
+          if (updateKotError) throw updateKotError;
+          await supabase.from("kot_items").delete().eq("kot_id", kotId);
+        } else {
+          const { data: kot, error: insertKotError } = await supabase.from("kot_tickets").insert(kotPayload).select("id").single();
+          if (insertKotError) throw insertKotError;
+          kotId = kot.id;
+        }
+
+        if (kotId) {
+          const { error: insertKotItemsError } = await supabase.from("kot_items").insert(
+            orderItems.map((i) => ({ kot_id: kotId, name: i.name, price: i.price, quantity: i.quantity }))
+          );
+          if (insertKotItemsError) throw insertKotItemsError;
+        }
       }
       toast.success(sendToKds ? "Sent to KDS ✓" : "Order saved ✓");
       // Update seat flags

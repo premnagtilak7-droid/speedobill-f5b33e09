@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { forwardRef, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -100,10 +100,10 @@ function StatCard({ title, value, icon: Icon, change, prefix = "", suffix = "", 
 }
 
 // ─── Custom Tooltip ───
-function CustomTooltip({ active, payload, label, prefix = "₹" }: any) {
+const CustomTooltip = forwardRef<HTMLDivElement, any>(({ active, payload, label, prefix = "₹" }, ref) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-border/50 bg-card p-3 shadow-lg">
+    <div ref={ref} className="rounded-lg border border-border/50 bg-card p-3 shadow-lg">
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       {payload.map((p: any, i: number) => (
         <p key={i} className="text-sm font-semibold" style={{ color: p.color }}>
@@ -112,7 +112,9 @@ function CustomTooltip({ active, payload, label, prefix = "₹" }: any) {
       ))}
     </div>
   );
-}
+});
+
+CustomTooltip.displayName = "CustomTooltip";
 
 // ─── Main Component ───
 const Analytics = () => {

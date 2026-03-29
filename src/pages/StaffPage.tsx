@@ -51,7 +51,29 @@ const StaffPage = () => {
       supabase.from("staff_leaves" as any).select("*").eq("hotel_id", hotelId).order("leave_date", { ascending: false }),
       supabase.from("orders").select("waiter_id, total, status").eq("hotel_id", hotelId).eq("status", "billed"),
     ]);
-    setStaff(staffRes.data || []);
+
+    const rawStaff = staffRes.data || [];
+    let roleMap: Record<string, string> = {};
+
+    if (rawStaff.length > 0) {
+      const { data: roleRows } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", rawStaff.map((member: any) => member.user_id));
+
+      (roleRows || []).forEach((row: any) => {
+        if (!roleMap[row.user_id] || roleMap[row.user_id] === "owner") {
+          roleMap[row.user_id] = row.role;
+        }
+      });
+    }
+
+    const normalizedStaff = rawStaff.map((member: any) => ({
+      ...member,
+      role: roleMap[member.user_id] || member.role || "waiter",
+    }));
+
+    setStaff(normalizedStaff);
     setHotel(hotelRes.data);
     setAttendance(attRes.data || []);
     setSalaries(salRes.data || []);
@@ -182,8 +204,8 @@ const StaffPage = () => {
     </div>;
   }
 
-  const staffOnly = staff.filter(s => s.role !== "owner");
-  const owners = staff.filter(s => s.role === "owner");
+    const staffOnly = staff.filter(s => s.role !== "owner");
+    const owners = staff.filter(s => s.role === "owner");
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-6xl mx-auto">
@@ -451,6 +473,17 @@ const StaffPage = () => {
                   <div className="p-3 rounded-lg bg-muted/50 text-center">
                     <p className="text-xl font-bold">{getStaffLeaves(selectedStaff.user_id).length}</p>
                     <p className="text-[10px] text-muted-foreground">Leaves</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div className="rounded-lg bg-muted/30 p-3 text-sm">
+                    <p className="text-xs text-muted-foreground">Phone</p>
+                    <p className="font-medium text-foreground">{selectedStaff.phone || "Not set"}</p>
+                  </div>
+                  <div className="rounded-lg bg-muted/30 p-3 text-sm">
+                    <p className="text-xs text-muted-foreground">Email</p>
+                    <p className="font-medium text-foreground break-all">{selectedStaff.email || "Not set"}</p>
                   </div>
                 </div>
 

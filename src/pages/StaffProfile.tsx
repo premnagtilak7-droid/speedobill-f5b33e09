@@ -22,7 +22,7 @@ const StaffProfile = () => {
       setLoading(true);
       const [hotelRes, profileRes] = await Promise.all([
         supabase.from("hotels").select("name").eq("id", hotelId).maybeSingle(),
-        supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
+        supabase.from("profiles").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       ]);
       setHotelName(hotelRes.data?.name || "Unknown");
       setProfile(profileRes.data);

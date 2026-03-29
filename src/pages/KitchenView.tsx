@@ -89,7 +89,6 @@ const KitchenView = () => {
     if (newStatus === "preparing") { updates.claimed_by = user?.id; updates.claimed_at = new Date().toISOString(); }
     if (newStatus === "preparing") { updates.started_at = new Date().toISOString(); }
     if (newStatus === "ready") { updates.ready_at = new Date().toISOString(); }
-    if (newStatus === "ready") { updates.completed_at = new Date().toISOString(); }
     const { error } = await supabase.from("kot_tickets").update(updates).eq("id", kotId);
     if (error) toast.error(error.message);
     else fetchTickets();

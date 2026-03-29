@@ -159,7 +159,19 @@ const ChefKDS = () => {
         }
         void fetchData();
       })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` }, () => void fetchData())
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` }, (payload) => {
+        const nextRow = payload.new as any;
+        const previousRow = payload.old as any;
+        const becameAssignedToMe = nextRow.assigned_chef_id === user?.id && previousRow?.assigned_chef_id !== user?.id;
+        const becameUnassigned = !nextRow.assigned_chef_id && previousRow?.assigned_chef_id;
+
+        if (nextRow.status === "pending" && (becameAssignedToMe || becameUnassigned)) {
+          playLoudBell();
+          toast.info("🔔 Order assigned to kitchen!", { duration: 3000 });
+        }
+
+        void fetchData();
+      })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [hotelId, fetchData, user?.id]);
@@ -173,15 +185,25 @@ const ChefKDS = () => {
     }
     if (newStatus === "ready") {
       updates.ready_at = new Date().toISOString();
-      updates.completed_at = new Date().toISOString();
     }
-    await supabase.from("kot_tickets").update(updates).eq("id", kotId);
+    const { error } = await supabase.from("kot_tickets").update(updates).eq("id", kotId);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(`Marked as ${newStatus}`);
     await fetchData();
   };
 
   const dismissReady = async (kotId: string) => {
-    await supabase.from("kot_tickets").update({ status: "served" }).eq("id", kotId);
+    const { error } = await supabase
+      .from("kot_tickets")
+      .update({ status: "served", completed_at: new Date().toISOString() })
+      .eq("id", kotId);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Served & dismissed");
     await fetchData();
   };
