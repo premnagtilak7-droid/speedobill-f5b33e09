@@ -64,32 +64,36 @@ const Auth = () => {
   };
 
   const handleSignup = async () => {
+    const normalizedHotelCode = hotelCode.trim().toUpperCase();
+
     if (!email || !password || !fullName) { toast.error("Fill all fields"); return; }
     if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
-    if (role !== "owner" && !hotelCode.trim()) { toast.error("Hotel code is required for staff accounts"); return; }
+    if (role !== "owner" && !normalizedHotelCode) { toast.error("Hotel code is required for staff accounts"); return; }
+    if (role !== "owner" && !/^QB-\d{4}$/.test(normalizedHotelCode)) { toast.error("Enter a valid hotel code like QB-1234"); return; }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName, role },
+        data: { full_name: fullName.trim(), role, hotel_code: role === "owner" ? null : normalizedHotelCode },
         emailRedirectTo: window.location.origin,
       },
     });
     if (error) {
       toast.error(error.message);
     } else {
-      if (role !== "owner" && hotelCode.trim()) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
+      if (role !== "owner" && normalizedHotelCode && data.user) {
+        try {
           const { error: linkError } = await supabase.rpc("link_waiter_to_hotel", {
-            _user_id: user.id,
-            _hotel_code: hotelCode.trim().toUpperCase(),
+            _user_id: data.user.id,
+            _hotel_code: normalizedHotelCode,
           });
-          if (linkError) toast.error("Could not link to hotel: " + linkError.message);
+          if (linkError) toast.warning("Account created. Hotel link will complete after first login.");
+        } catch {
+          toast.warning("Account created. Hotel link will complete after first login.");
         }
       }
-      toast.success("Account created! You can now sign in.");
+      toast.success(role === "owner" ? "Owner account created with a 7-day free trial." : "Staff account created. You can now sign in.");
     }
     setLoading(false);
   };
@@ -256,13 +260,14 @@ const Auth = () => {
                     {(role === "waiter" || role === "chef") && (
                       <div className="space-y-1">
                         <label className="text-sm font-bold text-foreground">Hotel Code</label>
-                        <Input placeholder="e.g. QB-1234" value={hotelCode} onChange={e => setHotelCode(e.target.value)} className="h-11 bg-secondary/50 border-border" />
+                        <Input placeholder="e.g. QB-1234" value={hotelCode} onChange={e => setHotelCode(e.target.value.toUpperCase())} className="h-11 bg-secondary/50 border-border" />
+                        <p className="text-xs text-muted-foreground">Waiter and chef accounts need a valid owner hotel code before they can open the app.</p>
                       </div>
                     )}
                   </>
                 )}
 
-                <Button className="w-full h-12 gradient-btn-primary text-base font-semibold rounded-xl" onClick={mode === "login" ? handleLogin : handleSignup} disabled={loading}>
+                <Button className="w-full h-12 gradient-btn-primary text-base font-semibold rounded-xl" onClick={mode === "login" ? handleLogin : handleSignup} disabled={loading || (mode === "signup" && role !== "owner" && !hotelCode.trim())}>
                   {loading ? (
                     <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   ) : (

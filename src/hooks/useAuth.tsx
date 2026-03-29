@@ -113,6 +113,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const { role: newRole, hotelId: newHotelId } = await ensureProfileAndHotel(userId, currentUser);
 
+      const requiresHotelLink = newRole === "waiter" || newRole === "chef" || newRole === "manager";
+
+      if (requiresHotelLink && !newHotelId) {
+        toast.error("Valid hotel code required for waiter, chef, and manager accounts.", {
+          id: AUTH_ERROR_TOAST_ID,
+          duration: 7000,
+        });
+        await supabase.auth.signOut();
+        setUser(null);
+        setRole(null);
+        setHotelId(null);
+        clearAuthCache();
+        setLoading(false);
+        return;
+      }
+
       setRole(newRole);
       setHotelId(newHotelId);
       writeAuthCache(currentUser, newRole, newHotelId);

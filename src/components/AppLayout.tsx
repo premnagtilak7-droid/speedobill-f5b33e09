@@ -16,6 +16,7 @@ import { useRoleNotifications } from "@/hooks/useRoleNotifications";
 import SectionErrorBoundary from "@/components/SectionErrorBoundary";
 import { useIncomingOrders } from "@/hooks/useIncomingOrders";
 import { supabase } from "@/integrations/supabase/client";
+import { primeNotificationEngine } from "@/lib/notification-sounds";
 
 interface NavItem {
   label: string;
@@ -80,6 +81,12 @@ const ownerSections: NavSection[] = [
       { label: "Supply Store", icon: ShoppingBag, path: "/supply-store" },
       { label: "Integrations", icon: Link2, path: "/integrations" },
       { label: "Settings", icon: Settings, path: "/settings" },
+    ],
+  },
+  {
+    title: "ACCOUNT",
+    items: [
+      { label: "My Profile", icon: Users, path: "/staff-profile" },
     ],
   },
 ];
@@ -171,7 +178,7 @@ const waiterBottomNav: NavItem[] = [
 ];
 
 const chefBottomNav: NavItem[] = [
-  { label: "Kitchen", icon: ChefHat, path: "/kitchen" },
+  { label: "Kitchen", icon: ChefHat, path: "/kds" },
 ];
 
 const SIDEBAR_SCROLL_KEY = "qb-sidebar-scroll";
@@ -190,6 +197,20 @@ const AppLayout = () => {
 
   useRoleNotifications();
   useIncomingOrders();
+
+  useEffect(() => {
+    const unlockNotifications = () => {
+      void primeNotificationEngine();
+    };
+
+    window.addEventListener("pointerdown", unlockNotifications, { passive: true });
+    window.addEventListener("keydown", unlockNotifications);
+
+    return () => {
+      window.removeEventListener("pointerdown", unlockNotifications);
+      window.removeEventListener("keydown", unlockNotifications);
+    };
+  }, []);
 
   useEffect(() => {
     try {

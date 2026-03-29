@@ -10,9 +10,43 @@ interface AccessContext {
 
 type DbAppRole = Enums<"app_role">;
 
+const STAFF_ROLES = new Set<DbAppRole>(["waiter", "chef", "manager"]);
+
 const resolveRole = (primaryRole: string | null | undefined, fallbackRole?: string | null): AppRole => {
   return (primaryRole ?? fallbackRole ?? "owner") as AppRole;
 };
+
+const readMetadataValue = (currentUser: any, key: string): string | null => {
+  const value = currentUser?.user_metadata?.[key];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+};
+
+async function ensureOwnerHotel(userId: string): Promise<string | null> {
+  const { data: existingHotel, error: existingHotelError } = await supabase
+    .from("hotels")
+    .select("id")
+    .eq("owner_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (existingHotelError) throw existingHotelError;
+  if (existingHotel?.id) return existingHotel.id;
+
+  const { data: createdHotel, error: createHotelError } = await supabase
+    .from("hotels")
+    .insert({
+      owner_id: userId,
+      name: "My Hotel",
+      subscription_tier: "free",
+      subscription_start_date: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+
+  if (createHotelError) throw createHotelError;
+  return createdHotel.id;
+}
 
 export async function ensureUserAccessContext(
   userId: string,
@@ -39,47 +73,67 @@ export async function ensureUserAccessContext(
   const profileRows = profilesResult.data ?? [];
   const profile = profileRows.find((row) => row.hotel_id) ?? profileRows[0] ?? null;
   let resolvedRole = userRoleResult.data?.role as AppRole | null;
-  const metadataRole = _currentUser?.user_metadata?.role as string | undefined;
+  const metadataRole = readMetadataValue(_currentUser, "role");
+  const metadataHotelCode = readMetadataValue(_currentUser, "hotel_code")?.toUpperCase() ?? null;
+  const metadataFullName = readMetadataValue(_currentUser, "full_name") ?? "";
+  const metadataEmail = typeof _currentUser?.email === "string" ? _currentUser.email : null;
 
-  if (!profile) {
-    const bootstrapRole = resolveRole(resolvedRole, metadataRole) as DbAppRole;
-    const { error: insertError } = await supabase
-      .from("profiles")
-      .insert({ user_id: userId, role: bootstrapRole });
+  resolvedRole = resolveRole(resolvedRole, profile?.role ?? metadataRole) as AppRole;
+  const bootstrapRole = resolvedRole as DbAppRole;
 
-    if (insertError && insertError.code !== "23505") throw insertError;
-
-    if (!resolvedRole) {
-      const { error: userRoleInsertError } = await supabase
-        .from("user_roles")
-        .insert({ user_id: userId, role: bootstrapRole });
-
-      if (userRoleInsertError && userRoleInsertError.code !== "23505") throw userRoleInsertError;
-      resolvedRole = bootstrapRole;
-    }
-
-    return { role: bootstrapRole, hotelId: null };
-  }
-
-  if (!resolvedRole) {
-    const fallbackRole = resolveRole(profile.role, metadataRole) as DbAppRole;
+  if (!userRoleResult.data?.role) {
     const { error: userRoleInsertError } = await supabase
       .from("user_roles")
-      .insert({ user_id: userId, role: fallbackRole });
+      .insert({ user_id: userId, role: bootstrapRole });
 
     if (userRoleInsertError && userRoleInsertError.code !== "23505") throw userRoleInsertError;
-    resolvedRole = fallbackRole;
   }
 
-  if (profile.role !== resolvedRole) {
-    await supabase
+  if (!profile) {
+    const { error: insertError } = await supabase
       .from("profiles")
-      .update({ role: resolvedRole })
+      .insert({
+        user_id: userId,
+        role: bootstrapRole,
+        full_name: metadataFullName,
+        email: metadataEmail,
+      });
+
+    if (insertError && insertError.code !== "23505") throw insertError;
+  }
+
+  let resolvedHotelId = profile?.hotel_id ?? null;
+
+  if (bootstrapRole === "owner") {
+    resolvedHotelId = await ensureOwnerHotel(userId);
+  } else if (STAFF_ROLES.has(bootstrapRole) && !resolvedHotelId && metadataHotelCode) {
+    const { data: linkedHotelId, error: linkHotelError } = await supabase.rpc("link_waiter_to_hotel", {
+      _user_id: userId,
+      _hotel_code: metadataHotelCode,
+    });
+
+    if (linkHotelError && !String(linkHotelError.message || "").includes("already assigned")) throw linkHotelError;
+    resolvedHotelId = linkedHotelId ?? resolvedHotelId;
+  }
+
+  const profileUpdates: Record<string, unknown> = {};
+
+  if (profile?.role !== bootstrapRole) profileUpdates.role = bootstrapRole;
+  if (bootstrapRole === "owner" && resolvedHotelId && profile?.hotel_id !== resolvedHotelId) profileUpdates.hotel_id = resolvedHotelId;
+  if ((!profile?.full_name || !profile.full_name.trim()) && metadataFullName) profileUpdates.full_name = metadataFullName;
+  if ((!profile?.email || !profile.email.trim()) && metadataEmail) profileUpdates.email = metadataEmail;
+
+  if (Object.keys(profileUpdates).length > 0) {
+    const { error: profileUpdateError } = await supabase
+      .from("profiles")
+      .update(profileUpdates)
       .eq("user_id", userId);
+
+    if (profileUpdateError) throw profileUpdateError;
   }
 
   return {
-    role: resolveRole(resolvedRole, profile.role),
-    hotelId: profile.hotel_id,
+    role: resolveRole(bootstrapRole, profile?.role),
+    hotelId: resolvedHotelId,
   };
 }
