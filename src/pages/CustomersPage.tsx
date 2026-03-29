@@ -87,7 +87,7 @@ const CustomersPage = () => {
 
   const addFeedback = async () => {
     if (!selectedCustomer || !hotelId) return;
-    const { error } = await supabase.from("customer_feedback" as any).insert({
+    const { error } = await supabase.from("customer_feedback").insert({
       hotel_id: hotelId,
       customer_id: selectedCustomer.id,
       rating: Number(feedbackForm.rating),
