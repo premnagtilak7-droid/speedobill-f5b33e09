@@ -246,7 +246,7 @@ export function useRoleNotifications() {
       )
       .subscribe();
 
-    // High-value bills (>₹500)
+    // Bills / Payments
     const billChannel = supabase
       .channel(`owner-bills-${hotelId}`)
       .on(
@@ -254,16 +254,16 @@ export function useRoleNotifications() {
         { event: "UPDATE", schema: "public", table: "orders", filter: `hotel_id=eq.${hotelId}` },
         (payload) => {
           const o = payload.new as any;
-          if (o.status === "billed" && o.total >= 500) {
-            playSoftDing();
+          if (o.status === "billed") {
+            playPaymentSound();
             sendBrowserNotif(
-              "💰 High-Value Bill",
-              `₹${Number(o.total).toFixed(0)} bill saved`,
+              "💰 Payment Received",
+              `₹${Number(o.total).toFixed(0)} bill completed`,
               `bill-${o.id}`
             );
             pushNotification({
               id: o.id,
-              title: "Bill Saved",
+              title: "Payment Received",
               body: `₹${Number(o.total).toFixed(0)} bill completed`,
               type: "bill",
               createdAt: Date.now(),
