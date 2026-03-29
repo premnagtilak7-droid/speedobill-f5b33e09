@@ -103,6 +103,7 @@ const managerSections: NavSection[] = [
     items: [
       { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
       { label: "Tables", icon: Grid3X3, path: "/tables" },
+      { label: "Counter", icon: Store, path: "/counter" },
       { label: "Incoming", icon: Bell, path: "/incoming-orders" },
       { label: "Online Orders", icon: ShoppingBag, path: "/online-orders" },
       { label: "Kitchen", icon: ChefHat, path: "/kitchen" },
