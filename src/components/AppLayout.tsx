@@ -8,6 +8,7 @@ import {
   Bell, FileText, TrendingUp, QrCode, Layers, Link2, UserCheck,
   HelpCircle, ChevronLeft
 } from "lucide-react";
+import BugReportButton from "@/components/BugReportButton";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef, memo, useCallback, Suspense } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
