@@ -12,8 +12,9 @@ type DbAppRole = Enums<"app_role">;
 
 const STAFF_ROLES = new Set<DbAppRole>(["waiter", "chef", "manager"]);
 
-const resolveRole = (primaryRole: string | null | undefined, fallbackRole?: string | null): AppRole => {
-  return (primaryRole ?? fallbackRole ?? "owner") as AppRole;
+const resolveRole = (primaryRole: string | null | undefined, fallbackRole?: string | null): AppRole | null => {
+  const role = primaryRole ?? fallbackRole ?? null;
+  return role as AppRole | null;
 };
 
 const readMetadataValue = (currentUser: any, key: string): string | null => {
