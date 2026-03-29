@@ -100,6 +100,47 @@ export type Database = {
           },
         ]
       }
+      bug_reports: {
+        Row: {
+          created_at: string
+          device_info: string | null
+          hotel_id: string | null
+          id: string
+          message: string
+          page: string | null
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_info?: string | null
+          hotel_id?: string | null
+          id?: string
+          message: string
+          page?: string | null
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_info?: string | null
+          hotel_id?: string | null
+          id?: string
+          message?: string
+          page?: string | null
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bug_reports_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       counter_orders: {
         Row: {
           created_at: string
