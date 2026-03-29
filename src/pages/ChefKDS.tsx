@@ -143,6 +143,15 @@ const ChefKDS = () => {
 
   useEffect(() => { void fetchData(); }, [fetchData]);
 
+  // Auto-refresh every 10 seconds as backup
+  useEffect(() => {
+    const iv = setInterval(() => {
+      if (activeTab === "orders") void fetchData();
+      else void fetchIngredients();
+    }, 10000);
+    return () => clearInterval(iv);
+  }, [fetchData, fetchIngredients, activeTab]);
+
   useEffect(() => {
     if (activeTab === "inventory") void fetchIngredients();
   }, [activeTab, fetchIngredients]);
@@ -151,11 +160,13 @@ const ChefKDS = () => {
     if (!hotelId) return;
     const ch = supabase
       .channel("kds-rt")
+      // Listen to kot_tickets changes
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` }, (payload) => {
         const newTicket = payload.new as any;
         if (!newTicket.assigned_chef_id || newTicket.assigned_chef_id === user?.id) {
           playLoudBell();
-          toast.info("🔔 New order received!", { duration: 3000 });
+          try { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play(); } catch {}
+          toast.info("🔔 New order received!", { duration: 4000 });
         }
         void fetchData();
       })
@@ -169,7 +180,16 @@ const ChefKDS = () => {
           playLoudBell();
           toast.info("🔔 Order assigned to kitchen!", { duration: 3000 });
         }
-
+        void fetchData();
+      })
+      // Also listen to orders table for new orders
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders", filter: `hotel_id=eq.${hotelId}` }, () => {
+        playLoudBell();
+        try { new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play(); } catch {}
+        toast.info("🔔 New order placed!", { duration: 4000 });
+        void fetchData();
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders", filter: `hotel_id=eq.${hotelId}` }, () => {
         void fetchData();
       })
       .subscribe();

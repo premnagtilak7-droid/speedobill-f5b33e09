@@ -76,10 +76,17 @@ const KitchenView = () => {
 
   useEffect(() => { fetchTickets(); }, [fetchTickets]);
 
+  // Auto-refresh every 10 seconds as backup
+  useEffect(() => {
+    const iv = setInterval(() => fetchTickets(), 10000);
+    return () => clearInterval(iv);
+  }, [fetchTickets]);
+
   useEffect(() => {
     if (!hotelId) return;
     const channel = supabase.channel("kitchen-kots")
       .on("postgres_changes", { event: "*", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` }, () => fetchTickets())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders", filter: `hotel_id=eq.${hotelId}` }, () => fetchTickets())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [hotelId, fetchTickets]);
