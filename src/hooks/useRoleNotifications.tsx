@@ -306,4 +306,27 @@ export function useRoleNotifications() {
       supabase.removeChannel(customerOrderChannel);
     };
   }, [hotelId, role]);
+
+  // ── License expiry warning (owner only, one-time check) ──
+  useEffect(() => {
+    if (!hotelId || role !== "owner") return;
+    (async () => {
+      const { data: hotel } = await supabase
+        .from("hotels")
+        .select("subscription_expiry, subscription_tier")
+        .eq("id", hotelId)
+        .maybeSingle();
+      if (!hotel?.subscription_expiry) return;
+      const daysLeft = Math.ceil((new Date(hotel.subscription_expiry).getTime() - Date.now()) / 86400000);
+      if (daysLeft <= 7 && daysLeft > 0) {
+        pushNotification({
+          id: `license-expiry-${hotelId}`,
+          title: "⚠️ License Expiring Soon",
+          body: `Your ${hotel.subscription_tier} plan expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
+          type: "info",
+          createdAt: Date.now(),
+        });
+      }
+    })();
+  }, [hotelId, role]);
 }
