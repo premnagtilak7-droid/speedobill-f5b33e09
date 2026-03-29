@@ -148,7 +148,7 @@ const AppRoutes = () => {
           <Route path="/tables" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><Tables /></RoleGuard>} />
           <Route path="/counter" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><CounterOrderPage /></RoleGuard>} />
           <Route path="/kitchen" element={<RoleGuard allowed={["owner", "manager"]}><KitchenView /></RoleGuard>} />
-          <Route path="/menu" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><MenuPage /></RoleGuard>} />
+          <Route path="/menu" element={<RoleGuard allowed={["owner", "manager", "waiter", "chef"]}><MenuPage /></RoleGuard>} />
           <Route path="/kds" element={<RoleGuard allowed={["owner", "manager", "chef"]}><ChefKDS /></RoleGuard>} />
 
           {/* Owner + Manager shared routes */}
