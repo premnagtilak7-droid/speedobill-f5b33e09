@@ -37,9 +37,11 @@ const ownerSections: NavSection[] = [
     items: [
       { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
       { label: "Tables", icon: Grid3X3, path: "/tables" },
+      { label: "Counter", icon: Store, path: "/counter" },
       { label: "Incoming", icon: Bell, path: "/incoming-orders" },
       { label: "Online Orders", icon: ShoppingBag, path: "/online-orders" },
       { label: "Kitchen", icon: ChefHat, path: "/kitchen" },
+      { label: "KDS", icon: ChefHat, path: "/kds" },
       { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
     ],
   },
@@ -55,12 +57,14 @@ const ownerSections: NavSection[] = [
     title: "FINANCE",
     items: [
       { label: "Order History", icon: ScrollText, path: "/order-history" },
+      { label: "Data Export", icon: FileText, path: "/download-data-export" },
     ],
   },
   {
     title: "MANAGE",
     items: [
       { label: "Staff", icon: Users, path: "/staff" },
+      { label: "Staff Performance", icon: TrendingUp, path: "/staff-performance" },
       { label: "Customers", icon: UserCheck, path: "/customers" },
       { label: "Voids", icon: FileText, path: "/void-reports" },
       { label: "Close Day", icon: CalendarCheck, path: "/daily-closing" },
@@ -99,6 +103,7 @@ const managerSections: NavSection[] = [
     items: [
       { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
       { label: "Tables", icon: Grid3X3, path: "/tables" },
+      { label: "Counter", icon: Store, path: "/counter" },
       { label: "Incoming", icon: Bell, path: "/incoming-orders" },
       { label: "Online Orders", icon: ShoppingBag, path: "/online-orders" },
       { label: "Kitchen", icon: ChefHat, path: "/kitchen" },
@@ -353,48 +358,51 @@ const AppLayout = () => {
         )}
       </div>
 
-      <nav ref={navScrollRef} className="flex-1 space-y-4 overflow-y-auto px-2">
-        {navSections.map((section) => (
-          <div key={section.title}>
-            {!collapsed && (
-              <p className="px-3 mb-1 text-[10px] font-semibold text-muted-foreground tracking-widest uppercase">
-                {section.title}
-              </p>
-            )}
-            <div className="space-y-0.5">
-              {section.items.map((item) => (
-                renderNavButton(item, onItemClick, location.pathname === item.path, collapsed)
-              ))}
+      <nav ref={navScrollRef} className="flex-1 overflow-y-auto px-2 pb-4">
+        <div className="space-y-5">
+          {navSections.map((section) => (
+            <div key={section.title}>
+              {!collapsed && (
+                <p className="px-3 mb-1.5 text-[10px] font-semibold text-muted-foreground tracking-widest uppercase">
+                  {section.title}
+                </p>
+              )}
+              <div className="space-y-1">
+                {section.items.map((item) => (
+                  renderNavButton(item, onItemClick, location.pathname === item.path, collapsed)
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </nav>
+          ))}
 
-      <div className="border-t border-border pt-3 mt-3 px-2 space-y-1 pb-2">
-        <BugReportButton collapsed={collapsed} />
-        <button
-          onClick={toggleTheme}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors min-h-[44px] active:scale-[0.97]"
-        >
-          {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
-          {!collapsed && <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
-        </button>
-        <button
-          onClick={() => { navigate("/support"); onItemClick?.(); }}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors min-h-[44px] active:scale-[0.97]"
-        >
-          <HelpCircle className="h-[18px] w-[18px]" />
-          {!collapsed && <span>Help & Feedback</span>}
-        </button>
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-3 text-destructive hover:bg-destructive/10 rounded-xl min-h-[44px]"
-          onClick={signOut}
-        >
-          <LogOut className="h-[18px] w-[18px]" />
-          {!collapsed && <span>Sign Out</span>}
-        </Button>
-      </div>
+          {/* Bottom actions inside scroll area */}
+          <div className="border-t border-border pt-3 space-y-1">
+            <BugReportButton collapsed={collapsed} />
+            <button
+              onClick={toggleTheme}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors min-h-[44px] active:scale-[0.97]"
+            >
+              {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+              {!collapsed && <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
+            </button>
+            <button
+              onClick={() => { navigate("/support"); onItemClick?.(); }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors min-h-[44px] active:scale-[0.97]"
+            >
+              <HelpCircle className="h-[18px] w-[18px]" />
+              {!collapsed && <span>Help & Feedback</span>}
+            </button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 text-destructive hover:bg-destructive/10 rounded-xl min-h-[44px]"
+              onClick={signOut}
+            >
+              <LogOut className="h-[18px] w-[18px]" />
+              {!collapsed && <span>Sign Out</span>}
+            </Button>
+          </div>
+        </div>
+      </nav>
     </>
   );
 
