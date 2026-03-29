@@ -345,7 +345,9 @@ const MenuPage = () => {
                 </Badge>
               </div>
 
-              {filtered.length === 0 ? (
+              {menuLoading ? (
+                <MenuPageSkeleton />
+              ) : filtered.length === 0 ? (
                 <div className="text-center py-16 text-muted-foreground">
                   {searchQuery ? (
                     <>
