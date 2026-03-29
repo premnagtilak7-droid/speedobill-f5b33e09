@@ -457,7 +457,7 @@ const AppLayout = () => {
         {renderSidebarContent()}
         {!collapsed && (
           <div className="px-4 py-2 text-[10px] text-muted-foreground text-center border-t border-border">
-            v2.0
+            v{APP_VERSION}
           </div>
         )}
       </aside>
