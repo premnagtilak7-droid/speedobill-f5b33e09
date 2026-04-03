@@ -59,6 +59,37 @@ const readCachedHotelCode = (email: string) => {
   }
 };
 
+const COMMON_PASSWORDS = new Set([
+  "password", "12345678", "123456789", "1234567890", "qwerty123", "password1",
+  "iloveyou", "admin123", "welcome1", "monkey123", "dragon12", "master12",
+  "letmein1", "abc12345", "football1", "shadow12", "sunshine1", "trustno1",
+  "princess1", "baseball1",
+]);
+
+interface PasswordStrength {
+  score: number; // 0-100
+  label: string;
+  color: string;
+  checks: { label: string; passed: boolean }[];
+}
+
+function evaluatePassword(pw: string): PasswordStrength {
+  const checks = [
+    { label: "8+ characters", passed: pw.length >= 8 },
+    { label: "Uppercase letter", passed: /[A-Z]/.test(pw) },
+    { label: "Lowercase letter", passed: /[a-z]/.test(pw) },
+    { label: "Number", passed: /\d/.test(pw) },
+    { label: "Special character (!@#$…)", passed: /[^A-Za-z0-9]/.test(pw) },
+    { label: "Not a common password", passed: !COMMON_PASSWORDS.has(pw.toLowerCase()) },
+  ];
+  const passed = checks.filter((c) => c.passed).length;
+  const score = Math.round((passed / checks.length) * 100);
+  const label = score <= 33 ? "Weak" : score <= 66 ? "Fair" : score < 100 ? "Good" : "Strong";
+  const color =
+    score <= 33 ? "bg-destructive" : score <= 66 ? "bg-yellow-500" : score < 100 ? "bg-blue-500" : "bg-green-500";
+  return { score, label, color, checks };
+}
+
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
