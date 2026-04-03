@@ -866,6 +866,30 @@ export type Database = {
           },
         ]
       }
+      login_attempts: {
+        Row: {
+          attempted_at: string
+          email: string
+          id: string
+          ip_address: string
+          success: boolean | null
+        }
+        Insert: {
+          attempted_at?: string
+          email: string
+          id?: string
+          ip_address: string
+          success?: boolean | null
+        }
+        Update: {
+          attempted_at?: string
+          email?: string
+          id?: string
+          ip_address?: string
+          success?: boolean | null
+        }
+        Relationships: []
+      }
       menu_item_modifiers: {
         Row: {
           created_at: string
@@ -2081,6 +2105,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_hotel_admin: { Args: { _user_id: string }; Returns: boolean }
       link_waiter_to_hotel: {
         Args: { _hotel_code: string; _user_id: string }
         Returns: string
