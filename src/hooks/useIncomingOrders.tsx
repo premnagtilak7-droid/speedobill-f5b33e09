@@ -82,8 +82,9 @@ export function useIncomingOrders() {
 
   useEffect(() => {
     if (!hotelId) return;
+    const channelName = `incoming-customer-orders-${hotelId}-${Date.now()}`;
     const channel = supabase
-      .channel("incoming-customer-orders")
+      .channel(channelName)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "customer_orders" },
