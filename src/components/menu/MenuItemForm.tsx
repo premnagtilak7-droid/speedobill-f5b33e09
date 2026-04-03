@@ -53,10 +53,14 @@ const MenuItemForm = ({ open, onOpenChange, editItem, hotelId, categories, onSav
     setImageFile(null);
   }, [editItem, categories]);
 
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+  const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
+    if (!ALLOWED_TYPES.includes(file.type)) { toast.error("Only JPG, PNG and WebP images allowed"); return; }
+    if (file.size > MAX_FILE_SIZE) { toast.error("Image must be under 2MB"); return; }
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
   };
@@ -64,11 +68,13 @@ const MenuItemForm = ({ open, onOpenChange, editItem, hotelId, categories, onSav
   const uploadImage = async (): Promise<string | null> => {
     if (!imageFile) return imagePreview;
     setUploading(true);
-    const ext = imageFile.name.split(".").pop() || "jpg";
-    const path = `${hotelId}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("menu-images").upload(path, imageFile, { upsert: true });
+    // Use UUID-based filename to prevent path traversal
+    const ext = imageFile.type === "image/png" ? "png" : imageFile.type === "image/webp" ? "webp" : "jpg";
+    const uuid = crypto.randomUUID();
+    const path = `${hotelId}/${uuid}.${ext}`;
+    const { error } = await supabase.storage.from("menu-images").upload(path, imageFile, { upsert: true, contentType: imageFile.type });
     setUploading(false);
-    if (error) { toast.error("Image upload failed: " + error.message); return null; }
+    if (error) { toast.error("Image upload failed"); return null; }
     const { data } = supabase.storage.from("menu-images").getPublicUrl(path);
     return data.publicUrl;
   };

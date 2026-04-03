@@ -33,9 +33,11 @@ class ErrorBoundary extends Component<Props, State> {
             <p className="text-slate-400 text-sm leading-relaxed">
               Something unexpected happened. Your data is safe — just restart the app to get back on track.
             </p>
-            <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-3 text-xs text-slate-500 font-mono text-left max-h-24 overflow-auto">
-              {this.state.error?.message || "Unknown error"}
-            </div>
+            {import.meta.env.DEV && (
+              <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-3 text-xs text-slate-500 font-mono text-left max-h-24 overflow-auto">
+                {this.state.error?.message || "Unknown error"}
+              </div>
+            )}
             <div className="flex flex-col gap-3 pt-2">
               <button
                 onClick={() => window.location.reload()}
