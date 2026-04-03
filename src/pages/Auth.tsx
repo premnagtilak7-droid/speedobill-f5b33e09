@@ -301,6 +301,23 @@ const Auth = () => {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  {mode === "signup" && password.length > 0 && (
+                    <div className="space-y-1.5 mt-2">
+                      <div className="flex items-center gap-2">
+                        <Progress value={pwStrength.score} className={`h-2 flex-1 [&>div]:${pwStrength.color}`} />
+                        <span className={`text-xs font-semibold ${pwStrength.score <= 33 ? "text-destructive" : pwStrength.score <= 66 ? "text-yellow-500" : pwStrength.score < 100 ? "text-blue-500" : "text-green-500"}`}>
+                          {pwStrength.label}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
+                        {pwStrength.checks.map((c) => (
+                          <span key={c.label} className={`text-[11px] flex items-center gap-1 ${c.passed ? "text-green-500" : "text-muted-foreground"}`}>
+                            {c.passed ? "✓" : "○"} {c.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {mode === "login" && (
