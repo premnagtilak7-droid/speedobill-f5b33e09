@@ -2086,6 +2086,7 @@ export type Database = {
         Returns: string
       }
       next_token_number: { Args: { _hotel_id: string }; Returns: number }
+      verify_owner_pin: { Args: { _pin: string }; Returns: boolean }
     }
     Enums: {
       app_role: "owner" | "waiter" | "chef" | "manager"
