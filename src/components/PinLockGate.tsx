@@ -76,8 +76,18 @@ const PinLockGate = ({ children }: PinLockGateProps) => {
     setUnlocked(true);
   }, []);
 
-  const handleUnlock = useCallback(() => {
-    if (pin === storedPin) {
+  const handleUnlock = useCallback(async () => {
+    if (storedPin === "__rpc__") {
+      // Use server-side verification
+      const { data: isValid } = await supabase.rpc("verify_owner_pin", { _pin: pin });
+      if (isValid) {
+        grantAccess();
+        toast.success("Access granted");
+      } else {
+        toast.error("Incorrect PIN");
+        setPin("");
+      }
+    } else if (pin === storedPin) {
       grantAccess();
       toast.success("Access granted");
     } else {
