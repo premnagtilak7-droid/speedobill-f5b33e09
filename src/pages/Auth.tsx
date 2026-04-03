@@ -102,6 +102,7 @@ const Auth = () => {
   const [forgotMode, setForgotMode] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
 
+  const pwStrength = useMemo(() => evaluatePassword(password), [password]);
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % slides.length);
