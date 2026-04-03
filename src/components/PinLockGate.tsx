@@ -43,10 +43,11 @@ const PinLockGate = ({ children }: PinLockGateProps) => {
     }
   }, []);
 
-  // Fetch existing PIN
+  // Check if a PIN exists (owners can read it, staff cannot)
   useEffect(() => {
     if (!hotelId || unlocked) { setLoading(false); return; }
     (async () => {
+      // Try to read PIN - only owners can see PIN rows now
       const { data } = await supabase
         .from("platform_config")
         .select("config_value")
@@ -55,7 +56,16 @@ const PinLockGate = ({ children }: PinLockGateProps) => {
       if (data?.config_value) {
         setStoredPin(data.config_value);
       } else {
-        setIsSetup(true);
+        // No data could mean: no PIN exists, or user is not owner (can't read PIN rows)
+        // Try verify RPC with a dummy to check if PIN exists
+        const { data: hasPin } = await supabase.rpc("verify_owner_pin", { _pin: "0000" });
+        if (hasPin === false) {
+          // PIN exists but dummy didn't match — use RPC-based verification
+          setStoredPin("__rpc__");
+        } else {
+          // No PIN set yet
+          setIsSetup(true);
+        }
       }
       setLoading(false);
     })();
@@ -66,8 +76,18 @@ const PinLockGate = ({ children }: PinLockGateProps) => {
     setUnlocked(true);
   }, []);
 
-  const handleUnlock = useCallback(() => {
-    if (pin === storedPin) {
+  const handleUnlock = useCallback(async () => {
+    if (storedPin === "__rpc__") {
+      // Use server-side verification
+      const { data: isValid } = await supabase.rpc("verify_owner_pin", { _pin: pin });
+      if (isValid) {
+        grantAccess();
+        toast.success("Access granted");
+      } else {
+        toast.error("Incorrect PIN");
+        setPin("");
+      }
+    } else if (pin === storedPin) {
       grantAccess();
       toast.success("Access granted");
     } else {
