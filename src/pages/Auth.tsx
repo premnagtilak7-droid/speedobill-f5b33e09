@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Eye, EyeOff, Zap, ChefHat, BarChart3, Grid3X3, UtensilsCrossed, ScrollText } from "lucide-react";
+import { Eye, EyeOff, Zap, ChefHat, BarChart3, Grid3X3, UtensilsCrossed, ScrollText, ShieldCheck, ShieldAlert } from "lucide-react";
 import { getScopedStorageKey } from "@/lib/backend-cache";
+import { Progress } from "@/components/ui/progress";
 
 type AuthMode = "login" | "signup";
 type RoleChoice = "owner" | "waiter" | "chef";
