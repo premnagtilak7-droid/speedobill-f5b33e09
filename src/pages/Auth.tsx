@@ -135,7 +135,11 @@ const Auth = () => {
     const normalizedHotelCode = hotelCode.trim().toUpperCase();
 
     if (!email || !password || !fullName) { toast.error("Fill all fields"); return; }
-    if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
+    if (pwStrength.score < 100) {
+      const missing = pwStrength.checks.filter(c => !c.passed).map(c => c.label).join(", ");
+      toast.error(`Password too weak. Missing: ${missing}`);
+      return;
+    }
     if (role !== "owner" && !normalizedHotelCode) { toast.error("Hotel code is required for staff accounts"); return; }
     if (role !== "owner" && !/^QB-\d{4}$/.test(normalizedHotelCode)) { toast.error("Enter a valid hotel code like QB-1234"); return; }
 
