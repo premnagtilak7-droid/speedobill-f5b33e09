@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Eye, EyeOff, Zap, ChefHat, BarChart3, Grid3X3, UtensilsCrossed, ScrollText } from "lucide-react";
+import { Eye, EyeOff, Zap, ChefHat, BarChart3, Grid3X3, UtensilsCrossed, ScrollText, ShieldCheck, ShieldAlert } from "lucide-react";
 import { getScopedStorageKey } from "@/lib/backend-cache";
+import { Progress } from "@/components/ui/progress";
 
 type AuthMode = "login" | "signup";
 type RoleChoice = "owner" | "waiter" | "chef";
@@ -58,6 +59,37 @@ const readCachedHotelCode = (email: string) => {
   }
 };
 
+const COMMON_PASSWORDS = new Set([
+  "password", "12345678", "123456789", "1234567890", "qwerty123", "password1",
+  "iloveyou", "admin123", "welcome1", "monkey123", "dragon12", "master12",
+  "letmein1", "abc12345", "football1", "shadow12", "sunshine1", "trustno1",
+  "princess1", "baseball1",
+]);
+
+interface PasswordStrength {
+  score: number; // 0-100
+  label: string;
+  color: string;
+  checks: { label: string; passed: boolean }[];
+}
+
+function evaluatePassword(pw: string): PasswordStrength {
+  const checks = [
+    { label: "8+ characters", passed: pw.length >= 8 },
+    { label: "Uppercase letter", passed: /[A-Z]/.test(pw) },
+    { label: "Lowercase letter", passed: /[a-z]/.test(pw) },
+    { label: "Number", passed: /\d/.test(pw) },
+    { label: "Special character (!@#$…)", passed: /[^A-Za-z0-9]/.test(pw) },
+    { label: "Not a common password", passed: !COMMON_PASSWORDS.has(pw.toLowerCase()) },
+  ];
+  const passed = checks.filter((c) => c.passed).length;
+  const score = Math.round((passed / checks.length) * 100);
+  const label = score <= 33 ? "Weak" : score <= 66 ? "Fair" : score < 100 ? "Good" : "Strong";
+  const color =
+    score <= 33 ? "bg-destructive" : score <= 66 ? "bg-yellow-500" : score < 100 ? "bg-blue-500" : "bg-green-500";
+  return { score, label, color, checks };
+}
+
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
@@ -70,6 +102,7 @@ const Auth = () => {
   const [forgotMode, setForgotMode] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
 
+  const pwStrength = useMemo(() => evaluatePassword(password), [password]);
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % slides.length);
@@ -102,7 +135,11 @@ const Auth = () => {
     const normalizedHotelCode = hotelCode.trim().toUpperCase();
 
     if (!email || !password || !fullName) { toast.error("Fill all fields"); return; }
-    if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
+    if (pwStrength.score < 100) {
+      const missing = pwStrength.checks.filter(c => !c.passed).map(c => c.label).join(", ");
+      toast.error(`Password too weak. Missing: ${missing}`);
+      return;
+    }
     if (role !== "owner" && !normalizedHotelCode) { toast.error("Hotel code is required for staff accounts"); return; }
     if (role !== "owner" && !/^QB-\d{4}$/.test(normalizedHotelCode)) { toast.error("Enter a valid hotel code like QB-1234"); return; }
 
@@ -264,6 +301,23 @@ const Auth = () => {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  {mode === "signup" && password.length > 0 && (
+                    <div className="space-y-1.5 mt-2">
+                      <div className="flex items-center gap-2">
+                        <Progress value={pwStrength.score} className={`h-2 flex-1 [&>div]:${pwStrength.color}`} />
+                        <span className={`text-xs font-semibold ${pwStrength.score <= 33 ? "text-destructive" : pwStrength.score <= 66 ? "text-yellow-500" : pwStrength.score < 100 ? "text-blue-500" : "text-green-500"}`}>
+                          {pwStrength.label}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
+                        {pwStrength.checks.map((c) => (
+                          <span key={c.label} className={`text-[11px] flex items-center gap-1 ${c.passed ? "text-green-500" : "text-muted-foreground"}`}>
+                            {c.passed ? "✓" : "○"} {c.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {mode === "login" && (

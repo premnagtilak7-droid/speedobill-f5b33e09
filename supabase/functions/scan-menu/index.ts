@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,15 +33,67 @@ function extractJsonFromResponse(response: string): unknown {
   }
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // ── Auth check ──
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const callerClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const { data: claimsData, error: claimsErr } = await callerClient.auth.getClaims(
+      authHeader.replace("Bearer ", "")
+    );
+    if (claimsErr || !claimsData?.claims?.sub) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Request validation ──
+    const contentLength = req.headers.get("content-length");
+    if (contentLength && parseInt(contentLength) > 5 * 1024 * 1024) {
+      return new Response(JSON.stringify({ error: "Request too large (max 5MB)" }), {
+        status: 413,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { image_base64 } = await req.json();
-    if (!image_base64) throw new Error("No image provided");
+    if (!image_base64 || typeof image_base64 !== "string") {
+      return new Response(JSON.stringify({ error: "No image provided" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Limit base64 size (~5MB)
+    if (image_base64.length > 7_000_000) {
+      return new Response(JSON.stringify({ error: "Image too large (max ~5MB)" }), {
+        status: 413,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
+    if (!GEMINI_API_KEY) {
+      return new Response(JSON.stringify({ error: "AI service not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const base64Data = image_base64.replace(/^data:image\/[a-z]+;base64,/, "");
 
@@ -85,9 +137,8 @@ No markdown, no explanation, ONLY the JSON array.`,
     );
 
     if (!response.ok) {
-      const errText = await response.text();
-      console.error("Gemini API error:", response.status, errText);
-      return new Response(JSON.stringify({ error: "Gemini API error: " + response.status }), {
+      console.error("Gemini API error:", response.status);
+      return new Response(JSON.stringify({ error: "AI service error" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -95,14 +146,12 @@ No markdown, no explanation, ONLY the JSON array.`,
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    console.log("Gemini raw response length:", text.length);
 
     let parsed: any;
     try {
       parsed = extractJsonFromResponse(text);
-    } catch (parseErr) {
-      console.error("JSON parse failed. Raw text:", text.substring(0, 500));
-      return new Response(JSON.stringify({ error: "Could not parse menu items from AI response", raw: text.substring(0, 300) }), {
+    } catch {
+      return new Response(JSON.stringify({ error: "Could not parse menu items from AI response" }), {
         status: 422,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -111,23 +160,25 @@ No markdown, no explanation, ONLY the JSON array.`,
     const rawItems = Array.isArray(parsed) ? parsed : [parsed];
     const items = rawItems
       .filter((i: any) => i.name && (i.price || i.price_variants?.length))
+      .slice(0, 500) // Cap at 500 items
       .map((i: any) => ({
-        name: String(i.name).trim(),
-        price: Number(i.price) || (i.price_variants?.[0]?.price || 0),
-        category: String(i.category || "General").trim(),
+        name: String(i.name).trim().slice(0, 200),
+        price: Math.max(0, Math.min(999999, Number(i.price) || (i.price_variants?.[0]?.price || 0))),
+        category: String(i.category || "General").trim().slice(0, 100),
         price_variants: Array.isArray(i.price_variants) && i.price_variants.length > 0
-          ? i.price_variants.map((v: any) => ({ label: String(v.label), price: Number(v.price) }))
+          ? i.price_variants.slice(0, 10).map((v: any) => ({
+              label: String(v.label).slice(0, 50),
+              price: Math.max(0, Math.min(999999, Number(v.price))),
+            }))
           : null,
       }));
-
-    console.log("Parsed items count:", items.length);
 
     return new Response(JSON.stringify({ items }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("scan-menu error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
