@@ -227,7 +227,7 @@ export function useRoleNotifications() {
   useEffect(() => {
     if (!hotelId || (role !== "waiter" && role !== "owner" && role !== "manager")) return;
     const channel = supabase
-      .channel(`service-calls-notif-${hotelId}`)
+      .channel(`service-calls-notif-${hotelId}-${Date.now()}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "service_calls", filter: `hotel_id=eq.${hotelId}` },
