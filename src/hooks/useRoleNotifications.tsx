@@ -262,7 +262,7 @@ export function useRoleNotifications() {
 
     // Void reports
     const voidChannel = supabase
-      .channel(`owner-voids-${hotelId}`)
+      .channel(`owner-voids-${hotelId}-${Date.now()}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "void_reports", filter: `hotel_id=eq.${hotelId}` },
