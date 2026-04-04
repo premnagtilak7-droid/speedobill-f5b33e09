@@ -59,7 +59,7 @@ export function useRoleNotifications() {
   useEffect(() => {
     if (!hotelId || role !== "chef") return;
     const channel = supabase
-      .channel(`chef-kot-notif-${hotelId}`)
+      .channel(`chef-kot-notif-${hotelId}-${Date.now()}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` },
