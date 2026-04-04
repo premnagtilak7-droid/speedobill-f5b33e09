@@ -59,7 +59,7 @@ export function useRoleNotifications() {
   useEffect(() => {
     if (!hotelId || role !== "chef") return;
     const channel = supabase
-      .channel(`chef-kot-notif-${hotelId}`)
+      .channel(`chef-kot-notif-${hotelId}-${Date.now()}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` },
@@ -133,7 +133,7 @@ export function useRoleNotifications() {
   useEffect(() => {
     if (!hotelId || !user || (role !== "waiter" && role !== "owner" && role !== "manager")) return;
     const channel = supabase
-      .channel(`waiter-ready-notif-${hotelId}`)
+      .channel(`waiter-ready-notif-${hotelId}-${Date.now()}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` },
@@ -182,13 +182,13 @@ export function useRoleNotifications() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [hotelId, role, user]);
+  }, [hotelId, role, user?.id]);
 
   // ── Chef/Owner: order marked "served" by waiter ──
   useEffect(() => {
     if (!hotelId || (role !== "chef" && role !== "owner" && role !== "manager")) return;
     const channel = supabase
-      .channel(`served-notif-${hotelId}`)
+      .channel(`served-notif-${hotelId}-${Date.now()}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` },
@@ -227,7 +227,7 @@ export function useRoleNotifications() {
   useEffect(() => {
     if (!hotelId || (role !== "waiter" && role !== "owner" && role !== "manager")) return;
     const channel = supabase
-      .channel(`service-calls-notif-${hotelId}`)
+      .channel(`service-calls-notif-${hotelId}-${Date.now()}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "service_calls", filter: `hotel_id=eq.${hotelId}` },
@@ -262,7 +262,7 @@ export function useRoleNotifications() {
 
     // Void reports
     const voidChannel = supabase
-      .channel(`owner-voids-${hotelId}`)
+      .channel(`owner-voids-${hotelId}-${Date.now()}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "void_reports", filter: `hotel_id=eq.${hotelId}` },
@@ -287,7 +287,7 @@ export function useRoleNotifications() {
 
     // Bills / Payments
     const billChannel = supabase
-      .channel(`owner-bills-${hotelId}`)
+      .channel(`owner-bills-${hotelId}-${Date.now()}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "orders", filter: `hotel_id=eq.${hotelId}` },
@@ -314,7 +314,7 @@ export function useRoleNotifications() {
 
     // Customer QR orders (incoming via customer_orders table)
     const customerOrderChannel = supabase
-      .channel(`owner-customer-orders-${hotelId}`)
+      .channel(`owner-customer-orders-${hotelId}-${Date.now()}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "customer_orders", filter: `hotel_id=eq.${hotelId}` },

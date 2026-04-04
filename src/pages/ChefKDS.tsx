@@ -162,7 +162,7 @@ const ChefKDS = () => {
   // Real-time
   useEffect(() => {
     if (!hotelId) return;
-    const ch = supabase.channel("kds-rt")
+    const ch = supabase.channel(`kds-rt-${hotelId}-${Date.now()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` }, () => void fetchData())
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders", filter: `hotel_id=eq.${hotelId}` }, () => void fetchData())
       .subscribe();
