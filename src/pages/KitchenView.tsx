@@ -98,7 +98,7 @@ const KitchenView = () => {
 
   useEffect(() => {
     if (!hotelId) return;
-    const channel = supabase.channel("kitchen-kots")
+    const channel = supabase.channel(`kitchen-kots-${hotelId}-${Date.now()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` }, () => fetchTickets())
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders", filter: `hotel_id=eq.${hotelId}` }, () => fetchTickets())
       .subscribe();

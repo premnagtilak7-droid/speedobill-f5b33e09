@@ -314,7 +314,7 @@ export function useRoleNotifications() {
 
     // Customer QR orders (incoming via customer_orders table)
     const customerOrderChannel = supabase
-      .channel(`owner-customer-orders-${hotelId}`)
+      .channel(`owner-customer-orders-${hotelId}-${Date.now()}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "customer_orders", filter: `hotel_id=eq.${hotelId}` },

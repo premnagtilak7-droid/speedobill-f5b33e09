@@ -86,7 +86,7 @@ const WaiterOrders = () => {
 
   useEffect(() => {
     if (!hotelId) return;
-    const ch = supabase.channel("waiter-orders-rt")
+    const ch = supabase.channel(`waiter-orders-rt-${hotelId}-${Date.now()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` }, () => void fetchMyOrders())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
