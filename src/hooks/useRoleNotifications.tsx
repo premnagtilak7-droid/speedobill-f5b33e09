@@ -287,7 +287,7 @@ export function useRoleNotifications() {
 
     // Bills / Payments
     const billChannel = supabase
-      .channel(`owner-bills-${hotelId}`)
+      .channel(`owner-bills-${hotelId}-${Date.now()}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "orders", filter: `hotel_id=eq.${hotelId}` },
