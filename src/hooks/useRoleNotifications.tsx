@@ -182,7 +182,7 @@ export function useRoleNotifications() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [hotelId, role, user]);
+  }, [hotelId, role, user?.id]);
 
   // ── Chef/Owner: order marked "served" by waiter ──
   useEffect(() => {
