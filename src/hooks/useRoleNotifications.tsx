@@ -133,7 +133,7 @@ export function useRoleNotifications() {
   useEffect(() => {
     if (!hotelId || !user || (role !== "waiter" && role !== "owner" && role !== "manager")) return;
     const channel = supabase
-      .channel(`waiter-ready-notif-${hotelId}`)
+      .channel(`waiter-ready-notif-${hotelId}-${Date.now()}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` },
