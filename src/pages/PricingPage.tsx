@@ -158,7 +158,6 @@ const PricingPage = () => {
                   <span className="text-4xl font-bold text-foreground">{isFree ? "Free" : `₹${price}`}</span>
                   {!isFree && <span className="text-muted-foreground text-sm">/{yearly ? "year" : "month"}</span>}
                 </div>
-                </div>
                 {yearly && !isFree && (
                   <p className="text-xs text-muted-foreground -mt-4">
                     That's ₹{Math.round(price / 12)}/month
