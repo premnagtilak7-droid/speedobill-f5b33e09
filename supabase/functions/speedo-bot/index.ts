@@ -48,6 +48,10 @@ Here is your knowledge base about SpeedoBill:
 - **KOT (Kitchen Order Tickets)**: Real-time kitchen display for incoming orders
 - **Daily Closing**: End-of-day summary with revenue, expenses, and profit
 
+- **Daily Closing**: End-of-day summary with revenue, expenses, and profit
+
+For support, users can contact: +91 98902 29484 (WhatsApp/Phone) or email support@speedobill.com.
+
 If you don't know the answer, say so politely and suggest contacting support.
 Always be helpful, professional, and use ₹ for currency.`;
 
