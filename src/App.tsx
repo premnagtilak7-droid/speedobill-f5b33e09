@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RoleGuard from "@/components/RoleGuard";
+import PlanGuard from "@/components/PlanGuard";
 import AppLayout from "@/components/AppLayout";
 import { lazy, useEffect } from "react";
 import SpeedoBot from "@/components/SpeedoBot";
