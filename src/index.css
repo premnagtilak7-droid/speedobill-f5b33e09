@@ -255,11 +255,18 @@
   }
 
   .glass-topbar {
-    background: hsl(var(--card) / 0.92);
-    border-bottom: 1px solid hsl(var(--border) / 0.25);
+    background: hsl(var(--background) / 0.96);
+    box-shadow:
+      0 1px 0 hsl(var(--border) / 0.18),
+      0 10px 24px hsl(var(--foreground) / 0.04);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
   }
   .dark .glass-topbar {
-    background: hsl(var(--card) / 0.6);
+    background: hsl(var(--background) / 0.82);
+    box-shadow:
+      0 1px 0 hsl(var(--border) / 0.16),
+      0 10px 24px hsl(0 0% 0% / 0.22);
   }
 
   .glass-bottombar {

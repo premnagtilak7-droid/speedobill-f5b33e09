@@ -31,6 +31,23 @@ interface CounterOrderRow {
   items: Array<{ name: string; price: number; qty: number }>;
 }
 
+const getTodayStartIso = () => {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  return todayStart.toISOString();
+};
+
+const isTodayOrder = (createdAt: string) => {
+  const orderDate = new Date(createdAt);
+  const now = new Date();
+
+  return (
+    orderDate.getFullYear() === now.getFullYear() &&
+    orderDate.getMonth() === now.getMonth() &&
+    orderDate.getDate() === now.getDate()
+  );
+};
+
 const CounterOrder = () => {
   const { user, hotelId } = useAuth();
   const [menuItems, setMenuItems] = useState<any[]>([]);
@@ -98,7 +115,12 @@ const CounterOrder = () => {
     () => menuItems.filter((m) => m.name.toLowerCase().includes(search.toLowerCase())),
     [menuItems, search],
   );
-  const latestToken = recentOrders[0]?.token_number ?? lastPlacedOrder?.token_number ?? null;
+  const latestToken = useMemo(() => {
+    const todayOrder = recentOrders.find((order) => isTodayOrder(order.created_at));
+    if (todayOrder) return todayOrder.token_number;
+    if (lastPlacedOrder && isTodayOrder(lastPlacedOrder.created_at)) return lastPlacedOrder.token_number;
+    return null;
+  }, [recentOrders, lastPlacedOrder]);
 
   const buildTokenText = (order: CounterOrderRow) => {
     const lines: string[] = [];
@@ -142,12 +164,22 @@ const CounterOrder = () => {
     if (!cart.length || !hotelId || !user) return;
     setPlacing(true);
 
-    const { data: tokenNum, error: tokenError } = await supabase.rpc("next_token_number", { _hotel_id: hotelId });
+    const { data: latestTodayOrder, error: tokenError } = await supabase
+      .from("counter_orders")
+      .select("token_number")
+      .eq("hotel_id", hotelId)
+      .gte("created_at", getTodayStartIso())
+      .order("token_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
     if (tokenError) {
       toast.error(`Token failed: ${tokenError.message}`);
       setPlacing(false);
       return;
     }
+
+    const nextTokenNumber = (latestTodayOrder?.token_number ?? 0) + 1;
 
     const { data: insertedOrder, error } = await supabase
       .from("counter_orders")
@@ -155,7 +187,7 @@ const CounterOrder = () => {
         hotel_id: hotelId,
         waiter_id: user.id,
         waiter_name: profile?.full_name || "",
-        token_number: tokenNum || 0,
+        token_number: nextTokenNumber,
         total_amount: total,
         items: cart.map((c) => ({ name: c.name, price: c.price, qty: c.qty })),
       })
@@ -190,7 +222,7 @@ const CounterOrder = () => {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="gap-1"><Receipt className="h-3.5 w-3.5" /> Takeaway</Badge>
-          <Badge variant="outline" className="gap-1"><Hash className="h-3.5 w-3.5" /> Latest Token {latestToken ? `#${latestToken}` : "—"}</Badge>
+          <Badge variant="outline" className="gap-1"><Hash className="h-3.5 w-3.5" /> Today's Token {latestToken ? `#${latestToken}` : "—"}</Badge>
         </div>
       </div>
 
