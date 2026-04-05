@@ -517,6 +517,24 @@ html, body, #root {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Momentum scrolling for all scrollable containers */
+.overflow-y-auto,
+.overflow-auto,
+[style*="overflow"] {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure all interactive elements meet 44x44 minimum */
+button, a, [role="button"], input[type="checkbox"], input[type="radio"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+/* Exception for inline/badge elements */
+.badge, [data-compact], .text-\[10px\], .text-\[11px\] {
+  min-height: unset;
+  min-width: unset;
+}
+
 input, select, textarea {
   font-size: 16px !important;
 }
