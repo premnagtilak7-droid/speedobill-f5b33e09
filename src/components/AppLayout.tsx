@@ -411,7 +411,9 @@ const AppLayout = () => {
   return (
     <div className="flex min-h-screen md:h-screen md:overflow-hidden mesh-gradient-bg">
       {/* Mobile top bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between glass-topbar px-4 md:hidden">
+      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between glass-topbar px-4 md:hidden"
+        style={{ height: "calc(56px + env(safe-area-inset-top))", paddingTop: "env(safe-area-inset-top)" }}
+      >
         <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-1 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center active:bg-secondary/60">
           <Menu className="h-5 w-5 text-foreground" />
         </button>
@@ -481,7 +483,9 @@ const AppLayout = () => {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 min-h-screen md:h-screen pt-14 pb-[72px] md:pt-0 md:pb-0 overflow-x-hidden overflow-y-auto">
+      <main className="flex-1 min-h-screen md:h-screen pb-[72px] md:pt-0 md:pb-0 overflow-x-hidden overflow-y-auto"
+        style={{ paddingTop: "calc(56px + env(safe-area-inset-top))" }}
+      >
         {/* Desktop top bar */}
         <div className="hidden md:flex sticky top-0 z-10 h-12 items-center justify-end gap-2 px-6 glass-topbar">
           <NotificationBell />
