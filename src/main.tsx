@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import ErrorBoundary from "./components/ErrorBoundary";
+import OfflineBanner from "./components/OfflineBanner";
 
 // Apply saved theme safely to prevent startup crashes on restricted browsers
 let savedTheme = "dark";
@@ -32,6 +33,7 @@ if (isPreviewHost || isInIframe) {
 
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
+    <OfflineBanner />
     <App />
   </ErrorBoundary>
 );
