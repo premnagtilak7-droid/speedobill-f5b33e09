@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/speedo-bot`;
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL || "https://pkpefscbpyqpafogdbor.supabase.co"}/functions/v1/speedo-bot`;
 
 const QUICK_QUESTIONS = [
   "How do I add menu items?",
@@ -45,13 +45,10 @@ const SpeedoBot = () => {
     };
 
     try {
-      const { data: { session } } = await (await import("@/integrations/supabase/client")).supabase.auth.getSession();
-      const token = session?.access_token;
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({ messages: allMessages }),
       });

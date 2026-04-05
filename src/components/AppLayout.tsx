@@ -483,11 +483,9 @@ const AppLayout = () => {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 min-h-screen md:h-screen pb-[72px] md:pt-0 md:pb-0 overflow-x-hidden overflow-y-auto"
-        style={{ paddingTop: "calc(56px + env(safe-area-inset-top))" }}
-      >
+      <main className="flex-1 min-h-screen md:h-screen overflow-x-hidden overflow-y-auto pb-[72px] pt-[calc(56px+env(safe-area-inset-top))] md:pb-0 md:pt-0">
         {/* Desktop top bar */}
-        <div className="hidden md:flex sticky top-0 z-30 h-12 items-center justify-end gap-2 px-6 glass-topbar bg-background/80 backdrop-blur-md">
+        <div className="hidden md:flex sticky top-0 z-30 h-12 shrink-0 items-center justify-end gap-2 px-6 glass-topbar">
           <NotificationBell />
           <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-secondary/60 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center">
             {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}

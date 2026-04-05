@@ -10,7 +10,7 @@ import {
   BarChart3, TrendingUp, TrendingDown, IndianRupee, ShoppingCart,
   Users, UtensilsCrossed, Clock, ArrowUpRight, ArrowDownRight,
   CreditCard, Banknote, Smartphone, Receipt, ChefHat, Star,
-  CalendarDays, Filter
+  CalendarDays, Filter, Hash
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -266,6 +266,8 @@ const Analytics = () => {
   const totalRevenue = useMemo(() => billedOrders.reduce((s, o) => s + Number(o.total), 0), [billedOrders]);
   const prevRevenue = useMemo(() => prevBilled.reduce((s, o) => s + Number(o.total), 0), [prevBilled]);
   const counterTotal = useMemo(() => (counterOrders ?? []).reduce((s, o) => s + Number(o.total_amount), 0), [counterOrders]);
+  const counterTokenCount = useMemo(() => (counterOrders ?? []).length, [counterOrders]);
+  const tableBillsCount = useMemo(() => billedOrders.length, [billedOrders]);
   const totalExpenses = useMemo(() => (expenses ?? []).reduce((s, e) => s + Number(e.amount), 0), [expenses]);
   const avgOrderValue = billedOrders.length > 0 ? totalRevenue / billedOrders.length : 0;
   const prevAvg = prevBilled.length > 0 ? prevRevenue / prevBilled.length : 0;
@@ -428,7 +430,7 @@ const Analytics = () => {
       </div>
 
       {/* Secondary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Card className="border-border/50">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-green-500/10"><Banknote className="h-4 w-4 text-green-500" /></div>
@@ -439,6 +441,18 @@ const Analytics = () => {
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-cyan-500/10"><Receipt className="h-4 w-4 text-cyan-500" /></div>
             <div><p className="text-xs text-muted-foreground">Counter Sales</p><p className="font-semibold">{fmtCurrency(counterTotal)}</p></div>
+          </CardContent>
+        </Card>
+        <Card className="border-border/50">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10"><Receipt className="h-4 w-4 text-primary" /></div>
+            <div><p className="text-xs text-muted-foreground">Table Bills</p><p className="font-semibold">{tableBillsCount}</p></div>
+          </CardContent>
+        </Card>
+        <Card className="border-border/50">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10"><Hash className="h-4 w-4 text-primary" /></div>
+            <div><p className="text-xs text-muted-foreground">Counter Tokens</p><p className="font-semibold">{counterTokenCount}</p></div>
           </CardContent>
         </Card>
         <Card className="border-border/50">
