@@ -11,6 +11,23 @@ import { useNavigate } from "react-router-dom";
 
 const plans = [
   {
+    name: "Free",
+    monthlyPrice: 0,
+    yearlyPrice: 0,
+    icon: Zap,
+    color: "#94A3B8",
+    popular: false,
+    features: [
+      "Up to 10 tables",
+      "Menu management",
+      "Order & billing",
+      "Basic sales reports",
+      "KOT system",
+      "Staff management (2 users)",
+      "Email support",
+    ],
+  },
+  {
     name: "Basic",
     monthlyPrice: 199,
     yearlyPrice: 1990,
@@ -18,7 +35,7 @@ const plans = [
     color: "#06B6D4",
     popular: false,
     features: [
-      "Up to 15 tables",
+      "Up to 20 tables",
       "Menu management",
       "Order & billing",
       "Daily sales reports",
