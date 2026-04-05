@@ -15,8 +15,8 @@ const SupportPage = () => (
         <Button variant="outline" className="w-full justify-start gap-3" onClick={() => window.open("mailto:speedobill7@gmail.com")}>
           <Mail className="h-4 w-4" /> speedobill7@gmail.com
         </Button>
-        <Button variant="outline" className="w-full justify-start gap-3" onClick={() => window.open("https://wa.me/919876543210", "_blank")}>
-          <MessageCircle className="h-4 w-4" /> WhatsApp Support
+        <Button variant="outline" className="w-full justify-start gap-3" onClick={() => window.open("https://wa.me/919890229484", "_blank")}>
+          <MessageCircle className="h-4 w-4" /> WhatsApp Support (+91 98902 29484)
         </Button>
       </CardContent>
     </Card>

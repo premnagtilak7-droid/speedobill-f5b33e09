@@ -11,6 +11,23 @@ import { useNavigate } from "react-router-dom";
 
 const plans = [
   {
+    name: "Free",
+    monthlyPrice: 0,
+    yearlyPrice: 0,
+    icon: Zap,
+    color: "#94A3B8",
+    popular: false,
+    features: [
+      "Up to 10 tables",
+      "Menu management",
+      "Order & billing",
+      "Basic sales reports",
+      "KOT system",
+      "Staff management (2 users)",
+      "Email support",
+    ],
+  },
+  {
     name: "Basic",
     monthlyPrice: 199,
     yearlyPrice: 1990,
@@ -18,7 +35,7 @@ const plans = [
     color: "#06B6D4",
     popular: false,
     features: [
-      "Up to 15 tables",
+      "Up to 20 tables",
       "Menu management",
       "Order & billing",
       "Daily sales reports",
@@ -103,10 +120,13 @@ const PricingPage = () => {
       </div>
 
       {/* Plans */}
-      <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+      <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
         {plans.map((plan) => {
           const price = yearly ? plan.yearlyPrice : plan.monthlyPrice;
-          const isCurrentPlan = currentPlan?.toLowerCase() === plan.name.toLowerCase() && (status === "active" || status === "trial");
+          const isFree = plan.name === "Free";
+          const isCurrentPlan = isFree
+            ? (status === "free" || status === "expired")
+            : (currentPlan?.toLowerCase() === plan.name.toLowerCase() && (status === "active" || status === "trial"));
           return (
             <div
               key={plan.name}
@@ -135,10 +155,11 @@ const PricingPage = () => {
                 </div>
 
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold text-foreground">₹{price}</span>
-                  <span className="text-muted-foreground text-sm">/{yearly ? "year" : "month"}</span>
+                  <span className="text-4xl font-bold text-foreground">{isFree ? "Free" : `₹${price}`}</span>
+                  {!isFree && <span className="text-muted-foreground text-sm">/{yearly ? "year" : "month"}</span>}
                 </div>
-                {yearly && (
+                </div>
+                {yearly && !isFree && (
                   <p className="text-xs text-muted-foreground -mt-4">
                     That's ₹{Math.round(price / 12)}/month
                   </p>
@@ -156,12 +177,12 @@ const PricingPage = () => {
                 <Button
                   className={`w-full h-12 text-base font-semibold ${plan.popular ? "gradient-btn-primary" : ""}`}
                   variant={plan.popular ? "default" : "outline"}
-                  disabled={isCurrentPlan}
+                  disabled={isCurrentPlan || isFree}
                   onClick={() => {
-                    toast.info("Payment integration coming soon! Use a license key to activate.");
+                    if (!isFree) toast.info("Payment integration coming soon! Use a license key to activate.");
                   }}
                 >
-                  {isCurrentPlan ? "Current Plan" : `Get ${plan.name}`}
+                  {isCurrentPlan ? "Current Plan" : isFree ? "Current Plan" : `Get ${plan.name}`}
                 </Button>
               </div>
             </div>
