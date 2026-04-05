@@ -126,7 +126,7 @@ const PricingPage = () => {
           const isFree = plan.name === "Free";
           const isCurrentPlan = isFree
             ? (status === "free" || status === "expired")
-            : currentPlan?.toLowerCase() === plan.name.toLowerCase() && (status === "active" || status === "trial");
+            : (currentPlan?.toLowerCase() === plan.name.toLowerCase() && (status === "active" || status === "trial"));
           return (
             <div
               key={plan.name}
