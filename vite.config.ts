@@ -87,6 +87,9 @@ export default defineConfig(({ mode }) => {
   const cloudPublicEnv = resolveBuildSupabaseEnv(env);
 
   return {
+    build: {
+      target: ["es2020", "safari14", "chrome87", "firefox78"],
+    },
     define: {
       "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify(cloudPublicEnv.projectId),
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(cloudPublicEnv.url),
