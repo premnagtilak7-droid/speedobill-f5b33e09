@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ensureUserAccessContext, type AppRole } from "@/lib/auth-bootstrap";
 import { getScopedStorageKey, getScopedStoragePrefix } from "@/lib/backend-cache";
 import { getSupabaseEnvErrorMessage } from "@/lib/supabase-env";
+import { safeStorage } from "@/lib/safe-storage";
 
 const checkOnline = (): boolean => {
   if (typeof navigator !== "undefined" && "onLine" in navigator) {
