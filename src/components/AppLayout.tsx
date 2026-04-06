@@ -433,10 +433,10 @@ const AppLayout = () => {
 
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-[60] md:hidden" onClick={() => setSidebarOpen(false)}>
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+        <div className="fixed inset-0 z-[100] md:hidden" onClick={() => setSidebarOpen(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
           <aside
-            className="absolute left-0 top-0 bottom-0 w-72 glass-sidebar flex flex-col p-3 animate-slide-in-right"
+            className="absolute left-0 top-0 bottom-0 w-72 glass-sidebar flex flex-col p-3 animate-slide-in-right z-[101]"
             style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
             onClick={(e) => e.stopPropagation()}
           >
