@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const email = currentUser?.email ?? "";
         const cacheKey = getScopedStorageKey(`qb_staff_hotel_code:${email.trim().toLowerCase()}`);
         let fallbackCode: string | null = null;
-        try { fallbackCode = localStorage.getItem(cacheKey)?.trim().toUpperCase() || null; } catch {}
+        try { fallbackCode = safeStorage.getItem(cacheKey)?.trim().toUpperCase() || null; } catch {}
 
         if (fallbackCode) {
           try {
