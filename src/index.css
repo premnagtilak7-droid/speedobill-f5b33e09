@@ -5,6 +5,14 @@
 @tailwind utilities;
 
 @layer base {
+  /* Smooth theme transition on toggle */
+  html {
+    transition: color 0.2s ease, background-color 0.2s ease;
+  }
+  * {
+    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
   :root {
     /* SpeedoBill — Light theme with Orange accent */
     --background: 30 20% 98%;

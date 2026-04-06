@@ -566,4 +566,5 @@ const MenuPage = () => {
   );
 };
 
-export default MenuPage;
+import { memo } from "react";
+export default memo(MenuPage);
