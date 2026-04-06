@@ -22,7 +22,7 @@ interface Table { id: string; table_number: number; capacity: number; status: st
 interface PriceVariant { label: string; price: number; }
 interface MenuItem { id: string; name: string; category: string; price: number; image_url?: string | null; is_available: boolean; price_variants?: PriceVariant[] | null; }
 interface OrderLine { key: string; name: string; price: number; quantity: number; source: "menu" | "custom"; }
-interface HotelInfo { name: string; address: string | null; phone: string | null; tax_percent: number; gst_enabled: boolean; upi_qr_url: string | null; }
+interface HotelInfo { name: string; address: string | null; phone: string | null; tax_percent: number; gst_enabled: boolean; upi_qr_url: string | null; logo_url?: string | null; upi_id?: string | null; receipt_footer?: string | null; }
 interface ChefProfile { user_id: string; full_name: string | null; }
 
 const formatCurrency = (v: number) =>
@@ -374,16 +374,23 @@ const Tables = () => {
     l.push("═".repeat(32));
     l.push(`TOTAL:              ${formatCurrency(grandTotal)}`);
     l.push("═".repeat(32));
-    l.push("   Thank you! Visit again.");
+    if (hotelInfo?.upi_id) {
+      l.push(`UPI: ${hotelInfo.upi_id}`);
+    }
+    l.push(hotelInfo?.receipt_footer || "   Thank you! Visit again.");
     return l.join("\n");
   };
 
   const handlePrint = () => {
     if (!orderItems.length) { toast.error("Add items first"); return; }
     const receipt = buildReceiptText();
-    const popup = window.open("", "_blank", "width=380,height=700");
+    const popup = window.open("", "_blank", "width=380,height=800");
     if (!popup) { toast.error("Popup blocked"); return; }
-    popup.document.write(`<html><head><title>Receipt</title><style>body{font-family:'Courier New',monospace;padding:12px;white-space:pre-wrap;font-size:12px;}</style></head><body><pre>${receipt}</pre></body></html>`);
+    const logoHtml = hotelInfo?.logo_url ? `<div style="text-align:center;margin-bottom:8px"><img src="${hotelInfo.logo_url}" style="max-width:120px;max-height:60px" /></div>` : "";
+    const upiQrHtml = hotelInfo?.upi_id
+      ? `<div style="text-align:center;margin-top:10px"><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=${hotelInfo.upi_id}&pn=${encodeURIComponent(hotelInfo?.name || "Hotel")}&am=${grandTotal.toFixed(2)}&cu=INR`)}" style="width:130px;height:130px" /><p style="font-size:10px;margin:4px 0">Scan to Pay ₹${grandTotal.toFixed(2)}</p></div>`
+      : "";
+    popup.document.write(`<html><head><title>Receipt</title><style>body{font-family:'Courier New',monospace;padding:12px;white-space:pre-wrap;font-size:12px;}</style></head><body>${logoHtml}<pre>${receipt}</pre>${upiQrHtml}</body></html>`);
     popup.document.close(); popup.focus(); popup.print();
   };
 

@@ -590,15 +590,18 @@ export type Database = {
           gst_enabled: boolean
           hotel_code: string
           id: string
+          logo_url: string | null
           name: string
           owner_id: string
           phone: string | null
+          receipt_footer: string | null
           subscription_expiry: string | null
           subscription_start_date: string | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
           tax_percent: number
           token_counter: number
           updated_at: string
+          upi_id: string | null
           upi_qr_url: string | null
           waitlist_notify_on_available: boolean
         }
@@ -611,15 +614,18 @@ export type Database = {
           gst_enabled?: boolean
           hotel_code?: string
           id?: string
+          logo_url?: string | null
           name?: string
           owner_id: string
           phone?: string | null
+          receipt_footer?: string | null
           subscription_expiry?: string | null
           subscription_start_date?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           tax_percent?: number
           token_counter?: number
           updated_at?: string
+          upi_id?: string | null
           upi_qr_url?: string | null
           waitlist_notify_on_available?: boolean
         }
@@ -632,15 +638,18 @@ export type Database = {
           gst_enabled?: boolean
           hotel_code?: string
           id?: string
+          logo_url?: string | null
           name?: string
           owner_id?: string
           phone?: string | null
+          receipt_footer?: string | null
           subscription_expiry?: string | null
           subscription_start_date?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           tax_percent?: number
           token_counter?: number
           updated_at?: string
+          upi_id?: string | null
           upi_qr_url?: string | null
           waitlist_notify_on_available?: boolean
         }

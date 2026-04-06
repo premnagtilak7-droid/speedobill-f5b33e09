@@ -158,7 +158,7 @@ const OrderHistory = () => {
     }
     lines.push(`TOTAL: ₹${Number(order.total).toFixed(0)}`);
     lines.push("─".repeat(28));
-    lines.push("Thank you! Visit again.");
+    lines.push((hotelInfo as any)?.receipt_footer || "Thank you! Visit again.");
     return lines.join("\n");
   };
 
