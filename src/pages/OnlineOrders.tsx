@@ -96,7 +96,10 @@ const OnlineOrders = () => {
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <ShoppingBag className="h-6 w-6" /> Online Orders
           </h1>
-          <p className="text-sm text-muted-foreground">Simulated aggregator orders (Zomato & Swiggy)</p>
+          <p className="text-sm text-muted-foreground">
+            ⚠️ Demo Mode — These are simulated test orders, not real Zomato/Swiggy orders.
+            Real integration requires aggregator API partnerships.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {incomingCount > 0 && (
