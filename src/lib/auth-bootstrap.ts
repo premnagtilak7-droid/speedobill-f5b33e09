@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Enums } from "@/integrations/supabase/types";
 import { getScopedStorageKey } from "@/lib/backend-cache";
+import { safeStorage } from "@/lib/safe-storage";
 
 export type AppRole = "owner" | "waiter" | "chef" | "manager" | string;
 
@@ -30,7 +31,7 @@ const readCachedHotelCode = (email: string | null): string | null => {
   if (!email || typeof window === "undefined") return null;
 
   try {
-    const value = window.localStorage.getItem(getStaffHotelCodeCacheKey(email));
+    const value = safeStorage.getItem(getStaffHotelCodeCacheKey(email));
     return typeof value === "string" && value.trim() ? value.trim().toUpperCase() : null;
   } catch {
     return null;

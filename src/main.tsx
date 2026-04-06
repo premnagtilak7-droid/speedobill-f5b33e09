@@ -1,3 +1,12 @@
+// Polyfill requestIdleCallback for Safari
+if (typeof window !== "undefined" && !("requestIdleCallback" in window)) {
+  (window as any).requestIdleCallback = (cb: Function) => setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 50 }), 1);
+  (window as any).cancelIdleCallback = (id: number) => clearTimeout(id);
+}
+
+import { installGlobalErrorHandlers } from "./lib/startup-error-logger";
+installGlobalErrorHandlers();
+
 import { createRoot } from "react-dom/client";
 import ErrorBoundary from "./components/ErrorBoundary";
 import OfflineBanner from "./components/OfflineBanner";

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ensureUserAccessContext, type AppRole } from "@/lib/auth-bootstrap";
 import { getScopedStorageKey, getScopedStoragePrefix } from "@/lib/backend-cache";
 import { getSupabaseEnvErrorMessage } from "@/lib/supabase-env";
+import { safeStorage } from "@/lib/safe-storage";
 
 const checkOnline = (): boolean => {
   if (typeof navigator !== "undefined" && "onLine" in navigator) {
@@ -30,7 +31,7 @@ interface CachedAuthData {
 
 function readAuthCache(): CachedAuthData | null {
   try {
-    const raw = localStorage.getItem(AUTH_CACHE_KEY);
+    const raw = safeStorage.getItem(AUTH_CACHE_KEY);
     if (!raw) return null;
 
     const parsed = JSON.parse(raw) as CachedAuthData;
@@ -50,7 +51,7 @@ function readAuthCache(): CachedAuthData | null {
 
 function writeAuthCache(user: User | null, role: AppRole | null, hotelId: string | null) {
   try {
-    localStorage.setItem(
+    safeStorage.setItem(
       AUTH_CACHE_KEY,
       JSON.stringify({
         isLoggedIn: Boolean(user),
@@ -65,11 +66,11 @@ function writeAuthCache(user: User | null, role: AppRole | null, hotelId: string
 
 function clearAuthCache() {
   try {
-    localStorage.removeItem(AUTH_CACHE_KEY);
-      localStorage.removeItem(LEGACY_AUTH_CACHE_KEY);
-    Object.keys(localStorage)
+    safeStorage.removeItem(AUTH_CACHE_KEY);
+    safeStorage.removeItem(LEGACY_AUTH_CACHE_KEY);
+    safeStorage.keys()
       .filter((key) => key.startsWith(SUBSCRIPTION_CACHE_PREFIX) || key.startsWith(LEGACY_SUBSCRIPTION_CACHE_PREFIX))
-      .forEach((key) => localStorage.removeItem(key));
+      .forEach((key) => safeStorage.removeItem(key));
   } catch {}
 }
 
@@ -120,7 +121,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const email = currentUser?.email ?? "";
         const cacheKey = getScopedStorageKey(`qb_staff_hotel_code:${email.trim().toLowerCase()}`);
         let fallbackCode: string | null = null;
-        try { fallbackCode = localStorage.getItem(cacheKey)?.trim().toUpperCase() || null; } catch {}
+        try { fallbackCode = safeStorage.getItem(cacheKey)?.trim().toUpperCase() || null; } catch {}
 
         if (fallbackCode) {
           try {
