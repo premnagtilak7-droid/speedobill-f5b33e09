@@ -68,15 +68,23 @@ const MenuItemForm = ({ open, onOpenChange, editItem, hotelId, categories, onSav
   const uploadImage = async (): Promise<string | null> => {
     if (!imageFile) return imagePreview;
     setUploading(true);
-    // Use UUID-based filename to prevent path traversal
-    const ext = imageFile.type === "image/png" ? "png" : imageFile.type === "image/webp" ? "webp" : "jpg";
-    const uuid = crypto.randomUUID();
-    const path = `${hotelId}/${uuid}.${ext}`;
-    const { error } = await supabase.storage.from("menu-images").upload(path, imageFile, { upsert: true, contentType: imageFile.type });
-    setUploading(false);
-    if (error) { toast.error("Image upload failed"); return null; }
-    const { data } = supabase.storage.from("menu-images").getPublicUrl(path);
-    return data.publicUrl;
+    try {
+      // Convert to WebP for storage optimization
+      const { convertToWebP } = await import("@/lib/image-utils");
+      const { blob, ext } = await convertToWebP(imageFile, 1200, 0.8);
+      const uuid = crypto.randomUUID();
+      const path = `${hotelId}/${uuid}.${ext}`;
+      const contentType = ext === "webp" ? "image/webp" : "image/jpeg";
+      const { error } = await supabase.storage.from("menu-images").upload(path, blob, { upsert: true, contentType });
+      setUploading(false);
+      if (error) { toast.error("Image upload failed: " + error.message); return null; }
+      const { data } = supabase.storage.from("menu-images").getPublicUrl(path);
+      return data.publicUrl;
+    } catch (err: any) {
+      setUploading(false);
+      toast.error("Image processing failed: " + (err.message || "Unknown error"));
+      return null;
+    }
   };
 
   const addVariant = () => {

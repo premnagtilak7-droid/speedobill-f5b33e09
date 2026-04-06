@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,33 @@ interface Props {
   onComplete: () => void;
 }
 
-const MAX_FILE_SIZE = 1024 * 1024; // 1MB
+/** Compress image to max 1024px width, 70% JPEG quality, under ~900KB */
+const compressImage = (file: File, maxDim = 1024, quality = 0.7): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement("canvas");
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > maxDim) { h = Math.round((maxDim / w) * h); w = maxDim; } }
+      else { if (h > maxDim) { w = Math.round((maxDim / h) * w); h = maxDim; } }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Canvas not supported"));
+      ctx.drawImage(img, 0, 0, w, h);
+      let q = quality;
+      let result = canvas.toDataURL("image/jpeg", q);
+      while (result.length > 900_000 && q > 0.2) {
+        q -= 0.1;
+        result = canvas.toDataURL("image/jpeg", q);
+      }
+      resolve(result);
+    };
+    img.onerror = () => reject(new Error("Failed to load image"));
+    img.src = url;
+  });
 
 const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
   const [open, setOpen] = useState(false);
@@ -32,39 +58,31 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
   const [items, setItems] = useState<ScannedItem[]>([]);
   const [scanStatus, setScanStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const fileRef = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
-  const compressImage = (file: File, maxDim = 1200, quality = 0.6): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        const canvas = document.createElement("canvas");
-        let w = img.width, h = img.height;
-        if (w > h) { if (w > maxDim) { h = Math.round((maxDim / w) * h); w = maxDim; } }
-        else { if (h > maxDim) { w = Math.round((maxDim / h) * w); h = maxDim; } }
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject(new Error("Canvas not supported"));
-        ctx.drawImage(img, 0, 0, w, h);
-        let q = quality;
-        let result = canvas.toDataURL("image/jpeg", q);
-        // Ensure under 1MB
-        while (result.length > MAX_FILE_SIZE * 1.37 && q > 0.2) {
-          q -= 0.1;
-          result = canvas.toDataURL("image/jpeg", q);
-        }
-        resolve(result);
-      };
-      img.onerror = () => reject(new Error("Failed to load image"));
-      img.src = url;
-    });
+  // Auto-scroll to results when items appear
+  useEffect(() => {
+    if (items.length > 0 && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [items.length]);
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (fileRef.current) fileRef.current.value = "";
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file (JPG, PNG, WebP)");
+      return;
+    }
+    // Validate size (10MB raw limit before compression)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File too large (max 10MB). Please use a smaller image.");
+      return;
+    }
+
     try {
       setScanning(true);
       setScanStatus("processing");
@@ -73,7 +91,7 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
       setPreview(compressed);
       await scanImage(compressed);
     } catch (err: any) {
-      toast.error("Failed to process image: " + err.message);
+      toast.error("Failed to process image: " + (err.message || "Unknown error"));
       setScanStatus("error");
       setScanning(false);
     }
@@ -92,8 +110,14 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
           body: JSON.stringify({ image_base64: base64 }),
         }
       );
+
+      if (!resp.ok) {
+        const errData = await resp.json().catch(() => ({}));
+        const reason = errData.error || `Server error (${resp.status})`;
+        throw new Error(reason);
+      }
+
       const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || "Scan failed");
 
       if (data.items?.length > 0) {
         const mapped: ScannedItem[] = data.items.map((item: any) => ({
@@ -107,7 +131,7 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
         }));
         setItems(mapped);
         setScanStatus("success");
-        toast.success(`${mapped.length} items found!`);
+        toast.success(`${mapped.length} items found! Review & confirm below.`);
       } else {
         setScanStatus("error");
         toast.error("Could not extract menu items. Try a clearer photo.");
@@ -115,7 +139,11 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
     } catch (err: any) {
       console.error("AI scan error:", err);
       setScanStatus("error");
-      toast.error("Scan failed: " + err.message);
+      if (err.message?.includes("NetworkError") || err.message?.includes("Failed to fetch")) {
+        toast.error("Network timeout — check your internet and try again.");
+      } else {
+        toast.error("Scan failed: " + (err.message || "Unknown error"));
+      }
     }
     setScanning(false);
   };
@@ -170,19 +198,22 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
       setPreview(null);
       setScanStatus("idle");
     } catch (err: any) {
-      toast.error("Save failed: " + err.message);
+      toast.error("Save failed: " + (err.message || "Unknown error"));
     }
     setSaving(false);
   };
 
   const selectedCount = items.filter(i => i.selected).length;
 
+  // Group items by category and sort categories alphabetically
   const groupedByCategory = items.reduce<Record<string, { item: ScannedItem; globalIdx: number }[]>>((acc, item, idx) => {
     const cat = item.category || "General";
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push({ item, globalIdx: idx });
     return acc;
   }, {});
+
+  const sortedCategories = Object.keys(groupedByCategory).sort();
 
   const resetScanner = () => {
     setItems([]);
@@ -206,9 +237,8 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
           </DialogHeader>
 
           <div className="space-y-2 flex-1 overflow-hidden flex flex-col min-h-0">
-            <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
+            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic" capture="environment" className="hidden" onChange={handleFile} />
 
-            {/* Upload Area */}
             {!preview ? (
               <button
                 onClick={() => fileRef.current?.click()}
@@ -237,7 +267,6 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
               </div>
             )}
 
-            {/* Error state */}
             {scanStatus === "error" && !scanning && (
               <div className="text-center space-y-2 py-2">
                 <p className="text-xs text-destructive font-medium">❌ No items detected</p>
@@ -247,11 +276,13 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
               </div>
             )}
 
-            {/* Results */}
+            {/* Review & Confirm Results */}
             {items.length > 0 && (
-              <div className="space-y-2 flex-1 overflow-hidden flex flex-col min-h-0">
+              <div ref={resultsRef} className="space-y-2 flex-1 overflow-hidden flex flex-col min-h-0">
                 <div className="flex items-center justify-between px-1 shrink-0">
-                  <p className="text-xs sm:text-sm font-semibold">{items.length} items · {selectedCount} selected</p>
+                  <p className="text-xs sm:text-sm font-semibold">
+                    📋 Review & Confirm · {items.length} items · {selectedCount} selected
+                  </p>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="sm" className="h-6 text-[10px] sm:text-xs px-2" onClick={selectAll}>All</Button>
                     <Button variant="ghost" size="sm" className="h-6 text-[10px] sm:text-xs px-2" onClick={deselectAll}>None</Button>
@@ -260,14 +291,14 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
 
                 <ScrollArea className="flex-1 min-h-0 border rounded-lg">
                   <div className="p-1.5 sm:p-2 space-y-3">
-                    {Object.entries(groupedByCategory).map(([category, entries]) => (
+                    {sortedCategories.map((category) => (
                       <div key={category}>
                         <p className="text-[10px] sm:text-xs font-bold text-primary uppercase tracking-wide mb-1.5 px-1 flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                          {category} ({entries.length})
+                          {category} ({groupedByCategory[category].length})
                         </p>
                         <div className="space-y-1">
-                          {entries.map(({ item, globalIdx }) => (
+                          {groupedByCategory[category].map(({ item, globalIdx }) => (
                             <div
                               key={globalIdx}
                               className={`p-1.5 sm:p-2 rounded-lg border transition-all ${
@@ -277,22 +308,20 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
                               }`}
                             >
                               <div className="flex items-start gap-1.5 sm:gap-2">
-                                {/* Checkbox */}
                                 <button
                                   onClick={() => toggleItem(globalIdx)}
-                                  className={`w-4 h-4 sm:w-5 sm:h-5 rounded border-2 flex items-center justify-center shrink-0 mt-1 ${
+                                  className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 mt-1 min-w-[20px] min-h-[20px] ${
                                     item.selected ? "border-primary bg-primary" : "border-muted-foreground/30"
                                   }`}
                                 >
-                                  {item.selected && <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-primary-foreground" />}
+                                  {item.selected && <Check className="h-3 w-3 text-primary-foreground" />}
                                 </button>
 
-                                {/* Fields */}
                                 <div className="flex-1 min-w-0 space-y-1">
                                   <Input
                                     value={item.name}
                                     onChange={(e) => updateItem(globalIdx, "name", e.target.value)}
-                                    className="h-6 sm:h-7 text-xs sm:text-sm font-medium px-1.5 sm:px-2"
+                                    className="h-7 text-xs sm:text-sm font-medium px-2"
                                     placeholder="Item name"
                                   />
                                   {item.price_variants && item.price_variants.length > 0 ? (
@@ -305,7 +334,7 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
                                             type="number"
                                             value={v.price}
                                             onChange={(e) => updateVariantPrice(globalIdx, vi, Number(e.target.value))}
-                                            className="h-4 sm:h-5 w-12 sm:w-14 text-[10px] sm:text-xs px-0.5 border-0 bg-transparent font-semibold text-primary"
+                                            className="h-5 w-14 text-[10px] sm:text-xs px-0.5 border-0 bg-transparent font-semibold text-primary"
                                           />
                                         </div>
                                       ))}
@@ -317,19 +346,18 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
                                         type="number"
                                         value={item.price}
                                         onChange={(e) => updateItem(globalIdx, "price", Number(e.target.value))}
-                                        className="h-6 sm:h-7 w-16 sm:w-20 text-xs sm:text-sm font-semibold text-primary px-1.5"
+                                        className="h-7 w-20 text-xs sm:text-sm font-semibold text-primary px-1.5"
                                         placeholder="Price"
                                       />
                                     </div>
                                   )}
                                 </div>
 
-                                {/* Delete */}
                                 <button
                                   onClick={() => removeItem(globalIdx)}
-                                  className="text-muted-foreground hover:text-destructive p-0.5 shrink-0"
+                                  className="text-muted-foreground hover:text-destructive p-1 shrink-0 min-w-[28px] min-h-[28px] flex items-center justify-center"
                                 >
-                                  <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                  <Trash2 className="h-3.5 w-3.5" />
                                 </button>
                               </div>
                             </div>
@@ -340,7 +368,6 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
                   </div>
                 </ScrollArea>
 
-                {/* Prominent Confirm Button */}
                 <Button
                   onClick={saveAll}
                   disabled={saving || selectedCount === 0}
