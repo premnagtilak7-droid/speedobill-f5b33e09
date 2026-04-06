@@ -140,7 +140,7 @@ const Tables = () => {
     const [tablesRes, menuRes, hotelRes] = await Promise.all([
       supabase.from("restaurant_tables").select("id, table_number, capacity, status, section_name").eq("hotel_id", hotelId).order("table_number"),
       supabase.from("menu_items").select("id, name, category, price, image_url, is_available, price_variants").eq("hotel_id", hotelId).eq("is_available", true).order("category").order("name"),
-      supabase.from("hotels").select("name, address, phone, tax_percent, gst_enabled, upi_qr_url").eq("id", hotelId).maybeSingle(),
+      supabase.from("hotels").select("name, address, phone, tax_percent, gst_enabled, upi_qr_url, logo_url, upi_id, receipt_footer").eq("id", hotelId).maybeSingle(),
     ]);
     setTables(tablesRes.data || []);
     setMenuItems((menuRes.data || []) as unknown as MenuItem[]);
