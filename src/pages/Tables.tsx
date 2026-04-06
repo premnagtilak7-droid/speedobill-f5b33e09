@@ -387,10 +387,17 @@ const Tables = () => {
     const popup = window.open("", "_blank", "width=380,height=800");
     if (!popup) { toast.error("Popup blocked"); return; }
     const logoHtml = hotelInfo?.logo_url ? `<div style="text-align:center;margin-bottom:8px"><img src="${hotelInfo.logo_url}" style="max-width:120px;max-height:60px" /></div>` : "";
-    const upiQrHtml = hotelInfo?.upi_id
-      ? `<div style="text-align:center;margin-top:10px"><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=${hotelInfo.upi_id}&pn=${encodeURIComponent(hotelInfo?.name || "Hotel")}&am=${grandTotal.toFixed(2)}&cu=INR`)}" style="width:130px;height:130px" /><p style="font-size:10px;margin:4px 0">Scan to Pay ₹${grandTotal.toFixed(2)}</p></div>`
+    const upiQrUrl = hotelInfo?.upi_id
+      ? `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=${hotelInfo.upi_id}&pn=${encodeURIComponent(hotelInfo?.name || "Hotel")}&am=${grandTotal.toFixed(2)}&cu=INR`)}`
       : "";
-    popup.document.write(`<html><head><title>Receipt</title><style>body{font-family:'Courier New',monospace;padding:12px;white-space:pre-wrap;font-size:12px;}</style></head><body>${logoHtml}<pre>${receipt}</pre>${upiQrHtml}</body></html>`);
+    const upiQrHtml = upiQrUrl
+      ? `<div style="text-align:center;margin-top:10px;border-top:1px dashed #000;padding-top:8px"><img src="${upiQrUrl}" style="width:130px;height:130px;margin:0 auto;display:block" /><p style="font-size:10px;margin:4px 0">Scan to Pay ₹${grandTotal.toFixed(2)}</p></div>`
+      : "";
+    popup.document.write(`<html><head><title>Receipt</title><style>
+      body{font-family:'Courier New',monospace;padding:0;margin:0;font-size:12px;}
+      .receipt{width:300px;margin:0 auto;padding:16px;}
+      pre{white-space:pre-wrap;word-break:break-word;margin:0;}
+    </style></head><body><div class="receipt">${logoHtml}<pre>${receipt}</pre>${upiQrHtml}</div></body></html>`);
     popup.document.close(); popup.focus(); popup.print();
   };
 
@@ -958,15 +965,20 @@ const Tables = () => {
                             </div>
                           )}
 
-                          {showUpiQr && hotelInfo?.upi_qr_url && (
+                          {showUpiQr && (hotelInfo?.upi_qr_url || hotelInfo?.upi_id) && (
                             <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-center">
                               <p className="mb-2 text-xs font-medium text-foreground">Scan to Pay</p>
-                              <img src={hotelInfo.upi_qr_url} alt="UPI QR" className="mx-auto h-40 w-40 rounded-lg object-contain" />
+                              {hotelInfo?.upi_qr_url ? (
+                                <img src={hotelInfo.upi_qr_url} alt="UPI QR" className="mx-auto h-40 w-40 rounded-lg object-contain" />
+                              ) : hotelInfo?.upi_id ? (
+                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=${hotelInfo.upi_id}&pn=${encodeURIComponent(hotelInfo.name || "Hotel")}&am=${grandTotal.toFixed(2)}&cu=INR`)}`} alt="UPI QR" className="mx-auto h-40 w-40 rounded-lg object-contain" />
+                              ) : null}
+                              {hotelInfo?.upi_id && <p className="mt-1 text-[10px] text-muted-foreground">{hotelInfo.upi_id}</p>}
                             </div>
                           )}
-                          {showUpiQr && !hotelInfo?.upi_qr_url && (
+                          {showUpiQr && !hotelInfo?.upi_qr_url && !hotelInfo?.upi_id && (
                             <div className="rounded-lg border border-dashed border-border p-3 text-center text-[11px] text-muted-foreground">
-                              No UPI QR uploaded. Go to Settings → add UPI QR image.
+                              No UPI configured. Go to Settings → add UPI ID or QR image.
                             </div>
                           )}
 
