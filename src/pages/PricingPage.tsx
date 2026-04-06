@@ -226,4 +226,5 @@ const PricingPage = () => {
   );
 };
 
-export default PricingPage;
+import { memo } from "react";
+export default memo(PricingPage);
