@@ -9,10 +9,11 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
-import { Settings, Copy, Key, Shield, FileText, ExternalLink, Volume2 } from "lucide-react";
+import { Settings, Copy, Key, Shield, FileText, ExternalLink, Volume2, Upload, Image as ImageIcon, QrCode } from "lucide-react";
 import InstallAppPrompt from "@/components/InstallAppPrompt";
 import { useNavigate } from "react-router-dom";
 import { setNotificationVolume, getNotificationVolume, playLoudBell } from "@/lib/notification-sounds";
+import { convertToWebP } from "@/lib/image-utils";
 
 const SettingsPage = () => {
   const { user, hotelId } = useAuth();
@@ -32,6 +33,10 @@ const SettingsPage = () => {
   const [counterBilling, setCounterBilling] = useState(false);
   const [autoCleanup, setAutoCleanup] = useState(true);
   const [volume, setVolume] = useState(getNotificationVolume());
+  const [logoUrl, setLogoUrl] = useState("");
+  const [upiId, setUpiId] = useState("");
+  const [receiptFooter, setReceiptFooter] = useState("Thank you! Visit again.");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
     if (!hotelId) return;
@@ -47,10 +52,34 @@ const SettingsPage = () => {
         setEasyVoid(data.easy_void_enabled);
         setCounterBilling(data.counter_billing_enabled);
         setAutoCleanup(data.auto_cleanup_after_bill);
+        setLogoUrl((data as any).logo_url || "");
+        setUpiId((data as any).upi_id || "");
+        setReceiptFooter((data as any).receipt_footer || "Thank you! Visit again.");
       }
       setLoading(false);
     })();
   }, [hotelId]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !hotelId) return;
+    if (file.size > 2 * 1024 * 1024) { toast.error("Logo must be under 2MB"); return; }
+    setUploadingLogo(true);
+    try {
+      const { blob, ext } = await convertToWebP(file, 400, 0.85);
+      const path = `${hotelId}/logo.${ext}`;
+      const { error: upErr } = await supabase.storage.from("menu-images").upload(path, blob, { upsert: true, contentType: `image/${ext}` });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("menu-images").getPublicUrl(path);
+      const url = urlData.publicUrl + "?t=" + Date.now();
+      setLogoUrl(url);
+      await supabase.from("hotels").update({ logo_url: url } as any).eq("id", hotelId);
+      toast.success("Logo uploaded!");
+    } catch (err: any) {
+      toast.error("Upload failed: " + err.message);
+    }
+    setUploadingLogo(false);
+  };
 
   const saveSettings = async () => {
     if (!hotelId) return;
@@ -62,7 +91,9 @@ const SettingsPage = () => {
       easy_void_enabled: easyVoid,
       counter_billing_enabled: counterBilling,
       auto_cleanup_after_bill: autoCleanup,
-    }).eq("id", hotelId);
+      upi_id: upiId,
+      receipt_footer: receiptFooter,
+    } as any).eq("id", hotelId);
     if (error) toast.error("Save failed: " + error.message);
     else toast.success("Settings saved!");
     setSaving(false);
@@ -98,7 +129,7 @@ const SettingsPage = () => {
           subscription_tier: lic.tier === "premium" ? "premium" : "basic",
           subscription_start_date: now.toISOString(),
           subscription_expiry: expiry.toISOString(),
-        }).eq("id", hotelId),
+        } as any).eq("id", hotelId),
         supabase.from("profiles").update({
           subscription_status: "active",
           subscription_plan: lic.tier,
@@ -113,11 +144,8 @@ const SettingsPage = () => {
 
       toast.success(`✅ ${planLabel} plan activated! Valid until ${expiryStr}`, { duration: 6000 });
       setLicenseKey("");
-      // Refresh hotel data
       const { data: refreshed } = await supabase.from("hotels").select("*").eq("id", hotelId).single();
-      if (refreshed) {
-        setHotel(refreshed);
-      }
+      if (refreshed) setHotel(refreshed);
     } catch (err: any) {
       toast.error("Activation failed: " + err.message, {
         action: { label: "Retry", onClick: () => activateLicense() },
@@ -169,6 +197,37 @@ const SettingsPage = () => {
               <label className="text-xs text-muted-foreground">Address</label>
               <Input value={address} onChange={(e) => setAddress(e.target.value)} />
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Branding & Receipt */}
+      <Card>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><ImageIcon className="h-4 w-4" /> Branding & Receipt</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          {/* Logo */}
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground">Hotel Logo (shown on receipts)</label>
+            <div className="flex items-center gap-4">
+              {logoUrl && <img src={logoUrl} alt="Logo" className="h-12 w-auto rounded border border-border object-contain" />}
+              <label className="cursor-pointer">
+                <Button variant="outline" size="sm" asChild disabled={uploadingLogo}>
+                  <span><Upload className="h-3.5 w-3.5 mr-1" />{uploadingLogo ? "Uploading..." : "Upload Logo"}</span>
+                </Button>
+                <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleLogoUpload} />
+              </label>
+            </div>
+          </div>
+          {/* UPI ID */}
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground flex items-center gap-1"><QrCode className="h-3 w-3" /> UPI ID (for payment QR on bills)</label>
+            <Input placeholder="yourname@upi" value={upiId} onChange={(e) => setUpiId(e.target.value)} />
+            <p className="text-[10px] text-muted-foreground">e.g. nagtilakprem@okaxis — QR code auto-generated on every bill</p>
+          </div>
+          {/* Footer Message */}
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Custom Receipt Footer</label>
+            <Input placeholder="Thank you! Visit again." value={receiptFooter} onChange={(e) => setReceiptFooter(e.target.value)} />
           </div>
         </CardContent>
       </Card>
