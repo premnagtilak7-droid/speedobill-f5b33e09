@@ -31,7 +31,7 @@ interface CachedAuthData {
 
 function readAuthCache(): CachedAuthData | null {
   try {
-    const raw = localStorage.getItem(AUTH_CACHE_KEY);
+    const raw = safeStorage.getItem(AUTH_CACHE_KEY);
     if (!raw) return null;
 
     const parsed = JSON.parse(raw) as CachedAuthData;
@@ -51,7 +51,7 @@ function readAuthCache(): CachedAuthData | null {
 
 function writeAuthCache(user: User | null, role: AppRole | null, hotelId: string | null) {
   try {
-    localStorage.setItem(
+    safeStorage.setItem(
       AUTH_CACHE_KEY,
       JSON.stringify({
         isLoggedIn: Boolean(user),
@@ -66,11 +66,11 @@ function writeAuthCache(user: User | null, role: AppRole | null, hotelId: string
 
 function clearAuthCache() {
   try {
-    localStorage.removeItem(AUTH_CACHE_KEY);
-      localStorage.removeItem(LEGACY_AUTH_CACHE_KEY);
-    Object.keys(localStorage)
+    safeStorage.removeItem(AUTH_CACHE_KEY);
+    safeStorage.removeItem(LEGACY_AUTH_CACHE_KEY);
+    safeStorage.keys()
       .filter((key) => key.startsWith(SUBSCRIPTION_CACHE_PREFIX) || key.startsWith(LEGACY_SUBSCRIPTION_CACHE_PREFIX))
-      .forEach((key) => localStorage.removeItem(key));
+      .forEach((key) => safeStorage.removeItem(key));
   } catch {}
 }
 
