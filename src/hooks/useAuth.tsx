@@ -204,6 +204,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
+      // Clean up auth tokens from URL after OAuth redirect
+      if (window.location.hash && /access_token|token_type|refresh_token/.test(window.location.hash)) {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+
       setUser(currentUser);
 
       if (event === "TOKEN_REFRESHED") {
