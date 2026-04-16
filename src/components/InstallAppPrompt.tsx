@@ -47,7 +47,7 @@ const InstallAppPrompt = React.forwardRef<HTMLDivElement>((_, ref) => {
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === "accepted") {
         setIsInstalled(true);
-        toast.success("Speedo Bill installed on your device!");
+        toast.success("SpeedoBill installed on your device!");
       }
       setDeferredPrompt(null);
     } catch {
@@ -67,17 +67,17 @@ const InstallAppPrompt = React.forwardRef<HTMLDivElement>((_, ref) => {
         {isInstalled ? (
           <div className="flex items-center gap-2 text-sm">
             <CheckCircle2 className="h-4 w-4 text-green-500" />
-            <span className="text-muted-foreground">Speedo Bill is installed on this device</span>
+            <span className="text-muted-foreground">SpeedoBill is installed on this device</span>
           </div>
         ) : (
           <>
             <p className="text-sm text-muted-foreground">
-              Install Speedo Bill on your phone or tablet for instant access — works like a native app with offline support.
+              Install SpeedoBill on your phone or tablet for instant access — works like a native app with offline support.
             </p>
             <div className="flex flex-col gap-2">
               <Button onClick={handleInstall} disabled={installing} className="gap-2">
                 <Download className="h-4 w-4" />
-                {installing ? "Installing..." : "Install Speedo Bill"}
+                {installing ? "Installing..." : "Install SpeedoBill"}
               </Button>
               <p className="text-[11px] text-muted-foreground">
                 <strong>iPhone:</strong> Safari → Share → Add to Home Screen<br />

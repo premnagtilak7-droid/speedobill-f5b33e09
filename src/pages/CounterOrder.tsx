@@ -125,7 +125,7 @@ const CounterOrder = () => {
   const buildTokenText = (order: CounterOrderRow) => {
     const lines: string[] = [];
     lines.push("═".repeat(32));
-    lines.push("       SPEEDO BILL COUNTER");
+    lines.push("       SPEEDOBILL COUNTER");
     lines.push("═".repeat(32));
     lines.push(`TOKEN: #${order.token_number}`);
     lines.push(`TYPE : TAKEAWAY`);
