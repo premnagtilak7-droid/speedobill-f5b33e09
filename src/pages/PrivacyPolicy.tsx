@@ -67,7 +67,7 @@ const PrivacyPolicy = () => {
           <ul className="list-disc pl-5 text-muted-foreground space-y-1">
             <li>End-to-end encryption for data in transit (TLS 1.3).</li>
             <li>Row-Level Security (RLS) ensuring each hotel can only access its own data.</li>
-            <li>4-digit Security PIN protection for sensitive sections (financials, settings).</li>
+            <li>Google OAuth and email-based authentication for secure access.</li>
             <li>Role-based access control (Owner, Manager, Waiter, Chef) with granular permissions.</li>
             <li>Regular security audits and vulnerability assessments.</li>
           </ul>

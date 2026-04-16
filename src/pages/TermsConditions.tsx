@@ -47,7 +47,7 @@ const TermsConditions = () => {
           <h2 className="text-lg font-semibold text-foreground">3. Account Registration</h2>
           <ul className="list-disc pl-5 text-muted-foreground space-y-1">
             <li>You must provide accurate and complete registration information.</li>
-            <li>You are responsible for maintaining the confidentiality of your login credentials and Security PIN.</li>
+            <li>You are responsible for maintaining the confidentiality of your login credentials.</li>
             <li>You are responsible for all activities that occur under your account.</li>
             <li>Hotel owners may create staff accounts (Waiter, Chef, Manager) under their hotel. Owners are responsible for managing staff access.</li>
           </ul>

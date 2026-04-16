@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import StaffPinManager from "@/components/StaffPinManager";
+
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -245,9 +245,8 @@ const StaffPage = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 w-full max-w-2xl">
+        <TabsList className="grid grid-cols-4 w-full max-w-2xl">
           <TabsTrigger value="team">Team</TabsTrigger>
-          <TabsTrigger value="pins">PINs</TabsTrigger>
           <TabsTrigger value="salary">Salary</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
@@ -320,17 +319,6 @@ const StaffPage = () => {
           </div>
         </TabsContent>
 
-        {/* PINs Tab */}
-        <TabsContent value="pins" className="space-y-4">
-          <Card className="glass-card">
-            <CardContent className="p-4">
-              <StaffPinManager />
-            </CardContent>
-          </Card>
-          <p className="text-xs text-muted-foreground">
-            Staff can use their PIN for quick login without email/password. Assign a 4-digit PIN to each staff member.
-          </p>
-        </TabsContent>
 
         {/* Salary Tab */}
         <TabsContent value="salary" className="space-y-4">

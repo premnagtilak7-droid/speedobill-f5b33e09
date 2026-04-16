@@ -11,7 +11,7 @@ import PlanGuard from "@/components/PlanGuard";
 import AppLayout from "@/components/AppLayout";
 import { lazy, useEffect } from "react";
 import SpeedoBot from "@/components/SpeedoBot";
-import PinLockGate from "@/components/PinLockGate";
+
 import ScrollToTop from "@/components/ScrollToTop";
 
 // Eager load auth pages + critical entry routes for stability
@@ -168,20 +168,20 @@ const AppRoutes = () => {
           <Route path="/daily-closing" element={<RoleGuard allowed={["owner", "manager"]}><DailyClosing /></RoleGuard>} />
           <Route path="/online-orders" element={<RoleGuard allowed={["owner", "manager"]}><OnlineOrders /></RoleGuard>} />
 
-          {/* Owner-only routes — all PIN-protected */}
-          <Route path="/expenses" element={<RoleGuard allowed={["owner"]}><PinLockGate><ExpensesPage /></PinLockGate></RoleGuard>} />
-          <Route path="/billing-history" element={<RoleGuard allowed={["owner"]}><PinLockGate><BillingHistory /></PinLockGate></RoleGuard>} />
-          <Route path="/audit-log" element={<RoleGuard allowed={["owner"]}><PinLockGate><AuditLog /></PinLockGate></RoleGuard>} />
+          {/* Owner-only routes */}
+          <Route path="/expenses" element={<RoleGuard allowed={["owner"]}><ExpensesPage /></RoleGuard>} />
+          <Route path="/billing-history" element={<RoleGuard allowed={["owner"]}><BillingHistory /></RoleGuard>} />
+          <Route path="/audit-log" element={<RoleGuard allowed={["owner"]}><AuditLog /></RoleGuard>} />
           <Route path="/layout-designer" element={<RoleGuard allowed={["owner"]}><LayoutDesigner /></RoleGuard>} />
-          <Route path="/inventory" element={<RoleGuard allowed={["owner"]}><PinLockGate><InventoryPage /></PinLockGate></RoleGuard>} />
+          <Route path="/inventory" element={<RoleGuard allowed={["owner"]}><InventoryPage /></RoleGuard>} />
           <Route path="/recipes" element={<RoleGuard allowed={["owner"]}><RecipesPage /></RoleGuard>} />
-          <Route path="/vendors" element={<RoleGuard allowed={["owner"]}><PinLockGate><VendorsPage /></PinLockGate></RoleGuard>} />
+          <Route path="/vendors" element={<RoleGuard allowed={["owner"]}><VendorsPage /></RoleGuard>} />
           <Route path="/wastage" element={<RoleGuard allowed={["owner"]}><WastagePage /></RoleGuard>} />
-          <Route path="/stock-analytics" element={<RoleGuard allowed={["owner"]}><PinLockGate><PlanGuard featureName="Stock Analytics"><StockAnalytics /></PlanGuard></PinLockGate></RoleGuard>} />
+          <Route path="/stock-analytics" element={<RoleGuard allowed={["owner"]}><PlanGuard featureName="Stock Analytics"><StockAnalytics /></PlanGuard></RoleGuard>} />
           <Route path="/integrations" element={<RoleGuard allowed={["owner"]}><IntegrationsPage /></RoleGuard>} />
           <Route path="/supply-store" element={<RoleGuard allowed={["owner"]}><SupplyStore /></RoleGuard>} />
           <Route path="/loyalty-settings" element={<RoleGuard allowed={["owner"]}><LoyaltySettings /></RoleGuard>} />
-          <Route path="/settings" element={<RoleGuard allowed={["owner"]}><PinLockGate><SettingsPage /></PinLockGate></RoleGuard>} />
+          <Route path="/settings" element={<RoleGuard allowed={["owner"]}><SettingsPage /></RoleGuard>} />
 
           {/* Staff self-profile — waiter, chef, manager */}
           <Route path="/staff-profile" element={<RoleGuard allowed={["owner", "manager", "waiter", "chef"]}><StaffProfile /></RoleGuard>} />
