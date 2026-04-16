@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import LandingNavbar from "@/components/landing/LandingNavbar";
 import MobileNavbar from "@/components/landing/MobileNavbar";
 import DemoRequestForm from "@/components/landing/DemoRequestForm";
+import DemoBookingForm from "@/components/landing/DemoBookingForm";
 import LandingFooter from "@/components/landing/LandingFooter";
 import {
   Zap, LayoutDashboard, ChefHat, QrCode, Users, BarChart3,
@@ -200,19 +201,19 @@ const LandingPage = () => (
       </div>
     </section>
 
-    {/* Request a Demo */}
+    {/* Schedule a Free Demo */}
     <section id="demo" className="border-t px-4 py-24 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-5xl items-center gap-12 lg:grid-cols-2">
         <div>
           <Smartphone className="mb-4 h-10 w-10 text-primary" />
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Ready to modernize your canteen?
+            Schedule a Free Demo
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Request a free demo and our team will reach out on WhatsApp to set you up in minutes.
+            Fill in your details and a SpeedoBill expert will reach out on WhatsApp to set you up in minutes.
           </p>
           <ul className="mt-6 space-y-3">
-            {["Free setup assistance", "No credit card required", "7-day free trial included"].map((item) => (
+            {["Free setup assistance", "No credit card required", "7-day free trial included", "Personalized onboarding call"].map((item) => (
               <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
                 <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
                 {item}
@@ -220,7 +221,7 @@ const LandingPage = () => (
             ))}
           </ul>
         </div>
-        <DemoRequestForm />
+        <DemoBookingForm />
       </div>
     </section>
 
