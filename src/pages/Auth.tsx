@@ -98,9 +98,22 @@ const Auth = () => {
   const [role, setRole] = useState<RoleChoice>("owner");
   const [hotelCode, setHotelCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) {
+      toast.error(error.message);
+      setGoogleLoading(false);
+    }
+  };
 
   const pwStrength = useMemo(() => evaluatePassword(password), [password]);
   useEffect(() => {
