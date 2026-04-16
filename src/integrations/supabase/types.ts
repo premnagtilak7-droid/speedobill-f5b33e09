@@ -438,6 +438,33 @@ export type Database = {
           },
         ]
       }
+      demo_leads: {
+        Row: {
+          city: string
+          created_at: string
+          id: string
+          owner_name: string
+          restaurant_name: string
+          whatsapp_number: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          id?: string
+          owner_name: string
+          restaurant_name: string
+          whatsapp_number: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          id?: string
+          owner_name?: string
+          restaurant_name?: string
+          whatsapp_number?: string
+        }
+        Relationships: []
+      }
       demo_requests: {
         Row: {
           canteen_name: string
