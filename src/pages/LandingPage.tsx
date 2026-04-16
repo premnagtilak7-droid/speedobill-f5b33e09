@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import LandingNavbar from "@/components/landing/LandingNavbar";
+import DemoRequestForm from "@/components/landing/DemoRequestForm";
+import LandingFooter from "@/components/landing/LandingFooter";
 import {
   Zap, LayoutDashboard, ChefHat, QrCode, Users, BarChart3,
   ShieldCheck, Smartphone, ArrowRight, Star, CheckCircle2,
@@ -196,41 +198,32 @@ const LandingPage = () => (
       </div>
     </section>
 
-    {/* CTA */}
-    <section className="border-t px-4 py-24 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-3xl text-center">
-        <Smartphone className="mx-auto h-12 w-12 text-primary" />
-        <h2 className="mt-6 text-3xl font-bold tracking-tight sm:text-4xl">
-          Ready to modernize your restaurant?
-        </h2>
-        <p className="mt-4 text-lg text-muted-foreground">
-          Join hundreds of restaurants already using Speedo Bill.
-        </p>
-        <Link to="/auth">
-          <Button size="lg" className="mt-8 gap-2 px-10 text-base font-semibold">
-            Get Started Free <ArrowRight className="h-4 w-4" />
-          </Button>
-        </Link>
+    {/* Request a Demo */}
+    <section id="demo" className="border-t px-4 py-24 sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-5xl items-center gap-12 lg:grid-cols-2">
+        <div>
+          <Smartphone className="mb-4 h-10 w-10 text-primary" />
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Ready to modernize your canteen?
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Request a free demo and our team will reach out on WhatsApp to set you up in minutes.
+          </p>
+          <ul className="mt-6 space-y-3">
+            {["Free setup assistance", "No credit card required", "7-day free trial included"].map((item) => (
+              <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <DemoRequestForm />
       </div>
     </section>
 
     {/* Footer */}
-    <footer className="border-t bg-muted/30 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
-            <Zap className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="font-semibold">Speedo Bill</span>
-        </div>
-        <div className="flex gap-6 text-sm text-muted-foreground">
-          <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
-          <Link to="/terms" className="hover:text-foreground">Terms</Link>
-          <Link to="/support" className="hover:text-foreground">Support</Link>
-        </div>
-        <p className="text-sm text-muted-foreground">© 2026 Speedo Bill. All rights reserved.</p>
-      </div>
-    </footer>
+    <LandingFooter />
   </div>
 );
 
