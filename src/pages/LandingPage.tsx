@@ -13,7 +13,6 @@ import {
   Zap, LayoutDashboard, ChefHat, QrCode, Users, BarChart3,
   ShieldCheck, Smartphone, ArrowRight, Star, CheckCircle2,
 } from "lucide-react";
-import billingMockup from "@/assets/billing-dashboard-mockup.jpg";
 import ownerTabletImg from "@/assets/owner-tablet-hero.jpg";
 import thermalReceiptImg from "@/assets/thermal-receipt-mockup.jpg";
 import inventoryAlertsImg from "@/assets/inventory-alerts-phone.jpg";
