@@ -2,3 +2,6 @@ project_id = "pkpefscbpyqpafogdbor"
 
 [functions.speedo-bot]
 verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false
