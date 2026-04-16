@@ -324,7 +324,7 @@ const CreatorAdmin = () => {
 
   const copyKey = (code: string) => { navigator.clipboard.writeText(code); toast.success("Copied!"); };
   const shareWhatsApp = (code: string) => {
-    const msg = encodeURIComponent(`🔑 Your Speedo Bill License Key: ${code}\n\nActivate it in Settings → License Key`);
+    const msg = encodeURIComponent(`🔑 Your SpeedoBill License Key: ${code}\n\nActivate it in Settings → License Key`);
     window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
 
@@ -509,7 +509,7 @@ const CreatorAdmin = () => {
         <div className="hidden md:flex h-14 items-center justify-between px-6 lg:px-8 border-b border-border/40 dark:border-white/[0.08] bg-white/50 dark:bg-white/[0.02] backdrop-blur-xl">
           <div>
             <h2 className="text-base font-semibold text-foreground">{TABS.find(t => t.id === activeTab)?.label}</h2>
-            <p className="text-[11px] text-muted-foreground">Speedo Bill Enterprise • Platform Admin</p>
+            <p className="text-[11px] text-muted-foreground">SpeedoBill Enterprise • Platform Admin</p>
           </div>
           <div className="flex items-center gap-3">
             <Button variant="outline" size="sm" onClick={fetchData} className="gap-1.5 h-8 text-xs rounded-xl border-border/40">

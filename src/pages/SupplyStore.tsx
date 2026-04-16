@@ -127,7 +127,7 @@ const SupplyStore = () => {
       `💰 Total Estimate: ₹${cartTotal.toFixed(0)}\n` +
       (savings > 0 ? `🎁 You save: ₹${savings.toFixed(0)}\n` : "") +
       (notes ? `📝 Notes: ${notes}\n` : "") +
-      `\n_Sent via Speedo Bill Supply Store_`
+      `\n_Sent via SpeedoBill Supply Store_`
     );
 
     window.open(`https://wa.me/919890229484?text=${msg}`, "_blank");

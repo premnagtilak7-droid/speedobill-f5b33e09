@@ -66,7 +66,7 @@ const INTEGRATIONS: Integration[] = [
     whyUse: "Essential for online ordering. Customers can pay digitally instead of cash-only. Auto-reconciliation saves hours of manual accounting.",
     features: ["UPI payments (Google Pay, PhonePe, Paytm)", "Credit & Debit cards", "Net banking", "Auto-reconciliation with bills", "Refund management", "Payment links for delivery orders"],
     setupSteps: [
-      { step: 1, title: "Already configured", description: "Razorpay is already set up with your Speedo Bill account." },
+      { step: 1, title: "Already configured", description: "Razorpay is already set up with your SpeedoBill account." },
       { step: 2, title: "Test a payment", description: "Place a test order via QR ordering and complete payment to verify." },
     ],
   },
@@ -74,7 +74,7 @@ const INTEGRATIONS: Integration[] = [
     id: "zomato",
     name: "Zomato",
     tagline: "India's largest food delivery platform",
-    description: "When connected, Zomato orders will automatically appear in your Speedo Bill POS and Kitchen Display. No manual re-entry needed. Your menu stays in sync between Zomato and Speedo Bill.",
+    description: "When connected, Zomato orders will automatically appear in your SpeedoBill POS and Kitchen Display. No manual re-entry needed. Your menu stays in sync between Zomato and SpeedoBill.",
     icon: <UtensilsCrossed className="h-6 w-6" />,
     category: "delivery",
     status: "setup_required",
@@ -87,15 +87,15 @@ const INTEGRATIONS: Integration[] = [
     setupSteps: [
       { step: 1, title: "Register as Zomato Restaurant Partner", description: "Visit restaurant.zomato.com and sign up with your restaurant's FSSAI license, GST, and bank details." },
       { step: 2, title: "Get your Restaurant ID & API Key", description: "After approval (2-5 days), you'll find your Restaurant ID and API credentials in Zomato's Restaurant Dashboard → Settings → API." },
-      { step: 3, title: "Enter credentials in Speedo Bill", description: "Come back here, enter your Zomato Restaurant ID and API Key. We'll auto-sync your menu and start receiving orders." },
-      { step: 4, title: "Verify menu sync", description: "Check that your Speedo Bill menu items match Zomato. Update prices or availability from either platform." },
+      { step: 3, title: "Enter credentials in SpeedoBill", description: "Come back here, enter your Zomato Restaurant ID and API Key. We'll auto-sync your menu and start receiving orders." },
+      { step: 4, title: "Verify menu sync", description: "Check that your SpeedoBill menu items match Zomato. Update prices or availability from either platform." },
     ],
   },
   {
     id: "swiggy",
     name: "Swiggy",
     tagline: "India's fastest food delivery",
-    description: "Swiggy orders flow directly into your kitchen display. Menu changes in Speedo Bill auto-update on Swiggy. Track delivery status in real-time.",
+    description: "Swiggy orders flow directly into your kitchen display. Menu changes in SpeedoBill auto-update on Swiggy. Track delivery status in real-time.",
     icon: <ShoppingBag className="h-6 w-6" />,
     category: "delivery",
     status: "setup_required",
@@ -104,12 +104,12 @@ const INTEGRATIONS: Integration[] = [
     estimatedTime: "3-7 business days",
     portalUrl: "https://partner.swiggy.com",
     portalLabel: "Swiggy Partner Portal",
-    features: ["Auto-import orders to KDS", "Menu management from Speedo Bill", "Delivery tracking", "Revenue reports", "Item out-of-stock sync"],
+    features: ["Auto-import orders to KDS", "Menu management from SpeedoBill", "Delivery tracking", "Revenue reports", "Item out-of-stock sync"],
     setupSteps: [
       { step: 1, title: "Register on Swiggy Partner Portal", description: "Go to partner.swiggy.com and register your restaurant. You'll need FSSAI license, PAN, GST, menu photos, and bank account." },
       { step: 2, title: "Wait for onboarding approval", description: "Swiggy's team will verify your restaurant (3-7 days). They may visit for a photo shoot." },
       { step: 3, title: "Get your Swiggy Vendor ID & API Token", description: "After approval, find your Vendor ID in Swiggy Partner Dashboard → Account → API Settings." },
-      { step: 4, title: "Enter credentials in Speedo Bill", description: "Paste your Swiggy Vendor ID and API Token here. Orders will start flowing into your POS automatically." },
+      { step: 4, title: "Enter credentials in SpeedoBill", description: "Paste your Swiggy Vendor ID and API Token here. Orders will start flowing into your POS automatically." },
     ],
   },
   {
@@ -125,7 +125,7 @@ const INTEGRATIONS: Integration[] = [
     estimatedTime: "1 day",
     features: ["Zero commission on orders", "Your own brand & domain", "SEO optimized menu page", "Online payments via Razorpay", "Order tracking for customers", "Google search visibility"],
     setupSteps: [
-      { step: 1, title: "Ensure your menu is complete", description: "Add all items with prices, categories, and images in Speedo Bill's Menu section." },
+      { step: 1, title: "Ensure your menu is complete", description: "Add all items with prices, categories, and images in SpeedoBill's Menu section." },
       { step: 2, title: "Share your QR/order link", description: "Your customer ordering page is already live! Share the link on social media, Google Business, and print it on bills." },
       { step: 3, title: "Optional: Custom domain", description: "Want 'order.yourrestaurant.com'? Contact support to set up a custom domain pointing to your ordering page." },
     ],
@@ -148,7 +148,7 @@ const INTEGRATIONS: Integration[] = [
       { step: 1, title: "Get WhatsApp Business API access", description: "Sign up at business.facebook.com → WhatsApp Manager. You need a Facebook Business account and a phone number dedicated for the business." },
       { step: 2, title: "Get API Key", description: "After approval, go to WhatsApp Manager → API Setup → Generate a permanent API token." },
       { step: 3, title: "Create message templates", description: "Create templates for: Bill receipt, Order confirmation, and Promotional message. WhatsApp must approve each template (24-48 hours)." },
-      { step: 4, title: "Enter API Key in Speedo Bill", description: "Paste your WhatsApp API Token here. We'll start sending automated bills and confirmations." },
+      { step: 4, title: "Enter API Key in SpeedoBill", description: "Paste your WhatsApp API Token here. We'll start sending automated bills and confirmations." },
     ],
   },
   {
@@ -169,7 +169,7 @@ const INTEGRATIONS: Integration[] = [
       { step: 1, title: "Apply for PhonePe Business account", description: "Visit phonepe.com/business and apply. You'll need GST, PAN, bank account, and Aadhaar." },
       { step: 2, title: "Receive sound-box device", description: "PhonePe ships a sound-box device to your restaurant (₹500-1000 one-time, varies)." },
       { step: 3, title: "Get Merchant ID", description: "Find your Merchant ID in PhonePe Business Dashboard → Settings." },
-      { step: 4, title: "Enter Merchant ID here", description: "We'll link PhonePe payments to your Speedo Bill transactions for auto-reconciliation." },
+      { step: 4, title: "Enter Merchant ID here", description: "We'll link PhonePe payments to your SpeedoBill transactions for auto-reconciliation." },
     ],
   },
   {
@@ -187,7 +187,7 @@ const INTEGRATIONS: Integration[] = [
     setupSteps: [
       { step: 1, title: "Buy a thermal printer", description: "Get any 80mm thermal printer (₹3,000-8,000). Popular: TVS RP 3200 Star, Epson TM-T82. For Bluetooth: get a BT-enabled model." },
       { step: 2, title: "Connect to your device", description: "USB: Plug into your PC/tablet. Bluetooth: Pair from your device's Bluetooth settings." },
-      { step: 3, title: "Use browser print", description: "Speedo Bill uses browser's print dialog. Click 'Print KOT' or 'Print Bill' buttons → select your printer." },
+      { step: 3, title: "Use browser print", description: "SpeedoBill uses browser's print dialog. Click 'Print KOT' or 'Print Bill' buttons → select your printer." },
     ],
   },
   {
@@ -203,9 +203,9 @@ const INTEGRATIONS: Integration[] = [
     estimatedTime: "5 minutes",
     features: ["New order alerts", "KDS ready notifications", "Low stock warnings", "Service call alerts from customers"],
     setupSteps: [
-      { step: 1, title: "Allow notifications in browser", description: "When prompted by Speedo Bill, click 'Allow' on the notification permission popup." },
-      { step: 2, title: "Keep the app tab open", description: "Notifications work when Speedo Bill is open in a browser tab (can be in background)." },
-      { step: 3, title: "For mobile", description: "On Android/iOS, add Speedo Bill to your home screen ('Add to Home Screen') for app-like notification experience." },
+      { step: 1, title: "Allow notifications in browser", description: "When prompted by SpeedoBill, click 'Allow' on the notification permission popup." },
+      { step: 2, title: "Keep the app tab open", description: "Notifications work when SpeedoBill is open in a browser tab (can be in background)." },
+      { step: 3, title: "For mobile", description: "On Android/iOS, add SpeedoBill to your home screen ('Add to Home Screen') for app-like notification experience." },
     ],
   },
   {
@@ -227,7 +227,7 @@ const INTEGRATIONS: Integration[] = [
     id: "google_business",
     name: "Google Business Profile",
     tagline: "Get found on Google Search & Maps",
-    description: "Keep your Google listing updated with current menu, hours, and photos. Respond to reviews from your Speedo Bill dashboard.",
+    description: "Keep your Google listing updated with current menu, hours, and photos. Respond to reviews from your SpeedoBill dashboard.",
     icon: <Globe className="h-6 w-6" />,
     category: "marketing",
     status: "coming_soon",

@@ -19,7 +19,7 @@ export function playOrderAlert() {
 
 function sendBrowserNotification(order: IncomingOrder) {
   sendBrowserNotif(
-    "Speedo Bill — New Order",
+    "SpeedoBill — New Order",
     `Table ${order.table_number} ordered ₹${order.total_amount}`,
     `order-${order.id}`
   );
@@ -40,7 +40,7 @@ function notifyListeners(order: IncomingOrder) {
 
 // ── Title flash ──
 let titleInterval: ReturnType<typeof setInterval> | null = null;
-const originalTitle = typeof document !== "undefined" ? document.title : "Speedo Bill";
+const originalTitle = typeof document !== "undefined" ? document.title : "SpeedoBill";
 
 export function startTitleFlash() {
   if (titleInterval) return;

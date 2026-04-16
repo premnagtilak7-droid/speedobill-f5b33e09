@@ -135,7 +135,7 @@ export async function ensureUserAccessContext(
     resolvedHotelId = linkedHotelId ?? resolvedHotelId;
   }
 
-  const profileUpdates: Record<string, unknown> = {};
+  const profileUpdates: Partial<{ role: string; hotel_id: string; full_name: string; email: string }> = {};
 
   if (profile?.role !== bootstrapRole) profileUpdates.role = bootstrapRole;
   if (resolvedHotelId && profile?.hotel_id !== resolvedHotelId) profileUpdates.hotel_id = resolvedHotelId;

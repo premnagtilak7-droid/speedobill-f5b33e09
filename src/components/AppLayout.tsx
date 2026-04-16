@@ -465,8 +465,8 @@ const AppLayout = () => {
             </div>
             {!collapsed && (
               <div>
-                <h1 className="text-base font-bold text-primary leading-none" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Speedo Bill</h1>
-                <p className="text-[9px] text-muted-foreground mt-0.5">Canteen</p>
+                <h1 className="text-base font-bold text-primary leading-none" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>SpeedoBill</h1>
+                <p className="text-[9px] text-muted-foreground mt-0.5">Smart Canteen</p>
               </div>
             )}
           </div>
