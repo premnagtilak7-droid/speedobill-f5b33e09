@@ -57,7 +57,7 @@ function showRecoveryUI(errorMsg: string) {
         <button onclick="try{localStorage.clear();sessionStorage.clear()}catch(e){}location.reload()" style="background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;padding:14px 32px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;min-height:48px;width:100%">
           Clear Cache & Restart
         </button>
-        <p style="color:#475569;font-size:11px;margin-top:16px">Speedo Bill v8.0.0 • © 2026 Mangal Multiproduct</p>
+        <p style="color:#475569;font-size:11px;margin-top:16px">SpeedoBill v1.0.0 • © 2026 Mangal Multiproduct</p>
       </div>
     </div>
   `;
