@@ -1,18 +1,21 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Zap, Menu, Receipt, Package, CreditCard, Headphones, X } from "lucide-react";
+import { Zap, Menu, Receipt, Package, CreditCard, Headphones } from "lucide-react";
 import { useState } from "react";
-
-const menuItems = [
-  { label: "Billing", icon: Receipt, target: "features" },
-  { label: "Inventory", icon: Package, target: "features" },
-  { label: "Pricing", icon: CreditCard, target: "pricing" },
-  { label: "Support", icon: Headphones, target: "demo" },
-];
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const MobileNavbar = () => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+
+  const menuItems = [
+    { label: t("nav.billing"), icon: Receipt, target: "features" },
+    { label: t("nav.inventory"), icon: Package, target: "features" },
+    { label: t("nav.pricing"), icon: CreditCard, target: "pricing" },
+    { label: t("nav.support"), icon: Headphones, target: "demo" },
+  ];
 
   const scrollTo = (id: string) => {
     setOpen(false);
@@ -23,10 +26,9 @@ const MobileNavbar = () => {
 
   return (
     <header className="sticky top-0 z-50 flex h-14 items-center justify-between border-b border-border/40 bg-background/80 px-4 backdrop-blur-xl md:hidden">
-      {/* Hamburger */}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <button aria-label="Open menu" className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground">
+          <button aria-label={t("nav.openMenu")} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground">
             <Menu className="h-5 w-5" />
           </button>
         </SheetTrigger>
@@ -55,13 +57,12 @@ const MobileNavbar = () => {
           </nav>
           <div className="mt-auto border-t border-border/40 p-4">
             <Link to="/auth" onClick={() => setOpen(false)}>
-              <Button className="w-full font-semibold">Get Started Free</Button>
+              <Button className="w-full font-semibold">{t("nav.getStarted")}</Button>
             </Link>
           </div>
         </SheetContent>
       </Sheet>
 
-      {/* Center logo */}
       <Link to="/" className="flex items-center gap-1.5">
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
           <Zap className="h-4 w-4 text-primary-foreground" />
@@ -71,12 +72,14 @@ const MobileNavbar = () => {
         </span>
       </Link>
 
-      {/* Login */}
-      <Link to="/auth">
-        <Button variant="ghost" size="sm" className="text-xs font-semibold">
-          Log in
-        </Button>
-      </Link>
+      <div className="flex items-center gap-1">
+        <LanguageSwitcher />
+        <Link to="/auth">
+          <Button variant="ghost" size="sm" className="text-xs font-semibold px-2">
+            {t("nav.login")}
+          </Button>
+        </Link>
+      </div>
     </header>
   );
 };
