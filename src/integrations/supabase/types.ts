@@ -438,6 +438,30 @@ export type Database = {
           },
         ]
       }
+      demo_requests: {
+        Row: {
+          canteen_name: string
+          created_at: string
+          id: string
+          name: string
+          whatsapp_number: string
+        }
+        Insert: {
+          canteen_name: string
+          created_at?: string
+          id?: string
+          name: string
+          whatsapp_number: string
+        }
+        Update: {
+          canteen_name?: string
+          created_at?: string
+          id?: string
+          name?: string
+          whatsapp_number?: string
+        }
+        Relationships: []
+      }
       floor_sections: {
         Row: {
           color: string
