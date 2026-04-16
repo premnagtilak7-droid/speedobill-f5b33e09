@@ -22,7 +22,7 @@ const PrivacyPolicy = () => {
         <section>
           <h2 className="text-lg font-semibold text-foreground">1. Company Information</h2>
           <p className="text-muted-foreground">
-            Speedo Bill is a smart canteen and restaurant management platform. 
+            SpeedoBill is a smart canteen and restaurant management platform. 
             This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform ("Service").
           </p>
         </section>
@@ -41,7 +41,7 @@ const PrivacyPolicy = () => {
         <section>
           <h2 className="text-lg font-semibold text-foreground">3. How We Use Your Information</h2>
           <ul className="list-disc pl-5 text-muted-foreground space-y-1">
-            <li>To provide and maintain the Speedo Bill canteen management service.</li>
+            <li>To provide and maintain the SpeedoBill canteen management service.</li>
             <li>To process orders, generate bills, and manage inventory.</li>
             <li>To enable QR-based customer ordering and table management.</li>
             <li>To send service notifications, subscription reminders, and support communications.</li>
@@ -53,7 +53,7 @@ const PrivacyPolicy = () => {
         <section>
           <h2 className="text-lg font-semibold text-foreground">4. UPI Payments & Financial Data</h2>
           <p className="text-muted-foreground">
-            Speedo Bill integrates with Razorpay for subscription payments. All payment processing is handled by certified PCI-DSS compliant payment processors. 
+            SpeedoBill integrates with Razorpay for subscription payments. All payment processing is handled by certified PCI-DSS compliant payment processors. 
             We store only transaction references and payment confirmation status — never your UPI PIN, bank account details, or card information. 
             UPI QR codes uploaded for customer payments are stored securely and are accessible only to your hotel account.
           </p>
@@ -106,7 +106,7 @@ const PrivacyPolicy = () => {
         <section>
           <h2 className="text-lg font-semibold text-foreground">9. Children's Privacy</h2>
           <p className="text-muted-foreground">
-            Speedo Bill is a business management tool and is not intended for use by individuals under 18 years of age. We do not knowingly collect data from minors.
+            SpeedoBill is a business management tool and is not intended for use by individuals under 18 years of age. We do not knowingly collect data from minors.
           </p>
         </section>
 
@@ -114,7 +114,7 @@ const PrivacyPolicy = () => {
           <h2 className="text-lg font-semibold text-foreground">10. Contact Us</h2>
           <p className="text-muted-foreground">
             For privacy-related queries, data requests, or concerns:<br />
-            <strong className="text-foreground">Speedo Bill</strong><br />
+            <strong className="text-foreground">SpeedoBill</strong><br />
             Chinchwade Nagar, Dagdoba Chowk, Chinchwad, Pune — 411033<br />
             Phone: +91 98902 29484<br />
             Email: support@speedobill.com<br />

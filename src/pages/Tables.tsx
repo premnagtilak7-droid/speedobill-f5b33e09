@@ -615,7 +615,7 @@ const Tables = () => {
   const handleEmailBill = () => {
     if (!orderItems.length) { toast.error("Add items first"); return; }
     const receipt = buildReceiptText();
-    const subject = encodeURIComponent(`Bill from ${hotelInfo?.name || "Speedo Bill"}`);
+    const subject = encodeURIComponent(`Bill from ${hotelInfo?.name || "SpeedoBill"}`);
     const body = encodeURIComponent(receipt);
     window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
     toast.success("Email client opened");
