@@ -87,16 +87,25 @@ const SettingsPage = () => {
 
   const saveSettings = async () => {
     if (!hotelId) return;
+    const trimmedName = name.trim();
+    const trimmedPhone = phone.trim();
+    const parsedTax = parseFloat(taxPercent);
+    if (!trimmedName) { toast.error("Hotel name is required"); return; }
+    if (trimmedName.length > 100) { toast.error("Hotel name too long (max 100 chars)"); return; }
+    if (trimmedPhone && !/^[\d\s+\-()]{0,20}$/.test(trimmedPhone)) { toast.error("Invalid phone number"); return; }
+    if (isNaN(parsedTax) || parsedTax < 0 || parsedTax > 100) { toast.error("Tax must be 0-100%"); return; }
+    if (upiId.length > 100) { toast.error("UPI ID too long"); return; }
+    if (receiptFooter.length > 200) { toast.error("Receipt footer too long (max 200 chars)"); return; }
     setSaving(true);
     const { error } = await supabase.from("hotels").update({
-      name, address, phone,
-      tax_percent: parseFloat(taxPercent) || 5,
+      name: trimmedName, address: address.trim(), phone: trimmedPhone,
+      tax_percent: parsedTax || 5,
       gst_enabled: gstEnabled,
       easy_void_enabled: easyVoid,
       counter_billing_enabled: counterBilling,
       auto_cleanup_after_bill: autoCleanup,
-      upi_id: upiId,
-      receipt_footer: receiptFooter,
+      upi_id: upiId.trim(),
+      receipt_footer: receiptFooter.trim(),
     } as any).eq("id", hotelId);
     if (error) toast.error("Save failed: " + error.message);
     else toast.success("Settings saved!");
