@@ -13,7 +13,9 @@ import {
   Zap, LayoutDashboard, ChefHat, QrCode, Users, BarChart3,
   ShieldCheck, Smartphone, ArrowRight, Star, CheckCircle2,
 } from "lucide-react";
-import billingMockup from "@/assets/billing-dashboard-mockup.jpg";
+import ownerTabletImg from "@/assets/owner-tablet-hero.jpg";
+import thermalReceiptImg from "@/assets/thermal-receipt-mockup.jpg";
+import inventoryAlertsImg from "@/assets/inventory-alerts-phone.jpg";
 
 const features = [
   { icon: Zap, title: "Instant POS", desc: "3-tap billing designed for high-speed canteen counters." },
@@ -78,27 +80,30 @@ const LandingPage = () => (
           <p className="mt-4 text-sm text-slate-500">No credit card required · 7-day free trial</p>
         </div>
 
-        {/* Right — Dashboard mockup */}
+        {/* Right — Owner with tablet */}
         <div className="relative flex-1">
           <div className="relative mx-auto max-w-lg lg:max-w-xl">
-            {/* Glow behind frame */}
             <div className="absolute -inset-4 rounded-2xl bg-gradient-to-br from-orange-500/20 via-transparent to-indigo-500/20 blur-2xl" />
-            {/* macOS-style window frame */}
-            <div className="relative overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900 shadow-2xl shadow-black/50">
-              {/* Title bar */}
-              <div className="flex items-center gap-2 border-b border-slate-700/50 bg-slate-800/80 px-4 py-2.5">
-                <span className="h-3 w-3 rounded-full bg-red-500" />
-                <span className="h-3 w-3 rounded-full bg-yellow-500" />
-                <span className="h-3 w-3 rounded-full bg-green-500" />
-                <span className="ml-3 text-xs text-slate-500">Quick Billing — Speedo Bill</span>
-              </div>
+            <div className="relative overflow-hidden rounded-2xl border border-slate-700/60 shadow-2xl shadow-black/50">
               <img
-                src={billingMockup}
-                alt="Speedo Bill Quick Billing Dashboard"
-                className="block w-full"
+                src={ownerTabletImg}
+                alt="Restaurant owner using Speedo Bill on a tablet"
+                className="block h-auto w-full"
                 width={1280}
-                height={800}
+                height={960}
+                fetchPriority="high"
               />
+              <div className="absolute bottom-4 left-4 hidden rounded-xl border border-white/10 bg-slate-900/80 p-3 shadow-xl backdrop-blur-md sm:block">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/20 text-orange-400">
+                    <Zap className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide text-slate-400">Bill #1248</p>
+                    <p className="text-sm font-semibold text-white">₹ 1,240 · 3 taps</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -126,6 +131,84 @@ const LandingPage = () => (
               </CardContent>
             </Card>
           ))}
+        </div>
+      </div>
+    </section>
+
+    {/* Billing showcase */}
+    <section id="billing" className="border-t px-4 py-24 sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
+        <div className="order-2 lg:order-1">
+          <span className="mb-3 inline-block rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
+            Billing & Receipts
+          </span>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Print thermal receipts with UPI QR — instantly
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Every bill is GST-ready, prints crisp on 58mm/80mm thermal printers, and includes a scan-to-pay QR so guests can settle in seconds.
+          </p>
+          <ul className="mt-6 space-y-3">
+            {["5% GST auto-calculated", "Split payments (Cash · UPI · Card)", "WhatsApp digital receipts", "Reprint & void controls"].map((item) => (
+              <li key={item} className="flex items-center gap-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="order-1 lg:order-2">
+          <div className="relative mx-auto max-w-sm">
+            <div className="absolute -inset-6 rounded-full bg-gradient-to-br from-primary/20 to-transparent blur-3xl" />
+            <img
+              src={thermalReceiptImg}
+              alt="Thermal printed restaurant receipt with UPI QR code"
+              className="relative block h-auto w-full rounded-2xl shadow-2xl"
+              width={1024}
+              height={1024}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* Inventory showcase */}
+    <section id="inventory" className="border-t bg-muted/30 px-4 py-24 sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
+        <div>
+          <div className="relative mx-auto max-w-sm">
+            <div className="absolute -inset-6 rounded-full bg-gradient-to-br from-orange-500/20 to-indigo-500/20 blur-3xl" />
+            <img
+              src={inventoryAlertsImg}
+              alt="Live low-stock inventory alerts on a phone screen"
+              className="relative block h-auto w-full rounded-2xl shadow-2xl"
+              width={1024}
+              height={1024}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        </div>
+        <div>
+          <span className="mb-3 inline-block rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
+            Inventory & Stock
+          </span>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Never run out of an ingredient again
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Real-time stock tracking with instant low-stock alerts on your phone. Auto-deduct ingredients per recipe with every order.
+          </p>
+          <ul className="mt-6 space-y-3">
+            {["Live low-stock push alerts", "Recipe-based auto-deduction", "Vendor & purchase logs", "Wastage tracking with reasons"].map((item) => (
+              <li key={item} className="flex items-center gap-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+                {item}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>
