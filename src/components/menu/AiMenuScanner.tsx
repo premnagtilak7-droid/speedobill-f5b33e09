@@ -99,13 +99,17 @@ const AiMenuScanner = ({ compact, hotelId, onComplete }: Props) => {
 
   const scanImage = async (base64: string) => {
     try {
+      const { data: { session } } = await (await import("@/integrations/supabase/client")).supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) throw new Error("You must be logged in to scan menus");
+
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/scan-menu`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ image_base64: base64 }),
         }
