@@ -6,6 +6,9 @@ import MobileNavbar from "@/components/landing/MobileNavbar";
 import DemoRequestForm from "@/components/landing/DemoRequestForm";
 import DemoBookingForm from "@/components/landing/DemoBookingForm";
 import LandingFooter from "@/components/landing/LandingFooter";
+import MultiTerminalSection from "@/components/landing/MultiTerminalSection";
+import AddOnsSection from "@/components/landing/AddOnsSection";
+import FaqSection from "@/components/landing/FaqSection";
 import {
   Zap, LayoutDashboard, ChefHat, QrCode, Users, BarChart3,
   ShieldCheck, Smartphone, ArrowRight, Star, CheckCircle2,
@@ -127,6 +130,12 @@ const LandingPage = () => (
       </div>
     </section>
 
+    {/* Multi-Terminal */}
+    <MultiTerminalSection />
+
+    {/* Add-ons */}
+    <AddOnsSection />
+
     {/* Pricing */}
     <section id="pricing" className="border-t px-4 py-24 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
@@ -224,6 +233,9 @@ const LandingPage = () => (
         <DemoBookingForm />
       </div>
     </section>
+
+    {/* FAQ */}
+    <FaqSection />
 
     {/* Footer */}
     <LandingFooter />
