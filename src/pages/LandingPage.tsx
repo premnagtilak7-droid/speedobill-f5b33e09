@@ -81,27 +81,30 @@ const LandingPage = () => (
           <p className="mt-4 text-sm text-slate-500">No credit card required · 7-day free trial</p>
         </div>
 
-        {/* Right — Dashboard mockup */}
+        {/* Right — Owner with tablet */}
         <div className="relative flex-1">
           <div className="relative mx-auto max-w-lg lg:max-w-xl">
-            {/* Glow behind frame */}
             <div className="absolute -inset-4 rounded-2xl bg-gradient-to-br from-orange-500/20 via-transparent to-indigo-500/20 blur-2xl" />
-            {/* macOS-style window frame */}
-            <div className="relative overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900 shadow-2xl shadow-black/50">
-              {/* Title bar */}
-              <div className="flex items-center gap-2 border-b border-slate-700/50 bg-slate-800/80 px-4 py-2.5">
-                <span className="h-3 w-3 rounded-full bg-red-500" />
-                <span className="h-3 w-3 rounded-full bg-yellow-500" />
-                <span className="h-3 w-3 rounded-full bg-green-500" />
-                <span className="ml-3 text-xs text-slate-500">Quick Billing — Speedo Bill</span>
-              </div>
+            <div className="relative overflow-hidden rounded-2xl border border-slate-700/60 shadow-2xl shadow-black/50">
               <img
-                src={billingMockup}
-                alt="Speedo Bill Quick Billing Dashboard"
-                className="block w-full"
+                src={ownerTabletImg}
+                alt="Restaurant owner using Speedo Bill on a tablet"
+                className="block h-auto w-full"
                 width={1280}
-                height={800}
+                height={960}
+                fetchPriority="high"
               />
+              <div className="absolute bottom-4 left-4 hidden rounded-xl border border-white/10 bg-slate-900/80 p-3 shadow-xl backdrop-blur-md sm:block">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/20 text-orange-400">
+                    <Zap className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wide text-slate-400">Bill #1248</p>
+                    <p className="text-sm font-semibold text-white">₹ 1,240 · 3 taps</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
