@@ -6,6 +6,7 @@ import {
   Zap, LayoutDashboard, ChefHat, QrCode, Users, BarChart3,
   ShieldCheck, Smartphone, ArrowRight, Star, CheckCircle2,
 } from "lucide-react";
+import billingMockup from "@/assets/billing-dashboard-mockup.jpg";
 
 const features = [
   { icon: LayoutDashboard, title: "Smart Dashboard", desc: "Real-time sales, orders & analytics at a glance." },
