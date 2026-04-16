@@ -9,11 +9,15 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
-import { Settings, Copy, Key, Shield, FileText, ExternalLink, Volume2, Upload, Image as ImageIcon, QrCode } from "lucide-react";
+import { Settings, Copy, Key, Shield, FileText, ExternalLink, Volume2, Upload, Image as ImageIcon, QrCode, Trash2 } from "lucide-react";
 import InstallAppPrompt from "@/components/InstallAppPrompt";
 import { useNavigate } from "react-router-dom";
 import { setNotificationVolume, getNotificationVolume, playLoudBell } from "@/lib/notification-sounds";
 import { convertToWebP } from "@/lib/image-utils";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const SettingsPage = () => {
   const { user, hotelId } = useAuth();
@@ -330,9 +334,54 @@ const SettingsPage = () => {
         </CardContent>
       </Card>
 
-      <p className="text-center text-[10px] text-muted-foreground pb-4">
-        {APP_NAME} v{APP_VERSION} · © {new Date().getFullYear()} {COMPANY_NAME}
-      </p>
+      {/* Delete Account */}
+      <Card className="border-destructive/30">
+        <CardHeader><CardTitle className="text-base flex items-center gap-2 text-destructive"><Trash2 className="h-4 w-4" /> Delete Account</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          <p className="text-xs text-muted-foreground">Permanently delete your account and all associated data. This action cannot be undone.</p>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">Delete My Account</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete your account, profile, and all associated hotel data. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={async () => {
+                  try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session?.access_token) { toast.error("Not authenticated"); return; }
+                    const { data, error } = await supabase.functions.invoke("delete-account", {
+                      headers: { Authorization: `Bearer ${session.access_token}` },
+                    });
+                    if (error) throw error;
+                    toast.success("Account deleted. Goodbye!");
+                    await supabase.auth.signOut();
+                    navigate("/auth");
+                  } catch (err: any) {
+                    toast.error("Delete failed: " + (err.message || "Unknown error"));
+                  }
+                }}>
+                  Yes, delete my account
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </CardContent>
+      </Card>
+
+      {/* Footer */}
+      <div className="text-center space-y-2 pb-4">
+        <a href="https://speedobill.in/privacy" target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">Privacy Policy</a>
+        <p className="text-[10px] text-muted-foreground">
+          {APP_NAME} v{APP_VERSION} · © {new Date().getFullYear()} {COMPANY_NAME}
+        </p>
+      </div>
     </div>
   );
 };
