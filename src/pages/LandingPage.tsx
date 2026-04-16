@@ -14,6 +14,9 @@ import {
   ShieldCheck, Smartphone, ArrowRight, Star, CheckCircle2,
 } from "lucide-react";
 import billingMockup from "@/assets/billing-dashboard-mockup.jpg";
+import ownerTabletImg from "@/assets/owner-tablet-hero.jpg";
+import thermalReceiptImg from "@/assets/thermal-receipt-mockup.jpg";
+import inventoryAlertsImg from "@/assets/inventory-alerts-phone.jpg";
 
 const features = [
   { icon: Zap, title: "Instant POS", desc: "3-tap billing designed for high-speed canteen counters." },
