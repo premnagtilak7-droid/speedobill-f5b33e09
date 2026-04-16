@@ -1118,22 +1118,33 @@ export type Database = {
         Row: {
           config_key: string
           config_value: string
+          hotel_id: string | null
           id: string
           updated_at: string
         }
         Insert: {
           config_key: string
           config_value?: string
+          hotel_id?: string | null
           id?: string
           updated_at?: string
         }
         Update: {
           config_key?: string
           config_value?: string
+          hotel_id?: string | null
           id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "platform_config_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -2102,6 +2113,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_login_rate_limit: { Args: { _email: string }; Returns: boolean }
       deduct_stock_for_order: {
         Args: { _order_id: string }
         Returns: undefined
