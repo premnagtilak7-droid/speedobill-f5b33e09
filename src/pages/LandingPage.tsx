@@ -9,12 +9,12 @@ import {
 import billingMockup from "@/assets/billing-dashboard-mockup.jpg";
 
 const features = [
-  { icon: LayoutDashboard, title: "Smart Dashboard", desc: "Real-time sales, orders & analytics at a glance." },
-  { icon: ChefHat, title: "Kitchen Display (KDS)", desc: "Live KOT tickets with priority alerts for chefs." },
-  { icon: QrCode, title: "QR Table Ordering", desc: "Guests scan, browse & order — no app download." },
-  { icon: Users, title: "Staff & Role Management", desc: "Owner, Manager, Waiter, Chef — granular RBAC." },
-  { icon: BarChart3, title: "Analytics & Reports", desc: "Revenue trends, top sellers & daily closing reports." },
-  { icon: ShieldCheck, title: "Inventory Hub", desc: "Track stock, recipes, vendors & wastage in one place." },
+  { icon: Zap, title: "Instant POS", desc: "3-tap billing designed for high-speed canteen counters." },
+  { icon: Smartphone, title: "Waiter App", desc: "Let your staff take orders from any mobile device." },
+  { icon: ShieldCheck, title: "Inventory Control", desc: "Real-time tracking of ingredients and stock levels." },
+  { icon: QrCode, title: "WhatsApp Billing", desc: "Go paperless and send digital bills directly to customers." },
+  { icon: BarChart3, title: "Admin Reports", desc: "Detailed daily sales and profit analytics for the owner." },
+  { icon: LayoutDashboard, title: "Cloud Sync", desc: "Access your canteen data from anywhere in the world." },
 ];
 
 const plans = [
