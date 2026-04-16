@@ -136,6 +136,84 @@ const LandingPage = () => (
       </div>
     </section>
 
+    {/* Billing showcase */}
+    <section id="billing" className="border-t px-4 py-24 sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
+        <div className="order-2 lg:order-1">
+          <span className="mb-3 inline-block rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
+            Billing & Receipts
+          </span>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Print thermal receipts with UPI QR — instantly
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Every bill is GST-ready, prints crisp on 58mm/80mm thermal printers, and includes a scan-to-pay QR so guests can settle in seconds.
+          </p>
+          <ul className="mt-6 space-y-3">
+            {["5% GST auto-calculated", "Split payments (Cash · UPI · Card)", "WhatsApp digital receipts", "Reprint & void controls"].map((item) => (
+              <li key={item} className="flex items-center gap-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="order-1 lg:order-2">
+          <div className="relative mx-auto max-w-sm">
+            <div className="absolute -inset-6 rounded-full bg-gradient-to-br from-primary/20 to-transparent blur-3xl" />
+            <img
+              src={thermalReceiptImg}
+              alt="Thermal printed restaurant receipt with UPI QR code"
+              className="relative block h-auto w-full rounded-2xl shadow-2xl"
+              width={1024}
+              height={1024}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* Inventory showcase */}
+    <section id="inventory" className="border-t bg-muted/30 px-4 py-24 sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
+        <div>
+          <div className="relative mx-auto max-w-sm">
+            <div className="absolute -inset-6 rounded-full bg-gradient-to-br from-orange-500/20 to-indigo-500/20 blur-3xl" />
+            <img
+              src={inventoryAlertsImg}
+              alt="Live low-stock inventory alerts on a phone screen"
+              className="relative block h-auto w-full rounded-2xl shadow-2xl"
+              width={1024}
+              height={1024}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        </div>
+        <div>
+          <span className="mb-3 inline-block rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
+            Inventory & Stock
+          </span>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Never run out of an ingredient again
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Real-time stock tracking with instant low-stock alerts on your phone. Auto-deduct ingredients per recipe with every order.
+          </p>
+          <ul className="mt-6 space-y-3">
+            {["Live low-stock push alerts", "Recipe-based auto-deduction", "Vendor & purchase logs", "Wastage tracking with reasons"].map((item) => (
+              <li key={item} className="flex items-center gap-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+
     {/* Multi-Terminal */}
     <MultiTerminalSection />
 
