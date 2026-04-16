@@ -127,7 +127,8 @@ const PinLockGate = ({ children }: PinLockGateProps) => {
       const { error } = await supabase.from("platform_config").insert({
         config_key: `owner_pin_${hotelId}`,
         config_value: pin,
-      });
+        hotel_id: hotelId,
+      } as any);
       if (error) {
         toast.error("Could not save PIN. Please ask your admin to set it up.");
         return;
