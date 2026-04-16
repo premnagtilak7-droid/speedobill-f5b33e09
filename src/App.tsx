@@ -18,6 +18,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import LandingPage from "./pages/LandingPage";
 import MenuPage from "./pages/MenuPage";
 import Dashboard from "./pages/Dashboard";
 import VoidReports from "./pages/VoidReports";
@@ -131,7 +132,7 @@ const AppRoutes = () => {
     <>
       <ScrollToTop />
       <Routes>
-        <Route path="/" element={<Navigate to={user ? defaultAuthenticatedRoute : "/auth"} replace />} />
+        <Route path="/" element={user ? <Navigate to={defaultAuthenticatedRoute} replace /> : <LandingPage />} />
         <Route path="/auth" element={user ? <Navigate to={defaultAuthenticatedRoute} replace /> : <Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
