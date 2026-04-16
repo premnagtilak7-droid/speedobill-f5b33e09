@@ -6,6 +6,7 @@ import {
   Zap, LayoutDashboard, ChefHat, QrCode, Users, BarChart3,
   ShieldCheck, Smartphone, ArrowRight, Star, CheckCircle2,
 } from "lucide-react";
+import billingMockup from "@/assets/billing-dashboard-mockup.jpg";
 
 const features = [
   { icon: LayoutDashboard, title: "Smart Dashboard", desc: "Real-time sales, orders & analytics at a glance." },
@@ -27,30 +28,72 @@ const LandingPage = () => (
     <LandingNavbar />
 
     {/* Hero */}
-    <section className="relative overflow-hidden px-4 pb-20 pt-24 sm:px-6 lg:px-8">
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_50%_at_50%_-20%,hsl(var(--primary)/0.12),transparent)]" />
-      <div className="mx-auto max-w-4xl text-center">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary">
-          <Zap className="h-4 w-4" /> Built for Indian Restaurants
-        </div>
-        <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-          The all-in-one POS for
-          <span className="block text-primary">modern restaurants</span>
-        </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-          Billing, KDS, QR ordering, inventory & analytics — everything you need to run your restaurant, from a single dashboard.
-        </p>
-        <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <Link to="/auth">
-            <Button size="lg" className="gap-2 px-8 text-base font-semibold">
-              Start Free Trial <ArrowRight className="h-4 w-4" />
+    <section className="relative overflow-hidden px-4 pb-20 pt-24 sm:px-6 lg:px-8" style={{ background: "linear-gradient(135deg, #0a0e1a 0%, #0f172a 40%, #1a1040 100%)" }}>
+      {/* Animated glow orbs */}
+      <div className="absolute left-1/4 top-20 -z-0 h-72 w-72 rounded-full bg-orange-500/10 blur-[100px]" />
+      <div className="absolute right-1/4 bottom-10 -z-0 h-60 w-60 rounded-full bg-indigo-500/10 blur-[100px]" />
+      <div className="absolute left-1/2 top-1/2 -z-0 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-500/5 blur-[80px]" />
+
+      <div className="relative z-10 mx-auto flex max-w-7xl flex-col items-center gap-12 lg:flex-row lg:gap-16">
+        {/* Left — Copy */}
+        <div className="flex-1 text-center lg:text-left">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/10 px-4 py-1.5 text-sm font-medium text-orange-400">
+            <Zap className="h-4 w-4" /> #1 POS for Indian Canteens
+          </div>
+          <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-[3.5rem] lg:leading-[1.1]">
+            Speedo Bill: The 10x Faster Billing System for{" "}
+            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
+              Modern Canteens.
+            </span>
+          </h1>
+          <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-slate-400 lg:mx-0">
+            Reduce counter rush, send WhatsApp receipts, and manage your inventory with India's easiest POS software.
+          </p>
+          <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row lg:justify-start">
+            <Link to="/auth">
+              <Button
+                size="lg"
+                className="relative gap-2 rounded-xl px-10 py-6 text-base font-bold shadow-[0_0_30px_hsl(25_95%_53%/0.35)] transition-shadow hover:shadow-[0_0_50px_hsl(25_95%_53%/0.5)]"
+              >
+                Start Free Trial <ArrowRight className="h-5 w-5" />
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="lg"
+              className="rounded-xl border-slate-700 bg-transparent px-8 py-6 text-base text-slate-300 hover:bg-white/5 hover:text-white"
+              onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
+            >
+              See Features
             </Button>
-          </Link>
-          <Button variant="outline" size="lg" className="gap-2 px-8 text-base" onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}>
-            See Features
-          </Button>
+          </div>
+          <p className="mt-4 text-sm text-slate-500">No credit card required · 7-day free trial</p>
         </div>
-        <p className="mt-4 text-sm text-muted-foreground">No credit card required · 7-day free trial</p>
+
+        {/* Right — Dashboard mockup */}
+        <div className="relative flex-1">
+          <div className="relative mx-auto max-w-lg lg:max-w-xl">
+            {/* Glow behind frame */}
+            <div className="absolute -inset-4 rounded-2xl bg-gradient-to-br from-orange-500/20 via-transparent to-indigo-500/20 blur-2xl" />
+            {/* macOS-style window frame */}
+            <div className="relative overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900 shadow-2xl shadow-black/50">
+              {/* Title bar */}
+              <div className="flex items-center gap-2 border-b border-slate-700/50 bg-slate-800/80 px-4 py-2.5">
+                <span className="h-3 w-3 rounded-full bg-red-500" />
+                <span className="h-3 w-3 rounded-full bg-yellow-500" />
+                <span className="h-3 w-3 rounded-full bg-green-500" />
+                <span className="ml-3 text-xs text-slate-500">Quick Billing — Speedo Bill</span>
+              </div>
+              <img
+                src={billingMockup}
+                alt="Speedo Bill Quick Billing Dashboard"
+                className="block w-full"
+                width={1280}
+                height={800}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
