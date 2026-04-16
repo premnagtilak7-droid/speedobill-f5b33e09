@@ -1,8 +1,12 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Zap } from "lucide-react";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const LandingNavbar = () => {
+  const { t } = useTranslation();
+
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
@@ -21,23 +25,24 @@ const LandingNavbar = () => {
 
         <nav className="hidden items-center gap-8 md:flex">
           <button onClick={() => scrollTo("features")} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            Features
+            {t("nav.features")}
           </button>
           <button onClick={() => scrollTo("pricing")} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            Pricing
+            {t("nav.pricing")}
           </button>
           <button onClick={() => scrollTo("testimonials")} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            Testimonials
+            {t("nav.testimonials")}
           </button>
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher />
           <Link to="/auth">
-            <Button variant="ghost" size="sm">Log in</Button>
+            <Button variant="ghost" size="sm">{t("nav.login")}</Button>
           </Link>
           <Link to="/auth">
             <Button size="sm" className="font-semibold">
-              Get Started Free
+              {t("nav.getStarted")}
             </Button>
           </Link>
         </div>
