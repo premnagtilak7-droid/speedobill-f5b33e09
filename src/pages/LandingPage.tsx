@@ -9,6 +9,7 @@ import LandingFooter from "@/components/landing/LandingFooter";
 import MultiTerminalSection from "@/components/landing/MultiTerminalSection";
 import AddOnsSection from "@/components/landing/AddOnsSection";
 import FaqSection from "@/components/landing/FaqSection";
+import ScrollReveal from "@/components/ScrollReveal";
 import {
   Zap, LayoutDashboard, ChefHat, QrCode, Users, BarChart3,
   ShieldCheck, Smartphone, ArrowRight, Star, CheckCircle2,
@@ -120,16 +121,18 @@ const LandingPage = () => (
           From front-of-house to back-of-house, Speedo Bill covers every aspect of restaurant operations.
         </p>
         <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((f) => (
-            <Card key={f.title} className="group border-border/50 bg-card/80 backdrop-blur transition-shadow hover:shadow-lg">
-              <CardContent className="flex flex-col gap-3 p-6">
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                  <f.icon className="h-5 w-5" />
-                </div>
-                <h3 className="text-lg font-semibold">{f.title}</h3>
-                <p className="text-sm text-muted-foreground">{f.desc}</p>
-              </CardContent>
-            </Card>
+          {features.map((f, i) => (
+            <ScrollReveal key={f.title} delay={i * 0.12} duration={0.6} yOffset={28}>
+              <Card className="group h-full border-border/50 bg-card/80 backdrop-blur transition-shadow hover:shadow-lg">
+                <CardContent className="flex flex-col gap-3 p-6">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                    <f.icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-lg font-semibold">{f.title}</h3>
+                  <p className="text-sm text-muted-foreground">{f.desc}</p>
+                </CardContent>
+              </Card>
+            </ScrollReveal>
           ))}
         </div>
       </div>
@@ -158,7 +161,7 @@ const LandingPage = () => (
           </ul>
         </div>
         <div className="order-1 lg:order-2">
-          <div className="relative mx-auto max-w-sm">
+          <ScrollReveal className="relative mx-auto max-w-sm" duration={0.9} initialScale={0.88} yOffset={20} amount={0.25}>
             <div className="absolute -inset-6 rounded-full bg-gradient-to-br from-primary/20 to-transparent blur-3xl" />
             <img
               src={thermalReceiptImg}
@@ -169,7 +172,7 @@ const LandingPage = () => (
               loading="lazy"
               decoding="async"
             />
-          </div>
+          </ScrollReveal>
         </div>
       </div>
     </section>
@@ -178,7 +181,7 @@ const LandingPage = () => (
     <section id="inventory" className="border-t bg-muted/30 px-4 py-24 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
         <div>
-          <div className="relative mx-auto max-w-sm">
+          <ScrollReveal className="relative mx-auto max-w-sm" duration={0.9} initialScale={0.88} yOffset={20} amount={0.25}>
             <div className="absolute -inset-6 rounded-full bg-gradient-to-br from-orange-500/20 to-indigo-500/20 blur-3xl" />
             <img
               src={inventoryAlertsImg}
@@ -189,7 +192,7 @@ const LandingPage = () => (
               loading="lazy"
               decoding="async"
             />
-          </div>
+          </ScrollReveal>
         </div>
         <div>
           <span className="mb-3 inline-block rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
