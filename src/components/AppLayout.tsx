@@ -10,6 +10,7 @@ import {
   HelpCircle, ChevronLeft
 } from "lucide-react";
 import BugReportButton from "@/components/BugReportButton";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef, memo, useCallback, Suspense } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -424,6 +425,7 @@ const AppLayout = () => {
           <span className="font-bold text-primary text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>SpeedoBill</span>
         </div>
         <div className="flex items-center gap-0.5">
+          <LanguageSwitcher />
           <NotificationBell />
           <button onClick={toggleTheme} className="p-2 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary/60">
             {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
@@ -486,6 +488,7 @@ const AppLayout = () => {
       <main className="flex-1 min-h-screen md:h-screen overflow-x-hidden overflow-y-auto pb-[72px] pt-[calc(56px+env(safe-area-inset-top))] md:pb-0 md:pt-0">
         {/* Desktop top bar */}
         <div className="hidden md:flex sticky top-0 z-30 h-12 shrink-0 items-center justify-end gap-2 px-6 glass-topbar">
+          <LanguageSwitcher />
           <NotificationBell />
           <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-secondary/60 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center">
             {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
