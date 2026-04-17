@@ -25,6 +25,7 @@ if (savedTheme === "dark") {
 }
 import App from "./App.tsx";
 import "./index.css";
+import "./i18n/config";
 
 // Unregister service workers in preview/iframe contexts
 const isInIframe = (() => {
