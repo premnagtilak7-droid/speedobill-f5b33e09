@@ -13,6 +13,7 @@ import AddOnsSection from "@/components/landing/AddOnsSection";
 import StickyScrollFeatures from "@/components/landing/StickyScrollFeatures";
 import TrustBar from "@/components/landing/TrustBar";
 import StatsSection from "@/components/landing/StatsSection";
+import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import FaqSection from "@/components/landing/FaqSection";
 import ScrollReveal from "@/components/ScrollReveal";
 import {
@@ -304,35 +305,7 @@ const LandingPage = () => {
     </section>
 
     {/* Testimonials */}
-    <section id="testimonials" className="border-t bg-muted/30 px-4 py-24 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl">
-        <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl">
-          Loved by restaurant owners
-        </h2>
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            { name: "Rajesh K.", role: "Owner, Spice Garden", text: "Speedo Bill replaced 3 separate apps. My staff learned it in one day." },
-            { name: "Priya M.", role: "Manager, Café Bloom", text: "The QR ordering alone saved us from hiring an extra waiter." },
-            { name: "Arjun S.", role: "Owner, Biryani House", text: "KDS alerts mean zero missed orders. Our kitchen runs like clockwork now." },
-          ].map((t) => (
-            <Card key={t.name} className="border-border/50 bg-card/80">
-              <CardContent className="p-6">
-                <div className="mb-3 flex gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground">"{t.text}"</p>
-                <div className="mt-4">
-                  <p className="text-sm font-semibold">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">{t.role}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    </section>
+    <TestimonialsSection />
 
     {/* Schedule a Free Demo */}
     <section id="demo" className="border-t px-4 py-24 sm:px-6 lg:px-8">
