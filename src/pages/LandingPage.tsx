@@ -36,7 +36,19 @@ const plans = [
   { name: "Premium", price: "₹499", period: "/month", features: ["Unlimited tables", "Full analytics", "Inventory hub", "Priority support"], cta: "Go Premium" },
 ];
 
-const LandingPage = () => (
+const ROTATING_WORDS = ["Canteens", "Restaurants", "Hotels", "Retail Shops", "Cafes"];
+
+const LandingPage = () => {
+  const [wordIndex, setWordIndex] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setWordIndex((i) => (i + 1) % ROTATING_WORDS.length);
+    }, 2000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
   <div className="min-h-screen bg-background text-foreground scroll-smooth">
     <MobileNavbar />
     <LandingNavbar />
@@ -56,8 +68,20 @@ const LandingPage = () => (
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-[3.5rem] lg:leading-[1.1]">
             Speedo Bill: The 10x Faster Billing System for{" "}
-            <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">
-              Modern Canteens.
+            <span className="relative inline-flex h-[1.15em] items-end overflow-hidden align-bottom">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={ROTATING_WORDS[wordIndex]}
+                  initial={{ y: "100%", opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: "-100%", opacity: 0 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="inline-block whitespace-nowrap"
+                  style={{ color: "#F97316" }}
+                >
+                  {ROTATING_WORDS[wordIndex]}
+                </motion.span>
+              </AnimatePresence>
             </span>
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-slate-400 lg:mx-0">
