@@ -12,6 +12,7 @@ import MultiTerminalSection from "@/components/landing/MultiTerminalSection";
 import AddOnsSection from "@/components/landing/AddOnsSection";
 import StickyScrollFeatures from "@/components/landing/StickyScrollFeatures";
 import TrustBar from "@/components/landing/TrustBar";
+import StatsSection from "@/components/landing/StatsSection";
 import FaqSection from "@/components/landing/FaqSection";
 import ScrollReveal from "@/components/ScrollReveal";
 import {
@@ -141,6 +142,9 @@ const LandingPage = () => {
 
     {/* Trust Bar */}
     <TrustBar />
+
+    {/* Stats */}
+    <StatsSection />
 
     {/* Features */}
     <section id="features" className="border-t bg-muted/30 px-4 py-24 sm:px-6 lg:px-8">
