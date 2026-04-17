@@ -299,7 +299,7 @@ const LandingPage = () => (
     {/* Schedule a Free Demo */}
     <section id="demo" className="border-t px-4 py-24 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-5xl items-center gap-12 lg:grid-cols-2">
-        <div>
+        <ScrollReveal yOffset={50}>
           <Smartphone className="mb-4 h-10 w-10 text-primary" />
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Schedule a Free Demo
@@ -315,8 +315,10 @@ const LandingPage = () => (
               </li>
             ))}
           </ul>
-        </div>
-        <DemoBookingForm />
+        </ScrollReveal>
+        <ScrollReveal yOffset={50} delay={0.15} stiffness={70} damping={16}>
+          <DemoBookingForm />
+        </ScrollReveal>
       </div>
     </section>
 
