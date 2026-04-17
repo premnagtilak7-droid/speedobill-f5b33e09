@@ -1,14 +1,4 @@
-import { motion } from "framer-motion";
-import { Star, Quote } from "lucide-react";
-
-type Testimonial = {
-  quote: string;
-  name: string;
-  role: string;
-  location: string;
-};
-
-const TESTIMONIALS: Testimonial[] = [
+const TESTIMONIALS = [
   {
     quote: "SpeedoBill reduced our billing time by 70%. Our canteen counter never has a rush anymore.",
     name: "Rajesh Patil",
@@ -46,45 +36,23 @@ const TestimonialsSection = () => {
       aria-label="Customer testimonials"
     >
       <div className="mx-auto max-w-6xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.6 }}
-          className="text-center"
-        >
+        <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
             What our customers say
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-base text-slate-400 sm:text-lg">
             Real stories from restaurant and hotel owners across India
           </p>
-        </motion.div>
+        </div>
 
         <div className="mt-14 grid gap-6 md:grid-cols-3">
-          {TESTIMONIALS.map((t, i) => (
-            <motion.div
+          {TESTIMONIALS.map((t) => (
+            <div
               key={t.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.6, delay: i * 0.15, ease: "easeOut" }}
-              className="group relative flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-orange-500/40 hover:bg-white/[0.05] hover:shadow-[0_10px_40px_-10px_rgba(249,115,22,0.25)]"
+              className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-7 transition-colors hover:border-orange-500/40"
             >
-              <Quote
-                className="absolute right-5 top-5 h-8 w-8 opacity-10 transition-opacity group-hover:opacity-30"
-                style={{ color: "#F97316" }}
-                aria-hidden="true"
-              />
-
-              <div className="mb-4 flex gap-1" aria-label="5 out of 5 stars">
-                {Array.from({ length: 5 }).map((_, idx) => (
-                  <Star
-                    key={idx}
-                    className="h-4 w-4"
-                    style={{ color: "#F97316", fill: "#F97316" }}
-                  />
-                ))}
+              <div className="mb-4 text-lg tracking-wider" style={{ color: "#F97316" }} aria-label="5 out of 5 stars">
+                ★★★★★
               </div>
 
               <p className="flex-1 text-base leading-relaxed text-slate-200">
@@ -94,9 +62,7 @@ const TestimonialsSection = () => {
               <div className="mt-6 flex items-center gap-3 border-t border-white/5 pt-5">
                 <div
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-                  style={{
-                    background: "linear-gradient(135deg, #F97316 0%, #ea580c 100%)",
-                  }}
+                  style={{ backgroundColor: "#F97316" }}
                   aria-hidden="true"
                 >
                   {getInitials(t.name)}
@@ -108,7 +74,7 @@ const TestimonialsSection = () => {
                   </p>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
