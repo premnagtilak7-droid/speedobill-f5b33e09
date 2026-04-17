@@ -1,9 +1,18 @@
-import { useRef } from "react";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion, useScroll, useTransform, AnimatePresence, type MotionValue } from "framer-motion";
 import { Zap, Package, BarChart3, CheckCircle2 } from "lucide-react";
 import billingImg from "@/assets/billing-dashboard-mockup.jpg";
 import inventoryImg from "@/assets/inventory-alerts-phone.jpg";
 import analyticsImg from "@/assets/analytics-dashboard-mockup.jpg";
+
+function useActiveIndex(mv: MotionValue<number>): [number, (i: number) => void] {
+  const [active, setActive] = useState(0);
+  useEffect(() => {
+    const unsub = mv.on("change", (v) => setActive(Math.round(v)));
+    return () => unsub();
+  }, [mv]);
+  return [active, setActive];
+}
 
 const features = [
   {
