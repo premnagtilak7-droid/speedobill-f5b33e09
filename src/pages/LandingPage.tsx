@@ -9,6 +9,7 @@ import LandingFooter from "@/components/landing/LandingFooter";
 import MultiTerminalSection from "@/components/landing/MultiTerminalSection";
 import AddOnsSection from "@/components/landing/AddOnsSection";
 import FaqSection from "@/components/landing/FaqSection";
+import ScrollReveal from "@/components/ScrollReveal";
 import {
   Zap, LayoutDashboard, ChefHat, QrCode, Users, BarChart3,
   ShieldCheck, Smartphone, ArrowRight, Star, CheckCircle2,
