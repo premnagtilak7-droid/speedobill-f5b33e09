@@ -8,6 +8,7 @@ import DemoBookingForm from "@/components/landing/DemoBookingForm";
 import LandingFooter from "@/components/landing/LandingFooter";
 import MultiTerminalSection from "@/components/landing/MultiTerminalSection";
 import AddOnsSection from "@/components/landing/AddOnsSection";
+import StickyScrollFeatures from "@/components/landing/StickyScrollFeatures";
 import FaqSection from "@/components/landing/FaqSection";
 import ScrollReveal from "@/components/ScrollReveal";
 import {
@@ -215,6 +216,9 @@ const LandingPage = () => (
         </div>
       </div>
     </section>
+
+    {/* Sticky Scroll Feature Showcase */}
+    <StickyScrollFeatures />
 
     {/* Multi-Terminal */}
     <MultiTerminalSection />
