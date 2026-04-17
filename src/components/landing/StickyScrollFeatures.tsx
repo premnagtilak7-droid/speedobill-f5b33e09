@@ -202,18 +202,4 @@ const StickyScrollFeatures = () => {
     </section>
   );
 };
-
-// Helper hook — sync motion value to React state for re-renders
-import { useEffect, useState } from "react";
-import type { MotionValue } from "framer-motion";
-
-function useActiveIndex(mv: MotionValue<number>): [number, (i: number) => void] {
-  const [active, setActive] = useState(0);
-  useEffect(() => {
-    const unsub = mv.on("change", (v) => setActive(Math.round(v)));
-    return () => unsub();
-  }, [mv]);
-  return [active, setActive];
-}
-
 export default StickyScrollFeatures;
