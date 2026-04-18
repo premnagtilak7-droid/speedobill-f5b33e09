@@ -438,6 +438,29 @@ const CreatorAdmin = () => {
     { tier: "Premium", revenue: premiumSubs * PRICE_PREMIUM, fill: "#EA580C" },
   ], [basicSubs, premiumSubs]);
 
+  // Last 6 months MRR snapshot — uses hotels w/ active subs whose start_date falls in that month
+  const monthlyRevenueData = useMemo(() => {
+    const months: { label: string; revenue: number }[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const next = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+      let revenue = 0;
+      hotels.forEach(h => {
+        if (h.subscription_tier === "free" || !h.subscription_tier) return;
+        const created = new Date(h.created_at);
+        if (created < next) {
+          revenue += h.subscription_tier === "premium" ? PRICE_PREMIUM : PRICE_BASIC;
+        }
+      });
+      months.push({
+        label: d.toLocaleDateString("en-IN", { month: "short" }),
+        revenue,
+      });
+    }
+    return months;
+  }, [hotels]);
+
   const activityFeed = useMemo(() => {
     const activities: { icon: any; text: string; time: string; color: string }[] = [];
     profiles.slice(0, 8).forEach((p, i) => {
