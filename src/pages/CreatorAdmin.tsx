@@ -51,11 +51,12 @@ const generateKeyCode = () => {
   return `SB-${seg()}-${seg()}-${seg()}-${seg()}`;
 };
 
-type TabId = "command" | "directory" | "revenue" | "vault" | "broadcast" | "console" | "wholesale";
+type TabId = "command" | "directory" | "leads" | "revenue" | "vault" | "broadcast" | "console" | "wholesale";
 
 const TABS: { id: TabId; label: string; shortLabel: string; icon: any }[] = [
   { id: "command", label: "Executive Command", shortLabel: "Command", icon: Crown },
   { id: "directory", label: "Client Directory", shortLabel: "Directory", icon: Users },
+  { id: "leads", label: "Demo Leads", shortLabel: "Leads", icon: Sparkles },
   { id: "revenue", label: "Revenue & Payments", shortLabel: "Revenue", icon: CreditCard },
   { id: "wholesale", label: "Wholesale Store", shortLabel: "Wholesale", icon: Store },
   { id: "vault", label: "License Vault", shortLabel: "Licenses", icon: Key },
@@ -117,6 +118,10 @@ const CreatorAdmin = () => {
   const [licenses, setLicenses] = useState<License[]>([]);
   const [hotels, setHotels] = useState<HotelInfo[]>([]);
   const [profiles, setProfiles] = useState<ProfileInfo[]>([]);
+  const [demoLeads, setDemoLeads] = useState<any[]>([]);
+  const [contactedLeads, setContactedLeads] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("speedo_contacted_leads") || "[]")); } catch { return new Set(); }
+  });
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [tier, setTier] = useState("basic");
@@ -128,6 +133,8 @@ const CreatorAdmin = () => {
   const [hotelSearch, setHotelSearch] = useState("");
   const [directorySearch, setDirectorySearch] = useState("");
   const [directoryFilter, setDirectoryFilter] = useState<"all" | "expired" | "new24h">("all");
+  const [leadsSearch, setLeadsSearch] = useState("");
+  const [healthChecks, setHealthChecks] = useState<{ name: string; latency: number | null; ok: boolean }[]>([]);
 
   // Wholesale state
   const [wsProducts, setWsProducts] = useState<any[]>([]);
