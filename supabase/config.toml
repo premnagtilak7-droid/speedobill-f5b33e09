@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.notify-demo-request]
 verify_jwt = false
+
+[functions.notify-demo-lead]
+verify_jwt = false
