@@ -1793,6 +1793,20 @@ const CreatorAdmin = () => {
               </TabPanel>
             )}
 
+            {/* ═══════ E1. ALERTS CENTER ═══════ */}
+            {activeTab === "alerts" && (
+              <TabPanel key="alerts">
+                <AdminAlertsPanel
+                  hotels={hotels as any}
+                  profiles={profiles as any}
+                  demoLeads={demoLeads as any}
+                  contactedLeadIds={Array.from(contactedLeads)}
+                  totalRevenue={lifetimeRevenue}
+                  onNavigate={(t) => setActiveTab(t as TabId)}
+                />
+              </TabPanel>
+            )}
+
             {/* ═══════ E2. SYSTEM SETTINGS (placeholder) ═══════ */}
             {activeTab === "settings" && (
               <TabPanel key="settings">
