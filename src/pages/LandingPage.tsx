@@ -15,6 +15,7 @@ import TrustBar from "@/components/landing/TrustBar";
 import StatsSection from "@/components/landing/StatsSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
+import ComparisonSection from "@/components/landing/ComparisonSection";
 import FaqSection from "@/components/landing/FaqSection";
 import ScrollReveal from "@/components/ScrollReveal";
 import {
