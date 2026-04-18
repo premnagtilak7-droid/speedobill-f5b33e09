@@ -31,6 +31,7 @@ import {
 import { useTheme } from "@/hooks/useTheme";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
 import { AdminAlertsPanel } from "@/components/admin/AdminAlertsPanel";
+import { ClientDirectory } from "@/components/admin/ClientDirectory";
 
 /* ─── Types ─── */
 interface License {
@@ -45,6 +46,7 @@ interface ProfileInfo {
   user_id: string; full_name: string | null; role: string | null;
   hotel_id: string | null; subscription_status: string | null;
   trial_ends_at: string | null; created_at: string;
+  email?: string | null; phone?: string | null; is_active?: boolean;
 }
 
 const generateKeyCode = () => {
@@ -1228,96 +1230,7 @@ const CreatorAdmin = () => {
             {/* ═══════ B. CLIENT DIRECTORY (GOD-VIEW) ═══════ */}
             {activeTab === "directory" && (
               <TabPanel key="directory">
-                <div className="space-y-4">
-                  {/* Header with filters */}
-                  <GlassCard className="p-4">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                      <div>
-                        <h3 className="text-base font-semibold text-foreground">Master User Directory</h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">{profiles.length} users across {hotels.length} hotels</p>
-                      </div>
-                      <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <div className="relative flex-1 sm:w-56">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input placeholder="Search users..." value={directorySearch} onChange={e => setDirectorySearch(e.target.value)} className="pl-9 h-9 rounded-xl bg-white/50 dark:bg-white/[0.04]" />
-                        </div>
-                        <Select value={directoryFilter} onValueChange={(v: any) => setDirectoryFilter(v)}>
-                          <SelectTrigger className="h-9 w-[140px] rounded-xl bg-white/50 dark:bg-white/[0.04]">
-                            <Filter className="h-3.5 w-3.5 mr-1 text-muted-foreground" />
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Users</SelectItem>
-                            <SelectItem value="expired">Expired Only</SelectItem>
-                            <SelectItem value="new24h">New (24h)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </GlassCard>
-
-                  {/* User Table */}
-                  <GlassCard className="overflow-hidden">
-                    <div className="overflow-x-auto">
-                      <table className="w-full min-w-[800px]">
-                        <thead>
-                          <tr className="text-[11px] text-muted-foreground border-b border-border/40 uppercase tracking-wider">
-                            <th className="text-left px-5 py-3 font-medium">User</th>
-                            <th className="text-left px-5 py-3 font-medium">Role</th>
-                            <th className="text-left px-5 py-3 font-medium">Hotel</th>
-                            <th className="text-left px-5 py-3 font-medium">Status</th>
-                            <th className="text-left px-5 py-3 font-medium">Joined</th>
-                            <th className="text-right px-5 py-3 font-medium">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/30">
-                          {directoryUsers.slice(0, 50).map(u => {
-                            const hotel = hotels.find(h => h.id === u.hotel_id);
-                            const status = hotel ? getHotelStatus(hotel) : (u.subscription_status || "trial");
-                            return (
-                              <tr key={u.user_id} className="hover:bg-white/40 dark:hover:bg-white/[0.02] transition-colors">
-                                <td className="px-5 py-3.5">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-indigo-500 flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
-                                      {(u.full_name || "U").charAt(0).toUpperCase()}
-                                    </div>
-                                    <span className="text-sm font-medium text-foreground truncate max-w-[140px]">{u.full_name || "—"}</span>
-                                  </div>
-                                </td>
-                                <td className="px-5 py-3.5">{roleBadge(u.role)}</td>
-                                <td className="px-5 py-3.5 text-xs text-muted-foreground truncate max-w-[120px]">{u.hotelName}</td>
-                                <td className="px-5 py-3.5">{statusBadge(status)}</td>
-                                <td className="px-5 py-3.5 text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</td>
-                                <td className="px-5 py-3.5 text-right">
-                                  <div className="flex items-center justify-end gap-1">
-                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg" title="WhatsApp"
-                                      onClick={() => window.open(`https://wa.me/${u.hotelPhone || ""}`, "_blank")}>
-                                      <Phone className="h-3.5 w-3.5 text-emerald-500" />
-                                    </Button>
-                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg" title="Send Email"
-                                      onClick={() => toast.info("Email feature coming soon")}>
-                                      <Mail className="h-3.5 w-3.5 text-indigo-500" />
-                                    </Button>
-                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg" title="View POS">
-                                      <Eye className="h-3.5 w-3.5" />
-                                    </Button>
-                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg" title="Reset Password"
-                                      onClick={() => toast.info("Password reset sent!")}>
-                                      <RotateCcw className="h-3.5 w-3.5 text-amber-500" />
-                                    </Button>
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                          {directoryUsers.length === 0 && (
-                            <tr><td colSpan={6} className="text-center py-10 text-muted-foreground text-sm">No users match your filters</td></tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </GlassCard>
-                </div>
+                <ClientDirectory profiles={profiles} hotels={hotels} onChanged={fetchData} />
               </TabPanel>
             )}
 
