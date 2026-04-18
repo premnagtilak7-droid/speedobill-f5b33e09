@@ -94,14 +94,14 @@ const LandingPage = () => {
             Reduce counter rush, send WhatsApp receipts, and manage your inventory with India's easiest POS software.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row lg:justify-start">
-            <Link to="/auth">
+            <a href="#demo">
               <Button
                 size="lg"
                 className="relative gap-2 rounded-xl px-10 py-6 text-base font-bold shadow-[0_0_30px_hsl(25_95%_53%/0.35)] transition-shadow hover:shadow-[0_0_50px_hsl(25_95%_53%/0.5)]"
               >
-                Start Free Trial <ArrowRight className="h-5 w-5" />
+                Book a Free Demo <ArrowRight className="h-5 w-5" />
               </Button>
-            </Link>
+            </a>
             <Button
               variant="outline"
               size="lg"
