@@ -266,20 +266,27 @@ const CreatorAdmin = () => {
   const usedKeys = licenses.filter(l => l.is_used);
   const unusedKeys = licenses.filter(l => !l.is_used);
 
+  // A hotel counts as "active" if its tier is paid (basic/premium) AND not past expiry.
+  // Trials default to premium tier with NULL expiry — those count as trial, not active.
   const getHotelStatus = (hotel: HotelInfo) => {
-    if (hotel.subscription_expiry && new Date(hotel.subscription_expiry) > new Date()) return "active";
-    const p = profiles.find(pr => pr.hotel_id === hotel.id);
-    if (p?.subscription_status === "trial") return "trial";
+    const tier = hotel.subscription_tier;
+    const exp = hotel.subscription_expiry ? new Date(hotel.subscription_expiry) : null;
+    const now = new Date();
+    if (tier && tier !== "free" && exp && exp > now) return "active";
+    if (tier && tier !== "free" && !exp) return "trial"; // paid tier, no expiry set = trial
+    if (tier === "free") return "trial";
     return "expired";
   };
 
   const activeHotels = hotels.filter(h => getHotelStatus(h) === "active").length;
   const trialHotels = hotels.filter(h => getHotelStatus(h) === "trial").length;
   const expiredHotels = hotels.filter(h => getHotelStatus(h) === "expired").length;
-  const lifetimeRevenue = usedKeys.reduce((s, l) => s + (l.tier === "premium" ? 399 : 199), 0);
   const basicSubs = hotels.filter(h => h.subscription_tier === "basic" && getHotelStatus(h) === "active").length;
   const premiumSubs = hotels.filter(h => h.subscription_tier === "premium" && getHotelStatus(h) === "active").length;
-  const mrr = (basicSubs * 199) + (premiumSubs * 399);
+  // Lifetime revenue: prefer license-based (real activations), fall back to estimating from active subs
+  const licenseRevenue = usedKeys.reduce((s, l) => s + (l.tier === "premium" ? PRICE_PREMIUM : PRICE_BASIC), 0);
+  const lifetimeRevenue = licenseRevenue || (basicSubs * PRICE_BASIC + premiumSubs * PRICE_PREMIUM);
+  const mrr = (basicSubs * PRICE_BASIC) + (premiumSubs * PRICE_PREMIUM);
   const churnRate = hotels.length > 0 ? ((expiredHotels / hotels.length) * 100).toFixed(1) : "0";
 
   const ownerCount = profiles.filter(p => p.role === "owner").length;
@@ -292,6 +299,11 @@ const CreatorAdmin = () => {
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
     return profiles.filter(p => p.created_at >= weekAgo).length;
   }, [profiles]);
+
+  const newHotelsThisWeek = useMemo(() => {
+    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+    return hotels.filter(h => h.created_at >= weekAgo).length;
+  }, [hotels]);
 
   const expiringIn7Days = useMemo(() => {
     const now = new Date();
