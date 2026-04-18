@@ -153,11 +153,12 @@ const CreatorAdmin = () => {
     setLoading(true);
     try {
       // Use admin-stats edge function (service role) to bypass RLS for platform-wide data
-      const [adminRes, licRes, wsRes, wsInqRes] = await Promise.all([
+      const [adminRes, licRes, wsRes, wsInqRes, leadsRes] = await Promise.all([
         supabase.functions.invoke("admin-stats"),
         supabase.from("licenses").select("*").order("created_at", { ascending: false }),
         supabase.from("wholesale_products" as any).select("*").order("created_at", { ascending: false }),
         supabase.from("wholesale_inquiries" as any).select("*").order("created_at", { ascending: false }),
+        supabase.from("demo_leads").select("*").order("created_at", { ascending: false }),
       ]);
 
       if (adminRes.error) {
@@ -170,19 +171,77 @@ const CreatorAdmin = () => {
       if (licRes.data) setLicenses(licRes.data);
       if (wsRes.data) setWsProducts(wsRes.data as any);
       if (wsInqRes.data) setWsInquiries(wsInqRes.data as any);
+      if (leadsRes.data) setDemoLeads(leadsRes.data);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { if (isCreator) fetchData(); }, [isCreator]);
+  // Real system health check — pings actual services
+  const runHealthCheck = async () => {
+    const checks: { name: string; latency: number | null; ok: boolean }[] = [];
+
+    // Database ping (lightweight count)
+    let t = performance.now();
+    try {
+      const { error } = await supabase.from("hotels").select("id", { count: "exact", head: true });
+      checks.push({ name: "Supabase Database", latency: Math.round(performance.now() - t), ok: !error });
+    } catch { checks.push({ name: "Supabase Database", latency: null, ok: false }); }
+
+    // Auth ping
+    t = performance.now();
+    try {
+      const { error } = await supabase.auth.getSession();
+      checks.push({ name: "Auth Service", latency: Math.round(performance.now() - t), ok: !error });
+    } catch { checks.push({ name: "Auth Service", latency: null, ok: false }); }
+
+    // Edge function ping (admin-stats already runs)
+    t = performance.now();
+    try {
+      const { error } = await supabase.functions.invoke("admin-stats");
+      checks.push({ name: "Edge Functions", latency: Math.round(performance.now() - t), ok: !error });
+    } catch { checks.push({ name: "Edge Functions", latency: null, ok: false }); }
+
+    // Storage ping
+    t = performance.now();
+    try {
+      const { error } = await supabase.storage.from("menu-images").list("", { limit: 1 });
+      checks.push({ name: "Storage CDN", latency: Math.round(performance.now() - t), ok: !error });
+    } catch { checks.push({ name: "Storage CDN", latency: null, ok: false }); }
+
+    setHealthChecks(checks);
+  };
+
+  useEffect(() => { if (isCreator) { fetchData(); runHealthCheck(); } }, [isCreator]);
 
   // Auto-refresh every 30 seconds
   useEffect(() => {
     if (!isCreator) return;
-    const iv = setInterval(() => fetchData(), 30000);
+    const iv = setInterval(() => { fetchData(); runHealthCheck(); }, 30000);
     return () => clearInterval(iv);
   }, [isCreator]);
+
+  const markLeadContacted = (id: string) => {
+    setContactedLeads(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      try { localStorage.setItem("speedo_contacted_leads", JSON.stringify(Array.from(next))); } catch {}
+      return next;
+    });
+    toast.success("Marked as contacted");
+  };
+
+  const exportLeadsCSV = () => {
+    const rows = [["Name", "Business", "City", "WhatsApp", "Submitted", "Status"].join(",")];
+    demoLeads.forEach(l => {
+      const status = contactedLeads.has(l.id) ? "Contacted" : "New";
+      rows.push([l.owner_name, l.restaurant_name, l.city, l.whatsapp_number, l.created_at, status].map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","));
+    });
+    const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "speedo-demo-leads.csv"; a.click();
+    toast.success("CSV downloaded!");
+  };
 
   const addWholesaleProduct = async () => {
     if (!wsNewName || !wsNewPrice) return;
