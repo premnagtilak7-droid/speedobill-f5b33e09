@@ -97,6 +97,71 @@ const GradientMetricCard = ({ label, value, change, changeUp, icon: Icon, gradie
   </div>
 );
 
+/* ─── New KpiCard for Executive Command (Speedo Enterprise design) ─── */
+const KpiCard = ({
+  label, value, icon, subLabel, trend, trendUp, danger, onClick,
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ReactNode;
+  subLabel?: string;
+  trend?: string;
+  trendUp?: boolean;
+  danger?: boolean;
+  onClick?: () => void;
+}) => (
+  <div
+    onClick={onClick}
+    className={`group relative rounded-2xl p-[1px] transition-all duration-200 ${onClick ? "cursor-pointer" : ""}`}
+    style={{ background: "linear-gradient(135deg, #F97316 0%, transparent 60%)" }}
+  >
+    <div
+      className="rounded-2xl p-6 h-full transition-all duration-200 group-hover:-translate-y-0.5"
+      style={{
+        background: "#131C35",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+      }}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <span
+          className="text-[11px] font-semibold uppercase tracking-[0.12em]"
+          style={{ color: "#7A8AAB" }}
+        >
+          {label}
+        </span>
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: "#0A0F1E", color: "#F97316" }}
+        >
+          {icon}
+        </div>
+      </div>
+      <p
+        className="text-4xl font-extrabold tracking-tight leading-none"
+        style={{ color: danger ? "#EF4444" : "#FFFFFF", fontWeight: 800 }}
+      >
+        {value}
+      </p>
+      {subLabel && (
+        <p className="text-xs mt-2 font-medium" style={{ color: "#F97316" }}>{subLabel}</p>
+      )}
+      {trend && (
+        <div className="mt-3">
+          <span
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+            style={{
+              backgroundColor: trendUp ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)",
+              color: trendUp ? "#10B981" : "#EF4444",
+            }}
+          >
+            {trendUp ? "↑" : "↓"} {trend}
+          </span>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
 /* ─── Tab panel animation wrapper ─── */
 const TabPanel = ({ children }: { children: React.ReactNode }) => (
   <motion.div
