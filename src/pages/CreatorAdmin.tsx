@@ -883,8 +883,9 @@ const CreatorAdmin = () => {
                           <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} axisLine={false} tickLine={false} />
                           <Tooltip contentStyle={chartTooltipStyle} />
                           <Bar dataKey="revenue" radius={[8, 8, 0, 0]}>
-                            <Cell fill="#F97316" />
-                            <Cell fill="#6366F1" />
+                            {revenueByTier.map((entry) => (
+                              <Cell key={entry.tier} fill={entry.fill} />
+                            ))}
                           </Bar>
                         </BarChart>
                       </ResponsiveContainer>
