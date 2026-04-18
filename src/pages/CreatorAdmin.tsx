@@ -360,8 +360,8 @@ const CreatorAdmin = () => {
   ].filter(d => d.value > 0), [ownerCount, waiterCount, chefCount]);
 
   const revenueByTier = useMemo(() => [
-    { tier: "Basic", revenue: basicSubs * 199, fill: "#F97316" },
-    { tier: "Premium", revenue: premiumSubs * 399, fill: "#6366F1" },
+    { tier: "Basic", revenue: basicSubs * PRICE_BASIC, fill: "#F97316" },
+    { tier: "Premium", revenue: premiumSubs * PRICE_PREMIUM, fill: "#EA580C" },
   ], [basicSubs, premiumSubs]);
 
   const activityFeed = useMemo(() => {
@@ -998,7 +998,7 @@ const CreatorAdmin = () => {
                                 <td className="px-5 py-3"><code className="font-mono text-xs text-muted-foreground">{lic.key_code}</code></td>
                                 <td className="px-5 py-3 text-xs capitalize text-foreground">{lic.tier}</td>
                                 <td className="px-5 py-3 text-xs text-muted-foreground truncate max-w-[120px]">{hotel?.name || "—"}</td>
-                                <td className="px-5 py-3 text-xs font-semibold text-foreground">₹{lic.tier === "premium" ? 399 : 199}</td>
+                                <td className="px-5 py-3 text-xs font-semibold text-foreground">₹{lic.tier === "premium" ? PRICE_PREMIUM : PRICE_BASIC}</td>
                                 <td className="px-5 py-3 text-xs text-muted-foreground">{lic.used_at ? new Date(lic.used_at).toLocaleDateString() : "—"}</td>
                               </tr>
                             );
@@ -1181,7 +1181,7 @@ const CreatorAdmin = () => {
                           <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="basic">Basic — ₹199/mo</SelectItem>
-                            <SelectItem value="premium">Premium — ₹399/mo</SelectItem>
+                            <SelectItem value="premium">Premium — ₹499/mo</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
