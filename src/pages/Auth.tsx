@@ -425,10 +425,16 @@ const Auth = () => {
               </div>
 
               <div className="text-center space-y-3 pt-2">
-                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                <p className="text-[11px] leading-relaxed text-muted-foreground px-4">
+                  By signing in you agree to our{" "}
+                  <a href="/terms" className="text-primary hover:underline">Terms</a>
+                  {" "}&{" "}
                   <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
+                </p>
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <a href="/privacy" className="text-primary hover:underline">Privacy</a>
                   <span>•</span>
-                  <a href="/terms" className="text-primary hover:underline">Terms & Conditions</a>
+                  <a href="/terms" className="text-primary hover:underline">Terms</a>
                   <span>•</span>
                   <a href="/support" className="text-primary hover:underline">Support</a>
                 </div>
