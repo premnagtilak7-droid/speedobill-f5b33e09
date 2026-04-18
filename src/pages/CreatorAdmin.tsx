@@ -97,6 +97,71 @@ const GradientMetricCard = ({ label, value, change, changeUp, icon: Icon, gradie
   </div>
 );
 
+/* ─── New KpiCard for Executive Command (Speedo Enterprise design) ─── */
+const KpiCard = ({
+  label, value, icon, subLabel, trend, trendUp, danger, onClick,
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ReactNode;
+  subLabel?: string;
+  trend?: string;
+  trendUp?: boolean;
+  danger?: boolean;
+  onClick?: () => void;
+}) => (
+  <div
+    onClick={onClick}
+    className={`group relative rounded-2xl p-[1px] transition-all duration-200 ${onClick ? "cursor-pointer" : ""}`}
+    style={{ background: "linear-gradient(135deg, #F97316 0%, transparent 60%)" }}
+  >
+    <div
+      className="rounded-2xl p-6 h-full transition-all duration-200 group-hover:-translate-y-0.5"
+      style={{
+        background: "#131C35",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+      }}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <span
+          className="text-[11px] font-semibold uppercase tracking-[0.12em]"
+          style={{ color: "#7A8AAB" }}
+        >
+          {label}
+        </span>
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: "#0A0F1E", color: "#F97316" }}
+        >
+          {icon}
+        </div>
+      </div>
+      <p
+        className="text-4xl font-extrabold tracking-tight leading-none"
+        style={{ color: danger ? "#EF4444" : "#FFFFFF", fontWeight: 800 }}
+      >
+        {value}
+      </p>
+      {subLabel && (
+        <p className="text-xs mt-2 font-medium" style={{ color: "#F97316" }}>{subLabel}</p>
+      )}
+      {trend && (
+        <div className="mt-3">
+          <span
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+            style={{
+              backgroundColor: trendUp ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)",
+              color: trendUp ? "#10B981" : "#EF4444",
+            }}
+          >
+            {trendUp ? "↑" : "↓"} {trend}
+          </span>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
 /* ─── Tab panel animation wrapper ─── */
 const TabPanel = ({ children }: { children: React.ReactNode }) => (
   <motion.div
@@ -136,6 +201,14 @@ const CreatorAdmin = () => {
   const [directoryFilter, setDirectoryFilter] = useState<"all" | "expired" | "new24h">("all");
   const [leadsSearch, setLeadsSearch] = useState("");
   const [healthChecks, setHealthChecks] = useState<{ name: string; latency: number | null; ok: boolean }[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [nowIST, setNowIST] = useState(new Date());
+
+  // Live IST clock — tick every second
+  useEffect(() => {
+    const id = setInterval(() => setNowIST(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   // Wholesale state
   const [wsProducts, setWsProducts] = useState<any[]>([]);
@@ -364,6 +437,29 @@ const CreatorAdmin = () => {
     { tier: "Basic", revenue: basicSubs * PRICE_BASIC, fill: "#F97316" },
     { tier: "Premium", revenue: premiumSubs * PRICE_PREMIUM, fill: "#EA580C" },
   ], [basicSubs, premiumSubs]);
+
+  // Last 6 months MRR snapshot — uses hotels w/ active subs whose start_date falls in that month
+  const monthlyRevenueData = useMemo(() => {
+    const months: { label: string; revenue: number }[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const next = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+      let revenue = 0;
+      hotels.forEach(h => {
+        if (h.subscription_tier === "free" || !h.subscription_tier) return;
+        const created = new Date(h.created_at);
+        if (created < next) {
+          revenue += h.subscription_tier === "premium" ? PRICE_PREMIUM : PRICE_BASIC;
+        }
+      });
+      months.push({
+        label: d.toLocaleDateString("en-IN", { month: "short" }),
+        revenue,
+      });
+    }
+    return months;
+  }, [hotels]);
 
   const activityFeed = useMemo(() => {
     const activities: { icon: any; text: string; time: string; color: string }[] = [];
@@ -752,20 +848,46 @@ const CreatorAdmin = () => {
       >
         {/* Desktop header */}
         <div
-          className="hidden md:flex h-14 items-center justify-between px-6 lg:px-8"
-          style={{ backgroundColor: "rgba(10,15,30,0.85)", borderBottom: "1px solid #1E2D4A", backdropFilter: "blur(12px)" }}
+          className="hidden md:flex h-16 items-center justify-between px-6 lg:px-8 sticky top-0 z-20"
+          style={{ backgroundColor: "rgba(10,15,30,0.85)", borderBottom: "1px solid #1E2D4A", backdropFilter: "blur(12px)", fontFamily: "Inter, sans-serif" }}
         >
           <div>
-            <h2 className="text-base font-semibold text-white tracking-tight">{TABS.find(t => t.id === activeTab)?.label}</h2>
+            <h2 className="text-[22px] md:text-[26px] font-bold text-white tracking-tight leading-tight">
+              {TABS.find(t => t.id === activeTab)?.label}
+            </h2>
             <p className="text-[11px]" style={{ color: "#7A8AAB" }}>SpeedoBill Enterprise • Platform Admin</p>
           </div>
           <div className="flex items-center gap-3">
+            {/* Live IST clock */}
+            <div className="hidden lg:flex flex-col items-end leading-tight">
+              <span className="text-xs font-semibold text-white tabular-nums">
+                {nowIST.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true, timeZone: "Asia/Kolkata" })}
+                <span className="text-[10px] ml-1 tabular-nums" style={{ color: "#7A8AAB" }}>
+                  :{nowIST.toLocaleTimeString("en-IN", { second: "2-digit", timeZone: "Asia/Kolkata" }).split(":").pop()?.split(" ")[0]}
+                </span>
+              </span>
+              <span className="text-[10px]" style={{ color: "#7A8AAB" }}>
+                {nowIST.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" })}
+              </span>
+            </div>
+            {/* All Systems badge */}
+            <div
+              className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold"
+              style={{ backgroundColor: "rgba(16,185,129,0.12)", color: "#10B981", border: "1px solid rgba(16,185,129,0.3)" }}
+            >
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ backgroundColor: "#10B981" }} />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#10B981" }} />
+              </span>
+              All Systems Operational
+            </div>
             <Button
-              variant="outline" size="sm" onClick={fetchData}
-              className="gap-1.5 h-8 text-xs rounded-xl text-[#E5EAF5] hover:text-white transition-colors duration-200"
+              variant="outline" size="sm"
+              onClick={async () => { setIsRefreshing(true); await fetchData(); setTimeout(() => setIsRefreshing(false), 600); }}
+              className="gap-1.5 h-8 text-xs rounded-xl text-[#E5EAF5] hover:text-white transition-all duration-200"
               style={{ backgroundColor: "#131C35", borderColor: "#1E2D4A" }}
             >
-              <RefreshCw className="h-3.5 w-3.5" /> Refresh
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} /> Refresh
             </Button>
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold"
@@ -780,216 +902,318 @@ const CreatorAdmin = () => {
             {/* ═══════ A. EXECUTIVE COMMAND ═══════ */}
             {activeTab === "command" && (
               <TabPanel key="command">
-                <div className="space-y-6">
-                  {/* Metric Cards - 7 cards */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                    <GradientMetricCard label="Total Hotels" value={hotels.length} icon={Hotel} gradient="bg-gradient-to-br from-orange-500/40 via-orange-500/10 to-transparent dark:from-orange-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="Active Subscriptions" value={activeHotels} change={`${basicSubs} basic · ${premiumSubs} premium`} changeUp icon={ShieldCheck} gradient="bg-gradient-to-br from-emerald-500/40 via-emerald-500/10 to-transparent dark:from-emerald-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="Monthly MRR" value={`₹${mrr.toLocaleString()}`} icon={TrendingUp} gradient="bg-gradient-to-br from-indigo-500/40 via-indigo-500/10 to-transparent dark:from-indigo-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="Lifetime Revenue" value={`₹${lifetimeRevenue.toLocaleString()}`} icon={IndianRupee} gradient="bg-gradient-to-br from-amber-500/40 via-amber-500/10 to-transparent dark:from-amber-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="New Users (7d)" value={newSignupsThisWeek} icon={UserPlus} gradient="bg-gradient-to-br from-cyan-500/40 via-cyan-500/10 to-transparent dark:from-cyan-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="New Hotels (7d)" value={newHotelsThisWeek} icon={Building2} gradient="bg-gradient-to-br from-sky-500/40 via-sky-500/10 to-transparent dark:from-sky-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="Demo Leads" value={demoLeads.length} icon={Sparkles} gradient="bg-gradient-to-br from-pink-500/40 via-pink-500/10 to-transparent dark:from-pink-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="Churn Rate" value={`${churnRate}%`} icon={Activity} gradient="bg-gradient-to-br from-red-500/30 via-red-500/10 to-transparent dark:from-red-500/20 dark:to-transparent" />
+                <div className="space-y-4" style={{ fontFamily: "Inter, sans-serif" }}>
+                  {/* ─── KPI ROW 1 ─── */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <KpiCard
+                      label="Total Hotels"
+                      value={hotels.length}
+                      icon={<span className="text-lg">🏨</span>}
+                      trend={`+${newHotelsThisWeek} this week`}
+                      trendUp
+                    />
+                    <KpiCard
+                      label="Active Subscriptions"
+                      value={activeHotels}
+                      icon={<ShieldCheck className="h-5 w-5" />}
+                      subLabel={`${basicSubs} basic • ${premiumSubs} premium`}
+                    />
+                    <KpiCard
+                      label="Monthly MRR"
+                      value={`₹${mrr.toLocaleString("en-IN")}`}
+                      icon={<IndianRupee className="h-5 w-5" />}
+                      trend={mrr > 0 ? `+${Math.round((mrr / Math.max(lifetimeRevenue, 1)) * 100)}% growth` : "—"}
+                      trendUp={mrr > 0}
+                    />
+                    <KpiCard
+                      label="Lifetime Revenue"
+                      value={`₹${lifetimeRevenue.toLocaleString("en-IN")}`}
+                      icon={<TrendingUp className="h-5 w-5" />}
+                    />
                   </div>
 
-
-                  {/* User Analytics + Subscription Analytics side by side */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <GlassCard className="p-5">
-                      <h3 className="text-sm font-semibold text-foreground mb-4">👥 User Analytics</h3>
-                      <div className="space-y-2.5">
-                        {[
-                          { label: "Hotel Owners", value: ownerCount, dot: "bg-orange-500", emoji: "👑" },
-                          { label: "Waiters", value: waiterCount, dot: "bg-indigo-500", emoji: "🍽️" },
-                          { label: "Chefs", value: chefCount, dot: "bg-emerald-500", emoji: "👨‍🍳" },
-                          { label: "Managers", value: managerCount, dot: "bg-cyan-500", emoji: "📋" },
-                          { label: "Total Staff (non-owner)", value: totalStaff, dot: "bg-purple-500", emoji: "👥" },
-                          { label: "Total Users", value: profiles.length, dot: "bg-foreground", emoji: "📊" },
-                        ].map(s => (
-                          <div key={s.label} className="flex items-center justify-between py-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs">{s.emoji}</span>
-                              <span className="text-xs text-muted-foreground">{s.label}</span>
-                            </div>
-                            <span className="text-sm font-semibold text-foreground tabular-nums">{s.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </GlassCard>
-
-                    <GlassCard className="p-5">
-                      <h3 className="text-sm font-semibold text-foreground mb-4">📊 Subscription Analytics</h3>
-                      <div className="space-y-2.5">
-                        {[
-                          { label: "Active Subscriptions", value: activeHotels, dot: "bg-emerald-500" },
-                          { label: "Basic Plans", value: basicSubs, dot: "bg-blue-500" },
-                          { label: "Premium Plans", value: premiumSubs, dot: "bg-purple-500" },
-                          { label: "Trial Users", value: trialHotels, dot: "bg-amber-500" },
-                          { label: "Expired", value: expiredHotels, dot: "bg-red-500" },
-                        ].map(s => (
-                          <div key={s.label} className="flex items-center justify-between py-1">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full ${s.dot}`} />
-                              <span className="text-xs text-muted-foreground">{s.label}</span>
-                            </div>
-                            <span className="text-sm font-semibold text-foreground tabular-nums">{s.value}</span>
-                          </div>
-                        ))}
-                        {expiringIn7Days > 0 && (
-                          <div className="mt-2 p-2 rounded-lg bg-red-500/10 border border-red-500/20">
-                            <p className="text-xs font-semibold text-red-600 dark:text-red-400">⚠️ {expiringIn7Days} subscription(s) expiring in 7 days</p>
-                          </div>
-                        )}
-                      </div>
-                    </GlassCard>
+                  {/* ─── KPI ROW 2 ─── */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <KpiCard
+                      label="New Users (7d)"
+                      value={newSignupsThisWeek}
+                      icon={<UserPlus className="h-5 w-5" />}
+                      trend={newSignupsThisWeek > 0 ? `↑ ${newSignupsThisWeek} signups` : "No new signups"}
+                      trendUp={newSignupsThisWeek > 0}
+                    />
+                    <KpiCard
+                      label="New Hotels (7d)"
+                      value={newHotelsThisWeek}
+                      icon={<span className="text-lg">🏨</span>}
+                      trend={newHotelsThisWeek > 0 ? `↑ ${newHotelsThisWeek} new` : "No new hotels"}
+                      trendUp={newHotelsThisWeek > 0}
+                    />
+                    <KpiCard
+                      label="Demo Leads"
+                      value={demoLeads.length}
+                      icon={<span className="text-lg">🎯</span>}
+                      subLabel="View leads →"
+                      onClick={() => setActiveTab("leads")}
+                    />
+                    <KpiCard
+                      label="Churn Rate"
+                      value={`${churnRate}%`}
+                      icon={<span className="text-lg">📉</span>}
+                      danger={parseFloat(churnRate) > 5}
+                      trend={parseFloat(churnRate) > 5 ? "above threshold" : "healthy"}
+                      trendUp={parseFloat(churnRate) <= 5}
+                    />
                   </div>
 
-                  {/* Revenue Area Chart + Activity Feed */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <GlassCard className="lg:col-span-2 p-5">
-                      <h3 className="text-sm font-semibold text-foreground mb-4">Revenue & Growth — 30 Days</h3>
+                  {/* ─── CHARTS ROW ─── */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* User Growth — Area Chart */}
+                    <div
+                      className="rounded-2xl p-6 transition-all duration-200 hover:-translate-y-0.5"
+                      style={{ backgroundColor: "#131C35", border: "1px solid #1E2D4A", boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h3 className="text-base font-bold text-white">User Growth</h3>
+                          <p className="text-[11px]" style={{ color: "#7A8AAB" }}>Last 30 days signups</p>
+                        </div>
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ backgroundColor: "#0A0F1E", color: "#F97316" }}>
+                          <TrendingUp className="h-4 w-4" />
+                        </div>
+                      </div>
                       <div className="h-[260px]">
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart data={signupData}>
                             <defs>
-                              <linearGradient id="gradOrange" x1="0" y1="0" x2="0" y2="1">
+                              <linearGradient id="cmdGradOrange" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="0%" stopColor="#F97316" stopOpacity={0.3} />
                                 <stop offset="100%" stopColor="#F97316" stopOpacity={0} />
                               </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                            <XAxis dataKey="date" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} />
-                            <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                            <Tooltip contentStyle={chartTooltipStyle} />
-                            <Area type="monotone" dataKey="signups" stroke="#F97316" fill="url(#gradOrange)" strokeWidth={2.5} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="#1E2D4A" />
+                            <XAxis dataKey="date" tick={{ fill: "#7A8AAB", fontSize: 10 }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fill: "#7A8AAB", fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                            <Tooltip
+                              contentStyle={{ background: "#131C35", border: "1px solid #F97316", borderRadius: 12, color: "#FFFFFF", fontSize: 12 }}
+                              labelStyle={{ color: "#F97316", fontWeight: 600 }}
+                            />
+                            <Area type="monotone" dataKey="signups" stroke="#F97316" fill="url(#cmdGradOrange)" strokeWidth={2.5} />
                           </AreaChart>
                         </ResponsiveContainer>
                       </div>
-                    </GlassCard>
+                    </div>
 
-                    <GlassCard className="p-5">
+                    {/* Revenue Trend — Bar Chart */}
+                    <div
+                      className="rounded-2xl p-6 transition-all duration-200 hover:-translate-y-0.5"
+                      style={{ backgroundColor: "#131C35", border: "1px solid #1E2D4A", boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}
+                    >
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-semibold text-foreground">Live Activity</h3>
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                          <span className="text-[10px] text-muted-foreground">Auto-refresh 30s</span>
+                        <div>
+                          <h3 className="text-base font-bold text-white">Revenue Trend</h3>
+                          <p className="text-[11px]" style={{ color: "#7A8AAB" }}>Last 6 months MRR</p>
+                        </div>
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ backgroundColor: "#0A0F1E", color: "#F97316" }}>
+                          <BarChart3 className="h-4 w-4" />
                         </div>
                       </div>
-                      <div className="space-y-2.5 max-h-[230px] overflow-y-auto">
-                        {activityFeed.map((a, i) => (
-                          <div key={i} className="flex items-start gap-3 p-2 rounded-xl hover:bg-secondary/30 transition-colors">
-                            <div className={`w-8 h-8 rounded-lg bg-white/50 dark:bg-white/[0.06] flex items-center justify-center flex-shrink-0 ${a.color}`}>
-                              <a.icon className="h-3.5 w-3.5" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-xs text-foreground leading-relaxed">{a.text}</p>
-                              <p className="text-[10px] text-muted-foreground mt-0.5">{a.time}</p>
-                            </div>
-                          </div>
-                        ))}
-                        {activityFeed.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">No recent activity</p>}
-                      </div>
-                    </GlassCard>
-                  </div>
-
-                  {/* Donut Charts */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <GlassCard className="p-5">
-                      <h3 className="text-sm font-semibold text-foreground mb-3">Subscription Split</h3>
-                      <div className="h-[180px]">
+                      <div className="h-[260px]">
                         <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie data={tierData} cx="50%" cy="50%" innerRadius={45} outerRadius={72} dataKey="value" paddingAngle={4} stroke="none">
-                              {tierData.map((e, i) => <Cell key={i} fill={e.color} />)}
-                            </Pie>
-                            <Tooltip contentStyle={chartTooltipStyle} />
-                          </PieChart>
+                          <BarChart data={monthlyRevenueData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#1E2D4A" />
+                            <XAxis dataKey="label" tick={{ fill: "#7A8AAB", fontSize: 10 }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fill: "#7A8AAB", fontSize: 10 }} axisLine={false} tickLine={false} />
+                            <Tooltip
+                              contentStyle={{ background: "#131C35", border: "1px solid #F97316", borderRadius: 12, color: "#FFFFFF", fontSize: 12 }}
+                              labelStyle={{ color: "#F97316", fontWeight: 600 }}
+                              formatter={(v: any) => [`₹${Number(v).toLocaleString("en-IN")}`, "Revenue"]}
+                              cursor={{ fill: "rgba(249,115,22,0.08)" }}
+                            />
+                            <Bar dataKey="revenue" fill="#F97316" radius={[8, 8, 0, 0]} />
+                          </BarChart>
                         </ResponsiveContainer>
                       </div>
-                      <div className="flex justify-center gap-4 mt-1">
-                        {tierData.map(t => (
-                          <div key={t.name} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                            <div className="w-2.5 h-2.5 rounded-full" style={{ background: t.color }} />{t.name}: {t.value}
-                          </div>
-                        ))}
+                      <div className="flex items-center justify-center gap-2 mt-2 text-[11px]" style={{ color: "#7A8AAB" }}>
+                        <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: "#F97316" }} />
+                        Monthly Recurring Revenue
                       </div>
-                    </GlassCard>
-
-                    <GlassCard className="p-5">
-                      <h3 className="text-sm font-semibold text-foreground mb-3">User Distribution</h3>
-                      <div className="h-[180px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie data={userDistData} cx="50%" cy="50%" innerRadius={45} outerRadius={72} dataKey="value" paddingAngle={4} stroke="none">
-                              {userDistData.map((e, i) => <Cell key={i} fill={e.color} />)}
-                            </Pie>
-                            <Tooltip contentStyle={chartTooltipStyle} />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                      <div className="flex justify-center gap-4 mt-1">
-                        {userDistData.map(t => (
-                          <div key={t.name} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                            <div className="w-2.5 h-2.5 rounded-full" style={{ background: t.color }} />{t.name}: {t.value}
-                          </div>
-                        ))}
-                      </div>
-                    </GlassCard>
+                    </div>
                   </div>
 
-                  {/* Hotel Management Table */}
-                  <GlassCard className="overflow-hidden">
-                    <div className="p-5 border-b border-border/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  {/* ─── BOTTOM ROW ─── */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* User Analytics */}
+                    <div
+                      className="rounded-2xl p-6 transition-all duration-200 hover:-translate-y-0.5"
+                      style={{ backgroundColor: "#131C35", border: "1px solid #1E2D4A", boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}
+                    >
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ backgroundColor: "#0A0F1E", color: "#A855F7" }}>
+                          <Users className="h-4 w-4" />
+                        </div>
+                        <h3 className="text-base font-bold text-white">User Analytics</h3>
+                      </div>
+                      <div className="divide-y" style={{ borderColor: "#1E2D4A" }}>
+                        {[
+                          { label: "Hotel Owners", value: ownerCount, emoji: "👑" },
+                          { label: "Waiters", value: waiterCount, emoji: "🍽️" },
+                          { label: "Chefs", value: chefCount, emoji: "👨‍🍳" },
+                          { label: "Managers", value: managerCount, emoji: "📋" },
+                          { label: "Total Staff", value: totalStaff, emoji: "👥" },
+                          { label: "Total Users", value: profiles.length, emoji: "📊" },
+                        ].map((s, idx) => (
+                          <div key={s.label} className="flex items-center justify-between py-3" style={{ borderTop: idx === 0 ? "none" : "1px solid #1E2D4A" }}>
+                            <div className="flex items-center gap-2.5">
+                              <span className="text-base">{s.emoji}</span>
+                              <span className="text-sm" style={{ color: "#B8C2DB" }}>{s.label}</span>
+                            </div>
+                            <span className="text-base font-bold text-white tabular-nums">{s.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {expiringIn7Days > 0 && (
+                        <button
+                          onClick={() => setActiveTab("directory")}
+                          className="mt-4 w-full flex items-center justify-between p-3 rounded-xl transition-all duration-200 hover:brightness-110"
+                          style={{ backgroundColor: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.3)" }}
+                        >
+                          <span className="text-xs font-semibold" style={{ color: "#F97316" }}>
+                            ⚠️ {expiringIn7Days} subscription{expiringIn7Days > 1 ? "s" : ""} expiring in 7 days
+                          </span>
+                          <span className="text-xs font-semibold" style={{ color: "#F97316" }}>View →</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Subscription Analytics — Donut */}
+                    <div
+                      className="rounded-2xl p-6 transition-all duration-200 hover:-translate-y-0.5"
+                      style={{ backgroundColor: "#131C35", border: "1px solid #1E2D4A", boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}
+                    >
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ backgroundColor: "#0A0F1E", color: "#F97316" }}>
+                          <BarChart3 className="h-4 w-4" />
+                        </div>
+                        <h3 className="text-base font-bold text-white">Subscription Analytics</h3>
+                      </div>
+                      <div className="relative h-[200px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={[
+                                { name: "Basic", value: basicSubs, color: "#F97316" },
+                                { name: "Premium", value: premiumSubs, color: "#EA580C" },
+                                { name: "Trial", value: trialHotels, color: "#7A8AAB" },
+                                { name: "Expired", value: expiredHotels, color: "#EF4444" },
+                              ].filter(d => d.value > 0)}
+                              cx="50%" cy="50%" innerRadius={55} outerRadius={85}
+                              dataKey="value" paddingAngle={3} stroke="none"
+                            >
+                              {[
+                                { name: "Basic", value: basicSubs, color: "#F97316" },
+                                { name: "Premium", value: premiumSubs, color: "#EA580C" },
+                                { name: "Trial", value: trialHotels, color: "#7A8AAB" },
+                                { name: "Expired", value: expiredHotels, color: "#EF4444" },
+                              ].filter(d => d.value > 0).map((e, i) => <Cell key={i} fill={e.color} />)}
+                            </Pie>
+                            <Tooltip
+                              contentStyle={{ background: "#131C35", border: "1px solid #F97316", borderRadius: 12, color: "#FFFFFF", fontSize: 12 }}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                          <span className="text-[10px] uppercase tracking-wider" style={{ color: "#7A8AAB" }}>Total</span>
+                          <span className="text-2xl font-extrabold text-white">{basicSubs + premiumSubs + trialHotels + expiredHotels}</span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mt-4">
+                        {[
+                          { name: "Basic", value: basicSubs, color: "#F97316" },
+                          { name: "Premium", value: premiumSubs, color: "#EA580C" },
+                          { name: "Trial", value: trialHotels, color: "#7A8AAB" },
+                          { name: "Expired", value: expiredHotels, color: "#EF4444" },
+                        ].map(t => (
+                          <div key={t.name} className="flex items-center justify-between p-2 rounded-lg" style={{ backgroundColor: "#0A0F1E" }}>
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full" style={{ background: t.color }} />
+                              <span className="text-xs" style={{ color: "#B8C2DB" }}>{t.name}</span>
+                            </div>
+                            <span className="text-sm font-bold text-white tabular-nums">{t.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hotel Management Table — preserved from previous design */}
+                  <div
+                    className="rounded-2xl overflow-hidden transition-all duration-200"
+                    style={{ backgroundColor: "#131C35", border: "1px solid #1E2D4A", boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}
+                  >
+                    <div className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3" style={{ borderBottom: "1px solid #1E2D4A" }}>
                       <div>
-                        <h3 className="text-sm font-semibold text-foreground">🏨 Hotel Management</h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">{hotels.length} hotels registered</p>
+                        <h3 className="text-base font-bold text-white">🏨 Hotel Management</h3>
+                        <p className="text-[11px] mt-0.5" style={{ color: "#7A8AAB" }}>{hotels.length} hotels registered</p>
                       </div>
                       <div className="relative w-full sm:w-56">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Input placeholder="Search hotels..." value={hotelSearch} onChange={e => setHotelSearch(e.target.value)} className="pl-9 h-8 rounded-xl text-xs" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: "#7A8AAB" }} />
+                        <Input
+                          placeholder="Search hotels..."
+                          value={hotelSearch}
+                          onChange={e => setHotelSearch(e.target.value)}
+                          className="pl-9 h-8 rounded-xl text-xs text-white placeholder:text-[#7A8AAB]"
+                          style={{ backgroundColor: "#0A0F1E", borderColor: "#1E2D4A" }}
+                        />
                       </div>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full min-w-[700px]">
                         <thead>
-                          <tr className="text-[11px] text-muted-foreground border-b border-border/40 uppercase tracking-wider">
-                            <th className="text-left px-4 py-3 font-medium">Hotel</th>
-                            <th className="text-left px-4 py-3 font-medium">Owner</th>
-                            <th className="text-left px-4 py-3 font-medium">Plan</th>
-                            <th className="text-left px-4 py-3 font-medium">Status</th>
-                            <th className="text-center px-4 py-3 font-medium">Staff</th>
-                            <th className="text-left px-4 py-3 font-medium">Expiry</th>
+                          <tr className="text-[11px] uppercase tracking-wider" style={{ color: "#7A8AAB", borderBottom: "1px solid #1E2D4A" }}>
+                            <th className="text-left px-4 py-3 font-semibold">Hotel</th>
+                            <th className="text-left px-4 py-3 font-semibold">Owner</th>
+                            <th className="text-left px-4 py-3 font-semibold">Plan</th>
+                            <th className="text-left px-4 py-3 font-semibold">Status</th>
+                            <th className="text-center px-4 py-3 font-semibold">Staff</th>
+                            <th className="text-left px-4 py-3 font-semibold">Expiry</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-border/30">
+                        <tbody>
                           {hotelTableData.map(h => (
-                            <tr key={h.id} className="hover:bg-white/40 dark:hover:bg-white/[0.02] transition-colors">
-                              <td className="px-4 py-3 text-sm font-medium text-foreground">{h.name}</td>
-                              <td className="px-4 py-3 text-xs text-muted-foreground">{h.ownerName}</td>
+                            <tr key={h.id} className="transition-colors hover:bg-white/[0.03]" style={{ borderBottom: "1px solid #1E2D4A" }}>
+                              <td className="px-4 py-3 text-sm font-semibold text-white">{h.name}</td>
+                              <td className="px-4 py-3 text-xs" style={{ color: "#B8C2DB" }}>{h.ownerName}</td>
                               <td className="px-4 py-3">
-                                <Badge variant="outline" className={`text-[10px] capitalize ${h.subscription_tier === "premium" ? "text-purple-600 border-purple-200 dark:text-purple-400 dark:border-purple-500/20" : "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/20"}`}>
+                                <span
+                                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize"
+                                  style={{
+                                    backgroundColor: h.subscription_tier === "premium" ? "rgba(234,88,12,0.15)" : "rgba(249,115,22,0.15)",
+                                    color: h.subscription_tier === "premium" ? "#EA580C" : "#F97316",
+                                  }}
+                                >
                                   {h.subscription_tier}
-                                </Badge>
+                                </span>
                               </td>
                               <td className="px-4 py-3">{statusBadge(h.status)}</td>
                               <td className="px-4 py-3 text-center">
-                                <div className="flex items-center justify-center gap-2 text-[10px]">
+                                <div className="flex items-center justify-center gap-2 text-[10px]" style={{ color: "#B8C2DB" }}>
                                   <span title="Owners">👑{h.ownerCount}</span>
                                   <span title="Waiters">🍽️{h.waiterCount}</span>
                                   <span title="Chefs">👨‍🍳{h.chefCount}</span>
                                 </div>
                               </td>
-                              <td className="px-4 py-3 text-xs text-muted-foreground">
+                              <td className="px-4 py-3 text-xs" style={{ color: "#B8C2DB" }}>
                                 {h.subscription_expiry ? new Date(h.subscription_expiry).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" }) : "—"}
                               </td>
                             </tr>
                           ))}
-                          {hotelTableData.length === 0 && <tr><td colSpan={6} className="text-center py-10 text-muted-foreground text-sm">No hotels found</td></tr>}
+                          {hotelTableData.length === 0 && (
+                            <tr><td colSpan={6} className="text-center py-10 text-sm" style={{ color: "#7A8AAB" }}>No hotels yet</td></tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
-                  </GlassCard>
+                  </div>
                 </div>
               </TabPanel>
             )}
