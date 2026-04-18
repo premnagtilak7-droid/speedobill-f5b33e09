@@ -14,6 +14,7 @@ import StickyScrollFeatures from "@/components/landing/StickyScrollFeatures";
 import TrustBar from "@/components/landing/TrustBar";
 import StatsSection from "@/components/landing/StatsSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
+import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import FaqSection from "@/components/landing/FaqSection";
 import ScrollReveal from "@/components/ScrollReveal";
 import {
@@ -173,6 +174,9 @@ const LandingPage = () => {
         </div>
       </div>
     </section>
+
+    {/* How It Works */}
+    <HowItWorksSection />
 
     {/* Billing showcase */}
     <section id="billing" className="border-t px-4 py-24 sm:px-6 lg:px-8">
