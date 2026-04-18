@@ -11,6 +11,7 @@ import PlanGuard from "@/components/PlanGuard";
 import AppLayout from "@/components/AppLayout";
 import { lazy, useEffect, Suspense } from "react";
 import SpeedoBot from "@/components/SpeedoBot";
+import PwaSplashOnboarding from "@/components/PwaSplashOnboarding";
 
 const PageFallback = () => (
   <div className="min-h-screen bg-[#0f1629] flex items-center justify-center">
@@ -232,6 +233,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <SubscriptionProvider>
+            <PwaSplashOnboarding />
             <AppRoutes />
             <SpeedoBot />
           </SubscriptionProvider>

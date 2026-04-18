@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import LandingNavbar from "@/components/landing/LandingNavbar";
 import MobileNavbar from "@/components/landing/MobileNavbar";
+import MobileAppBanner from "@/components/MobileAppBanner";
 import DemoRequestForm from "@/components/landing/DemoRequestForm";
 import DemoBookingForm from "@/components/landing/DemoBookingForm";
 import LandingFooter from "@/components/landing/LandingFooter";
@@ -54,6 +55,7 @@ const LandingPage = () => {
 
   return (
   <div className="min-h-screen bg-background text-foreground scroll-smooth">
+    <MobileAppBanner />
     <MobileNavbar />
     <LandingNavbar />
 
