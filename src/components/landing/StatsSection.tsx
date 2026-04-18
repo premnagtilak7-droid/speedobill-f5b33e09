@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
-import { Building2, Zap, ShieldCheck } from "lucide-react";
+import { Building2, Zap, Sparkles } from "lucide-react";
 
 type Stat = {
   icon: typeof Building2;
@@ -11,9 +11,9 @@ type Stat = {
 };
 
 const STATS: Stat[] = [
-  { icon: Building2, target: 500, suffix: "+", label: "Businesses trust SpeedoBill" },
-  { icon: Zap, target: 10, suffix: "x", label: "Faster than traditional billing" },
-  { icon: ShieldCheck, target: 0, suffix: "%", label: "Billing errors reported" },
+  { icon: Building2, target: 500, suffix: "+", label: "Businesses using SpeedoBill" },
+  { icon: Zap, target: 10, suffix: "x", label: "Faster than manual billing" },
+  { icon: Sparkles, target: 0, prefix: "₹", suffix: "", label: "To get started today" },
 ];
 
 const CountUp = ({ target, duration = 1600, start }: { target: number; duration?: number; start: boolean }) => {
@@ -29,7 +29,6 @@ const CountUp = ({ target, duration = 1600, start }: { target: number; duration?
     const startTime = performance.now();
     const tick = (now: number) => {
       const progress = Math.min((now - startTime) / duration, 1);
-      // easeOutCubic
       const eased = 1 - Math.pow(1 - progress, 3);
       setValue(Math.round(target * eased));
       if (progress < 1) rafRef.current = requestAnimationFrame(tick);
@@ -50,11 +49,16 @@ const StatsSection = () => {
   return (
     <section
       ref={ref}
-      className="relative px-4 py-16 sm:px-6 lg:px-8"
+      className="px-4 py-16 sm:px-6 lg:px-8"
       style={{ background: "linear-gradient(180deg, #0f172a 0%, #0a0e1a 100%)" }}
-      aria-label="Key statistics"
+      aria-label="Trusted by 500+ Businesses"
     >
       <div className="mx-auto max-w-6xl">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            Trusted by 500+ Businesses
+          </h2>
+        </div>
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-sm sm:p-10">
           <div className="grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-0 md:divide-x md:divide-white/10">
             {STATS.map((s, i) => (
@@ -72,6 +76,7 @@ const StatsSection = () => {
                   <s.icon className="h-6 w-6" style={{ color: "#F97316" }} />
                 </div>
                 <div className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+                  {s.prefix}
                   <CountUp target={s.target} start={inView} />
                   <span>{s.suffix}</span>
                 </div>

@@ -1,61 +1,53 @@
-import { Monitor, Tablet, ChefHat, ArrowRight } from "lucide-react";
-
 const terminals = [
   {
-    icon: Monitor,
+    emoji: "🖥️",
     title: "Master POS",
-    subtitle: "Desktop / PC",
-    desc: "Central billing hub for the cashier counter with full reports and controls.",
-    color: "from-orange-500/20 to-orange-500/5",
-    iconBg: "bg-orange-500/10 text-orange-500",
+    desc: "Complete billing from the counter station with full touch and controls.",
   },
   {
-    icon: Tablet,
+    emoji: "📱",
     title: "Waiter Tabs",
-    subtitle: "Mobile / Tablet",
-    desc: "Staff take orders tableside on any Android phone — synced instantly.",
-    color: "from-indigo-500/20 to-indigo-500/5",
-    iconBg: "bg-indigo-500/10 text-indigo-500",
+    desc: "Staff take orders tableside on any Android phone, synced instantly.",
   },
   {
-    icon: ChefHat,
+    emoji: "🍳",
     title: "KOT Display",
-    subtitle: "Kitchen Screen",
-    desc: "Live order tickets for chefs with status, timers and color-coded urgency.",
-    color: "from-emerald-500/20 to-emerald-500/5",
-    iconBg: "bg-emerald-500/10 text-emerald-500",
+    desc: "Live order display for chefs with status, timers and color-coded urgency.",
   },
 ];
 
 const MultiTerminalSection = () => (
-  <section className="border-t bg-muted/30 px-4 py-24 sm:px-6 lg:px-8">
+  <section
+    className="px-4 py-20 sm:px-6 lg:px-8"
+    style={{ background: "linear-gradient(180deg, #0a0e1a 0%, #0f172a 100%)" }}
+  >
     <div className="mx-auto max-w-6xl">
       <div className="text-center">
-        <span className="mb-4 inline-block rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
+        <span
+          className="mb-4 inline-block rounded-full px-4 py-1 text-sm font-medium"
+          style={{ backgroundColor: "rgba(249, 115, 22, 0.1)", color: "#F97316" }}
+        >
           One Platform · Three Devices
         </span>
-        <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
           Run your entire restaurant from any device
         </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-          Speedo Bill keeps your counter, waiters and kitchen perfectly in sync — in real time.
+        <p className="mx-auto mt-4 max-w-2xl text-slate-400">
+          Whether at the counter, kitchen or on the go — SpeedoBill works everywhere.
         </p>
       </div>
 
-      <div className="mt-16 grid items-stretch gap-6 md:grid-cols-3 md:gap-4 lg:gap-8">
-        {terminals.map((t, i) => (
-          <div key={t.title} className="relative flex">
-            <div className={`relative flex w-full flex-col rounded-2xl border bg-gradient-to-br ${t.color} p-6 backdrop-blur transition-transform hover:-translate-y-1`}>
-              <div className={`flex h-14 w-14 items-center justify-center rounded-xl ${t.iconBg}`}>
-                <t.icon className="h-7 w-7" />
-              </div>
-              <h3 className="mt-5 text-xl font-bold">{t.title}</h3>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.subtitle}</p>
-              <p className="mt-3 text-sm text-muted-foreground">{t.desc}</p>
+      <div className="mt-14 grid gap-6 md:grid-cols-3">
+        {terminals.map((t) => (
+          <div
+            key={t.title}
+            className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-orange-500/40"
+          >
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl text-3xl" style={{ backgroundColor: "rgba(249, 115, 22, 0.1)" }}>
+              {t.emoji}
             </div>
-            {i < terminals.length - 1 && (
-              <ArrowRight className="absolute -right-3 top-1/2 hidden h-6 w-6 -translate-y-1/2 text-primary md:block" />
-            )}
+            <h3 className="text-xl font-bold text-white">{t.title}</h3>
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">{t.desc}</p>
           </div>
         ))}
       </div>
