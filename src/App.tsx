@@ -61,6 +61,13 @@ const LoyaltySettings = lazy(() => import("./pages/LoyaltySettings"));
 const StaffProfile = lazy(() => import("./pages/StaffProfile"));
 const WaiterOrders = lazy(() => import("./pages/WaiterOrders"));
 
+// Public marketing feature pages
+const BillingFeature = lazy(() => import("./pages/features/BillingFeature"));
+const InventoryFeature = lazy(() => import("./pages/features/InventoryFeature"));
+const ReportsFeature = lazy(() => import("./pages/features/ReportsFeature"));
+const PayrollFeature = lazy(() => import("./pages/features/PayrollFeature"));
+const CustomersFeature = lazy(() => import("./pages/features/CustomersFeature"));
+
 // Prefetch critical routes after first paint
 if (typeof window !== "undefined") {
   requestIdleCallback?.(() => {
@@ -139,6 +146,11 @@ const AppRoutes = () => {
         <Route path="/terms" element={<TermsConditions />} />
         <Route path="/support" element={<SupportPage />} />
         <Route path="/order/:tableId" element={<CustomerOrder />} />
+        <Route path="/features/billing" element={<BillingFeature />} />
+        <Route path="/features/inventory" element={<InventoryFeature />} />
+        <Route path="/features/reports" element={<ReportsFeature />} />
+        <Route path="/features/payroll" element={<PayrollFeature />} />
+        <Route path="/features/customers" element={<CustomersFeature />} />
         <Route path="/creator-admin" element={<ProtectedRoute><RoleGuard allowed={["owner"]} redirectTo="/tables"><CreatorAdmin /></RoleGuard></ProtectedRoute>} />
 
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
