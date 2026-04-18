@@ -18,7 +18,7 @@ import {
   Clock, UserPlus, ArrowUpRight, ArrowDownRight, Share2,
   Filter, Mail, Phone, RotateCcw, Megaphone, Target,
   Globe, Layers, Store, Package, Plus, Minus, Trash2,
-  Sparkles, CheckCircle2, Building2,
+  Sparkles, CheckCircle2, Building2, AlertTriangle,
 } from "lucide-react";
 
 // Pricing constants (single source of truth)
@@ -29,6 +29,8 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar
 } from "recharts";
 import { useTheme } from "@/hooks/useTheme";
+import { AdminNotifications } from "@/components/admin/AdminNotifications";
+import { AdminAlertsPanel } from "@/components/admin/AdminAlertsPanel";
 
 /* ─── Types ─── */
 interface License {
@@ -51,18 +53,19 @@ const generateKeyCode = () => {
   return `SB-${seg()}-${seg()}-${seg()}-${seg()}`;
 };
 
-type TabId = "command" | "directory" | "leads" | "revenue" | "vault" | "broadcast" | "console" | "wholesale" | "settings";
+type TabId = "command" | "directory" | "leads" | "revenue" | "vault" | "broadcast" | "console" | "wholesale" | "settings" | "alerts";
 
 const TABS: { id: TabId; label: string; shortLabel: string; icon: any; emoji: string }[] = [
-  { id: "command",   label: "Executive Command", shortLabel: "Command",   icon: Crown,      emoji: "👑" },
-  { id: "directory", label: "Client Directory",  shortLabel: "Directory", icon: Users,      emoji: "👥" },
-  { id: "revenue",   label: "Revenue & Payments",shortLabel: "Revenue",   icon: CreditCard, emoji: "💳" },
-  { id: "wholesale", label: "Wholesale Store",   shortLabel: "Wholesale", icon: Store,      emoji: "🏪" },
-  { id: "vault",     label: "License Vault",     shortLabel: "Licenses",  icon: Key,        emoji: "🔑" },
-  { id: "broadcast", label: "Smart Broadcast",   shortLabel: "Broadcast", icon: Megaphone,  emoji: "📡" },
-  { id: "leads",     label: "Demo Leads",        shortLabel: "Leads",     icon: Target,     emoji: "🎯" },
-  { id: "settings",  label: "System Settings",   shortLabel: "Settings",  icon: Activity,   emoji: "⚙️" },
-  { id: "console",   label: "Developer Console", shortLabel: "Console",   icon: Terminal,   emoji: "🖥️" },
+  { id: "command",   label: "Executive Command", shortLabel: "Command",   icon: Crown,         emoji: "👑" },
+  { id: "directory", label: "Client Directory",  shortLabel: "Directory", icon: Users,         emoji: "👥" },
+  { id: "revenue",   label: "Revenue & Payments",shortLabel: "Revenue",   icon: CreditCard,    emoji: "💳" },
+  { id: "wholesale", label: "Wholesale Store",   shortLabel: "Wholesale", icon: Store,         emoji: "🏪" },
+  { id: "vault",     label: "License Vault",     shortLabel: "Licenses",  icon: Key,           emoji: "🔑" },
+  { id: "broadcast", label: "Smart Broadcast",   shortLabel: "Broadcast", icon: Megaphone,     emoji: "📡" },
+  { id: "leads",     label: "Demo Leads",        shortLabel: "Leads",     icon: Target,        emoji: "🎯" },
+  { id: "alerts",    label: "Alerts",            shortLabel: "Alerts",    icon: AlertTriangle, emoji: "🚨" },
+  { id: "settings",  label: "System Settings",   shortLabel: "Settings",  icon: Activity,      emoji: "⚙️" },
+  { id: "console",   label: "Developer Console", shortLabel: "Console",   icon: Terminal,      emoji: "🖥️" },
 ];
 
 /* ─── Glass Card with framer-motion ─── */
@@ -889,6 +892,10 @@ const CreatorAdmin = () => {
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} /> Refresh
             </Button>
+            <AdminNotifications onNavigate={(target) => {
+              const m = target.match(/tab=([a-z]+)/);
+              if (m && TABS.some(t => t.id === m[1])) setActiveTab(m[1] as TabId);
+            }} />
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold"
               style={{ background: "linear-gradient(135deg, #F97316, #EA580C)", boxShadow: "0 0 14px rgba(249,115,22,0.45)" }}
@@ -1783,6 +1790,20 @@ const CreatorAdmin = () => {
                     </div>
                   </GlassCard>
                 </div>
+              </TabPanel>
+            )}
+
+            {/* ═══════ E1. ALERTS CENTER ═══════ */}
+            {activeTab === "alerts" && (
+              <TabPanel key="alerts">
+                <AdminAlertsPanel
+                  hotels={hotels as any}
+                  profiles={profiles as any}
+                  demoLeads={demoLeads as any}
+                  contactedLeadIds={Array.from(contactedLeads)}
+                  totalRevenue={lifetimeRevenue}
+                  onNavigate={(t) => setActiveTab(t as TabId)}
+                />
               </TabPanel>
             )}
 
