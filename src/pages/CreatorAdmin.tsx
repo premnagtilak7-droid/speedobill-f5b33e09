@@ -29,6 +29,8 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar
 } from "recharts";
 import { useTheme } from "@/hooks/useTheme";
+import { AdminNotifications } from "@/components/admin/AdminNotifications";
+import { AdminAlertsPanel } from "@/components/admin/AdminAlertsPanel";
 
 /* ─── Types ─── */
 interface License {
@@ -51,18 +53,19 @@ const generateKeyCode = () => {
   return `SB-${seg()}-${seg()}-${seg()}-${seg()}`;
 };
 
-type TabId = "command" | "directory" | "leads" | "revenue" | "vault" | "broadcast" | "console" | "wholesale" | "settings";
+type TabId = "command" | "directory" | "leads" | "revenue" | "vault" | "broadcast" | "console" | "wholesale" | "settings" | "alerts";
 
 const TABS: { id: TabId; label: string; shortLabel: string; icon: any; emoji: string }[] = [
-  { id: "command",   label: "Executive Command", shortLabel: "Command",   icon: Crown,      emoji: "👑" },
-  { id: "directory", label: "Client Directory",  shortLabel: "Directory", icon: Users,      emoji: "👥" },
-  { id: "revenue",   label: "Revenue & Payments",shortLabel: "Revenue",   icon: CreditCard, emoji: "💳" },
-  { id: "wholesale", label: "Wholesale Store",   shortLabel: "Wholesale", icon: Store,      emoji: "🏪" },
-  { id: "vault",     label: "License Vault",     shortLabel: "Licenses",  icon: Key,        emoji: "🔑" },
-  { id: "broadcast", label: "Smart Broadcast",   shortLabel: "Broadcast", icon: Megaphone,  emoji: "📡" },
-  { id: "leads",     label: "Demo Leads",        shortLabel: "Leads",     icon: Target,     emoji: "🎯" },
-  { id: "settings",  label: "System Settings",   shortLabel: "Settings",  icon: Activity,   emoji: "⚙️" },
-  { id: "console",   label: "Developer Console", shortLabel: "Console",   icon: Terminal,   emoji: "🖥️" },
+  { id: "command",   label: "Executive Command", shortLabel: "Command",   icon: Crown,         emoji: "👑" },
+  { id: "directory", label: "Client Directory",  shortLabel: "Directory", icon: Users,         emoji: "👥" },
+  { id: "revenue",   label: "Revenue & Payments",shortLabel: "Revenue",   icon: CreditCard,    emoji: "💳" },
+  { id: "wholesale", label: "Wholesale Store",   shortLabel: "Wholesale", icon: Store,         emoji: "🏪" },
+  { id: "vault",     label: "License Vault",     shortLabel: "Licenses",  icon: Key,           emoji: "🔑" },
+  { id: "broadcast", label: "Smart Broadcast",   shortLabel: "Broadcast", icon: Megaphone,     emoji: "📡" },
+  { id: "leads",     label: "Demo Leads",        shortLabel: "Leads",     icon: Target,        emoji: "🎯" },
+  { id: "alerts",    label: "Alerts",            shortLabel: "Alerts",    icon: AlertTriangle, emoji: "🚨" },
+  { id: "settings",  label: "System Settings",   shortLabel: "Settings",  icon: Activity,      emoji: "⚙️" },
+  { id: "console",   label: "Developer Console", shortLabel: "Console",   icon: Terminal,      emoji: "🖥️" },
 ];
 
 /* ─── Glass Card with framer-motion ─── */
