@@ -21,7 +21,7 @@ const LandingFooter = () => (
 
       {/* Copyright */}
       <p className="text-center text-xs text-slate-500">
-        © {new Date().getFullYear()} Speedo Bill. All rights reserved. Made with ❤️ in India.
+        © 2026 SpeedoBill. All rights reserved.
       </p>
     </div>
   </footer>
