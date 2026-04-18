@@ -1562,6 +1562,27 @@ const CreatorAdmin = () => {
               </TabPanel>
             )}
 
+            {/* ═══════ E2. SYSTEM SETTINGS (placeholder) ═══════ */}
+            {activeTab === "settings" && (
+              <TabPanel key="settings">
+                <div
+                  className="rounded-2xl p-10 text-center"
+                  style={{ backgroundColor: "#131C35", border: "1px solid #1E2D4A" }}
+                >
+                  <div
+                    className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center"
+                    style={{ background: "linear-gradient(135deg, #F97316, #EA580C)", boxShadow: "0 0 18px rgba(249,115,22,0.4)" }}
+                  >
+                    <Activity className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-1">System Settings</h3>
+                  <p className="text-sm" style={{ color: "#9AA8C7" }}>
+                    Platform-wide configuration coming in Phase 2.
+                  </p>
+                </div>
+              </TabPanel>
+            )}
+
             {/* ═══════ F. DEVELOPER CONSOLE ═══════ */}
             {activeTab === "console" && (
               <TabPanel key="console">
