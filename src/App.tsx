@@ -68,6 +68,12 @@ const ReportsFeature = lazy(() => import("./pages/features/ReportsFeature"));
 const PayrollFeature = lazy(() => import("./pages/features/PayrollFeature"));
 const CustomersFeature = lazy(() => import("./pages/features/CustomersFeature"));
 
+// Public marketing add-on pages
+const WaiterCallingAddon = lazy(() => import("./pages/addons/WaiterCallingAddon"));
+const QrPayAddon = lazy(() => import("./pages/addons/QrPayAddon"));
+const SmsMarketingAddon = lazy(() => import("./pages/addons/SmsMarketingAddon"));
+const FeedbackAddon = lazy(() => import("./pages/addons/FeedbackAddon"));
+
 // Prefetch critical routes after first paint
 if (typeof window !== "undefined") {
   requestIdleCallback?.(() => {
