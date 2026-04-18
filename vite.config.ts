@@ -113,7 +113,7 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: "SpeedoBill – Smart Canteen Management",
           short_name: "SpeedoBill",
-          description: "Smart Canteen Management by Mangal Multiproduct. Manage tables, orders, kitchen, staff & billing.",
+          description: "SpeedoBill is India's fastest POS and billing software for restaurants, hotels, canteens and retail shops.",
           theme_color: "#F97316",
           background_color: "#FFFFFF",
           display: "standalone",
