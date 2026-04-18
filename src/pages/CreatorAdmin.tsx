@@ -944,6 +944,116 @@ const CreatorAdmin = () => {
               </TabPanel>
             )}
 
+            {/* ═══════ B2. DEMO LEADS ═══════ */}
+            {activeTab === "leads" && (
+              <TabPanel key="leads">
+                <div className="space-y-4">
+                  {/* Summary cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <GradientMetricCard label="Total Leads" value={demoLeads.length} icon={Sparkles} gradient="bg-gradient-to-br from-pink-500/40 via-pink-500/10 to-transparent dark:from-pink-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="Contacted" value={demoLeads.filter(l => contactedLeads.has(l.id)).length} icon={CheckCircle2} gradient="bg-gradient-to-br from-emerald-500/40 via-emerald-500/10 to-transparent dark:from-emerald-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="Pending" value={demoLeads.filter(l => !contactedLeads.has(l.id)).length} icon={Clock} gradient="bg-gradient-to-br from-orange-500/40 via-orange-500/10 to-transparent dark:from-orange-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="This Week" value={demoLeads.filter(l => (Date.now() - new Date(l.created_at).getTime()) < 7 * 86400000).length} icon={TrendingUp} gradient="bg-gradient-to-br from-indigo-500/40 via-indigo-500/10 to-transparent dark:from-indigo-500/25 dark:to-transparent" />
+                  </div>
+
+                  {/* Header w/ search + export */}
+                  <GlassCard className="p-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-base font-semibold text-foreground">Demo Requests</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">Inbound leads from the marketing site</p>
+                      </div>
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <div className="relative flex-1 sm:w-56">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input placeholder="Search leads..." value={leadsSearch} onChange={e => setLeadsSearch(e.target.value)} className="pl-9 h-9 rounded-xl bg-white/50 dark:bg-white/[0.04]" />
+                        </div>
+                        <Button variant="outline" size="sm" onClick={exportLeadsCSV} className="gap-1.5 h-9 text-xs rounded-xl">
+                          <Download className="h-3.5 w-3.5" /> CSV
+                        </Button>
+                      </div>
+                    </div>
+                  </GlassCard>
+
+                  {/* Leads table */}
+                  <GlassCard className="overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[760px]">
+                        <thead>
+                          <tr className="text-[11px] text-muted-foreground border-b border-border/40 uppercase tracking-wider">
+                            <th className="text-left px-5 py-3 font-medium">Owner</th>
+                            <th className="text-left px-5 py-3 font-medium">Restaurant</th>
+                            <th className="text-left px-5 py-3 font-medium">City</th>
+                            <th className="text-left px-5 py-3 font-medium">WhatsApp</th>
+                            <th className="text-left px-5 py-3 font-medium">Submitted</th>
+                            <th className="text-left px-5 py-3 font-medium">Status</th>
+                            <th className="text-right px-5 py-3 font-medium">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/30">
+                          {demoLeads
+                            .filter(l => {
+                              if (!leadsSearch.trim()) return true;
+                              const q = leadsSearch.toLowerCase();
+                              return (
+                                (l.owner_name || "").toLowerCase().includes(q) ||
+                                (l.restaurant_name || "").toLowerCase().includes(q) ||
+                                (l.city || "").toLowerCase().includes(q) ||
+                                (l.whatsapp_number || "").includes(q)
+                              );
+                            })
+                            .map(l => {
+                              const contacted = contactedLeads.has(l.id);
+                              const phone = (l.whatsapp_number || "").replace(/\D/g, "");
+                              return (
+                                <tr key={l.id} className="hover:bg-white/40 dark:hover:bg-white/[0.02] transition-colors">
+                                  <td className="px-5 py-3.5">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-orange-500 flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
+                                        {(l.owner_name || "L").charAt(0).toUpperCase()}
+                                      </div>
+                                      <span className="text-sm font-medium text-foreground truncate max-w-[140px]">{l.owner_name || "—"}</span>
+                                    </div>
+                                  </td>
+                                  <td className="px-5 py-3.5 text-sm text-foreground truncate max-w-[160px]">{l.restaurant_name || "—"}</td>
+                                  <td className="px-5 py-3.5 text-xs text-muted-foreground">{l.city || "—"}</td>
+                                  <td className="px-5 py-3.5 text-xs font-mono text-muted-foreground">{l.whatsapp_number || "—"}</td>
+                                  <td className="px-5 py-3.5 text-xs text-muted-foreground">{new Date(l.created_at).toLocaleDateString()}</td>
+                                  <td className="px-5 py-3.5">
+                                    {contacted ? (
+                                      <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 rounded-lg text-[10px]">Contacted</Badge>
+                                    ) : (
+                                      <Badge className="bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/20 rounded-lg text-[10px]">New</Badge>
+                                    )}
+                                  </td>
+                                  <td className="px-5 py-3.5 text-right">
+                                    <div className="flex items-center justify-end gap-1">
+                                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg" title="WhatsApp"
+                                        onClick={() => window.open(`https://wa.me/91${phone}`, "_blank")}>
+                                        <Phone className="h-3.5 w-3.5 text-emerald-500" />
+                                      </Button>
+                                      {!contacted && (
+                                        <Button size="sm" variant="ghost" className="h-8 px-2 rounded-lg text-xs" title="Mark contacted"
+                                          onClick={() => markLeadContacted(l.id)}>
+                                          <CheckCircle2 className="h-3.5 w-3.5 text-indigo-500 mr-1" /> Mark
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          {demoLeads.length === 0 && (
+                            <tr><td colSpan={7} className="text-center py-10 text-muted-foreground text-sm">No demo leads yet</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </GlassCard>
+                </div>
+              </TabPanel>
+            )}
+
             {/* ═══════ C. REVENUE & PAYMENTS ═══════ */}
             {activeTab === "revenue" && (
               <TabPanel key="revenue">
@@ -1318,31 +1428,52 @@ const CreatorAdmin = () => {
                         </div>
                         <div>
                           <h3 className="text-base font-semibold text-foreground">System Health</h3>
-                          <p className="text-xs text-muted-foreground">Real-time infrastructure status</p>
+                          <p className="text-xs text-muted-foreground">Real-time infrastructure status • auto-refresh 30s</p>
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20 rounded-lg text-xs gap-1.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> All Operational
-                      </Badge>
+                      {(() => {
+                        const allOk = healthChecks.length > 0 && healthChecks.every(c => c.ok);
+                        const anyDown = healthChecks.some(c => !c.ok);
+                        return (
+                          <Badge variant="outline" className={`rounded-lg text-xs gap-1.5 ${
+                            allOk ? "text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20" :
+                            anyDown ? "text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/20" :
+                            "text-muted-foreground border-border/40"
+                          }`}>
+                            <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                              allOk ? "bg-emerald-500" : anyDown ? "bg-red-500" : "bg-muted-foreground"
+                            }`} />
+                            {allOk ? "All Operational" : anyDown ? "Issue Detected" : "Checking…"}
+                          </Badge>
+                        );
+                      })()}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {[
-                        { name: "Supabase Database", icon: Database, latency: "12ms", status: "Healthy" },
-                        { name: "Auth Service", icon: ShieldCheck, latency: "8ms", status: "Healthy" },
-                        { name: "Edge Functions", icon: Zap, latency: "45ms", status: "Healthy" },
-                        { name: "Storage CDN", icon: Wifi, latency: "22ms", status: "Healthy" },
-                      ].map(s => (
-                        <div key={s.name} className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/40 dark:bg-white/[0.03]">
-                          <div className="flex items-center gap-3">
-                            <s.icon className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm text-foreground">{s.name}</span>
+                      {(healthChecks.length ? healthChecks : [
+                        { name: "Supabase Database", latency: null, ok: true },
+                        { name: "Auth Service", latency: null, ok: true },
+                        { name: "Edge Functions", latency: null, ok: true },
+                        { name: "Storage CDN", latency: null, ok: true },
+                      ]).map(s => {
+                        const Icon = s.name === "Supabase Database" ? Database
+                          : s.name === "Auth Service" ? ShieldCheck
+                          : s.name === "Edge Functions" ? Zap
+                          : Wifi;
+                        return (
+                          <div key={s.name} className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/40 dark:bg-white/[0.03]">
+                            <div className="flex items-center gap-3">
+                              <Icon className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm text-foreground">{s.name}</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-muted-foreground font-mono">
+                                {s.latency != null ? `${s.latency}ms` : healthChecks.length === 0 ? "…" : "—"}
+                              </span>
+                              <div className={`w-2 h-2 rounded-full ${s.ok ? "bg-emerald-500" : "bg-red-500"}`} />
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-muted-foreground font-mono">{s.latency}</span>
-                            <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </GlassCard>
 
