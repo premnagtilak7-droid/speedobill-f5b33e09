@@ -635,15 +635,18 @@ const CreatorAdmin = () => {
             {activeTab === "command" && (
               <TabPanel key="command">
                 <div className="space-y-6">
-                  {/* Metric Cards - 6 cards */}
-                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                  {/* Metric Cards - 7 cards */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     <GradientMetricCard label="Total Hotels" value={hotels.length} icon={Hotel} gradient="bg-gradient-to-br from-orange-500/40 via-orange-500/10 to-transparent dark:from-orange-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="Active Subscriptions" value={activeHotels} change={`${premiumSubs} premium`} changeUp icon={ShieldCheck} gradient="bg-gradient-to-br from-emerald-500/40 via-emerald-500/10 to-transparent dark:from-emerald-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="Active Subscriptions" value={activeHotels} change={`${basicSubs} basic · ${premiumSubs} premium`} changeUp icon={ShieldCheck} gradient="bg-gradient-to-br from-emerald-500/40 via-emerald-500/10 to-transparent dark:from-emerald-500/25 dark:to-transparent" />
                     <GradientMetricCard label="Monthly MRR" value={`₹${mrr.toLocaleString()}`} icon={TrendingUp} gradient="bg-gradient-to-br from-indigo-500/40 via-indigo-500/10 to-transparent dark:from-indigo-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="New Signups (7d)" value={newSignupsThisWeek} icon={UserPlus} gradient="bg-gradient-to-br from-cyan-500/40 via-cyan-500/10 to-transparent dark:from-cyan-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="Lifetime Revenue" value={`₹${lifetimeRevenue.toLocaleString()}`} change="+15%" changeUp icon={IndianRupee} gradient="bg-gradient-to-br from-amber-500/40 via-amber-500/10 to-transparent dark:from-amber-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="Lifetime Revenue" value={`₹${lifetimeRevenue.toLocaleString()}`} icon={IndianRupee} gradient="bg-gradient-to-br from-amber-500/40 via-amber-500/10 to-transparent dark:from-amber-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="New Users (7d)" value={newSignupsThisWeek} icon={UserPlus} gradient="bg-gradient-to-br from-cyan-500/40 via-cyan-500/10 to-transparent dark:from-cyan-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="New Hotels (7d)" value={newHotelsThisWeek} icon={Building2} gradient="bg-gradient-to-br from-sky-500/40 via-sky-500/10 to-transparent dark:from-sky-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="Demo Leads" value={demoLeads.length} icon={Sparkles} gradient="bg-gradient-to-br from-pink-500/40 via-pink-500/10 to-transparent dark:from-pink-500/25 dark:to-transparent" />
                     <GradientMetricCard label="Churn Rate" value={`${churnRate}%`} icon={Activity} gradient="bg-gradient-to-br from-red-500/30 via-red-500/10 to-transparent dark:from-red-500/20 dark:to-transparent" />
                   </div>
+
 
                   {/* User Analytics + Subscription Analytics side by side */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
