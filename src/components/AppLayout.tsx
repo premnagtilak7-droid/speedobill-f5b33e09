@@ -10,6 +10,7 @@ import {
   HelpCircle, ChevronLeft
 } from "lucide-react";
 import BugReportButton from "@/components/BugReportButton";
+import BroadcastBanner from "@/components/BroadcastBanner";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef, memo, useCallback, Suspense } from "react";
@@ -499,6 +500,7 @@ const AppLayout = () => {
             </Avatar>
           </div>
         </div>
+        <BroadcastBanner />
         <SectionErrorBoundary section="Page Content">
           <Suspense
             fallback={
