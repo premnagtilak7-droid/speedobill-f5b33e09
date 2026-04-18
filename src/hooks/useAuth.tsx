@@ -286,6 +286,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setHotelId(null);
     setLoading(false);
     clearAuthCache();
+    // Platform-aware post-logout redirect
+    try {
+      const { getPostLogoutPath } = await import("@/lib/platform");
+      const target = getPostLogoutPath();
+      if (typeof window !== "undefined" && window.location.pathname !== target) {
+        window.location.replace(target);
+      }
+    } catch {
+      // ignore — fall back to existing navigation
+    }
   }, []);
 
   const value = useMemo(

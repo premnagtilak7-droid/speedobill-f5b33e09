@@ -210,7 +210,16 @@ const Auth = () => {
   const currentSlide = slides[activeSlide];
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-background relative">
+      {/* Desktop-only "Back to Website" — only on /auth page */}
+      <a
+        href="/"
+        aria-label="Back to website"
+        className="hidden md:inline-flex absolute top-4 left-4 z-20 items-center gap-1.5 rounded-full border border-border/60 bg-background/70 backdrop-blur px-3 py-1.5 text-xs font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-orange-500"
+      >
+        <span aria-hidden>←</span>
+        Back to Website
+      </a>
       <div className="hidden md:flex md:w-1/2 lg:w-[55%] relative items-center justify-center overflow-hidden">
         <div className="absolute top-[10%] left-[20%] w-[400px] h-[400px] rounded-full opacity-[0.08]" style={{ background: "radial-gradient(circle, #F97316, transparent 70%)" }} />
         <div className="absolute bottom-[10%] right-[10%] w-[300px] h-[300px] rounded-full opacity-[0.05]" style={{ background: "radial-gradient(circle, #F97316, transparent 70%)" }} />

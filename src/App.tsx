@@ -12,6 +12,7 @@ import AppLayout from "@/components/AppLayout";
 import { lazy, useEffect, Suspense } from "react";
 import SpeedoBot from "@/components/SpeedoBot";
 import PwaSplashOnboarding from "@/components/PwaSplashOnboarding";
+import { isPWA } from "@/lib/platform";
 
 const PageFallback = () => (
   <div className="min-h-screen bg-[#0f1629] flex items-center justify-center">
@@ -153,7 +154,16 @@ const AppRoutes = () => {
       <ScrollToTop />
       <Suspense fallback={<PageFallback />}>
       <Routes>
-        <Route path="/" element={user ? <Navigate to={defaultAuthenticatedRoute} replace /> : <LandingPage />} />
+        <Route
+          path="/"
+          element={
+            user
+              ? <Navigate to={defaultAuthenticatedRoute} replace />
+              : isPWA()
+                ? <Navigate to="/auth" replace />
+                : <LandingPage />
+          }
+        />
         <Route path="/auth" element={user ? <Navigate to={defaultAuthenticatedRoute} replace /> : <Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
