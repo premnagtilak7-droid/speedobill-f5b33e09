@@ -175,6 +175,9 @@ const LandingPage = () => {
       </div>
     </section>
 
+    {/* How It Works */}
+    <HowItWorksSection />
+
     {/* Billing showcase */}
     <section id="billing" className="border-t px-4 py-24 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
