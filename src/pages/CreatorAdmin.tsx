@@ -1428,31 +1428,52 @@ const CreatorAdmin = () => {
                         </div>
                         <div>
                           <h3 className="text-base font-semibold text-foreground">System Health</h3>
-                          <p className="text-xs text-muted-foreground">Real-time infrastructure status</p>
+                          <p className="text-xs text-muted-foreground">Real-time infrastructure status • auto-refresh 30s</p>
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20 rounded-lg text-xs gap-1.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> All Operational
-                      </Badge>
+                      {(() => {
+                        const allOk = healthChecks.length > 0 && healthChecks.every(c => c.ok);
+                        const anyDown = healthChecks.some(c => !c.ok);
+                        return (
+                          <Badge variant="outline" className={`rounded-lg text-xs gap-1.5 ${
+                            allOk ? "text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20" :
+                            anyDown ? "text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/20" :
+                            "text-muted-foreground border-border/40"
+                          }`}>
+                            <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                              allOk ? "bg-emerald-500" : anyDown ? "bg-red-500" : "bg-muted-foreground"
+                            }`} />
+                            {allOk ? "All Operational" : anyDown ? "Issue Detected" : "Checking…"}
+                          </Badge>
+                        );
+                      })()}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {[
-                        { name: "Supabase Database", icon: Database, latency: "12ms", status: "Healthy" },
-                        { name: "Auth Service", icon: ShieldCheck, latency: "8ms", status: "Healthy" },
-                        { name: "Edge Functions", icon: Zap, latency: "45ms", status: "Healthy" },
-                        { name: "Storage CDN", icon: Wifi, latency: "22ms", status: "Healthy" },
-                      ].map(s => (
-                        <div key={s.name} className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/40 dark:bg-white/[0.03]">
-                          <div className="flex items-center gap-3">
-                            <s.icon className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm text-foreground">{s.name}</span>
+                      {(healthChecks.length ? healthChecks : [
+                        { name: "Supabase Database", latency: null, ok: true },
+                        { name: "Auth Service", latency: null, ok: true },
+                        { name: "Edge Functions", latency: null, ok: true },
+                        { name: "Storage CDN", latency: null, ok: true },
+                      ]).map(s => {
+                        const Icon = s.name === "Supabase Database" ? Database
+                          : s.name === "Auth Service" ? ShieldCheck
+                          : s.name === "Edge Functions" ? Zap
+                          : Wifi;
+                        return (
+                          <div key={s.name} className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/40 dark:bg-white/[0.03]">
+                            <div className="flex items-center gap-3">
+                              <Icon className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm text-foreground">{s.name}</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-muted-foreground font-mono">
+                                {s.latency != null ? `${s.latency}ms` : healthChecks.length === 0 ? "…" : "—"}
+                              </span>
+                              <div className={`w-2 h-2 rounded-full ${s.ok ? "bg-emerald-500" : "bg-red-500"}`} />
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-muted-foreground font-mono">{s.latency}</span>
-                            <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </GlassCard>
 
