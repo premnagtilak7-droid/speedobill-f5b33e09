@@ -157,6 +157,10 @@ const AppRoutes = () => {
         <Route path="/features/reports" element={<ReportsFeature />} />
         <Route path="/features/payroll" element={<PayrollFeature />} />
         <Route path="/features/customers" element={<CustomersFeature />} />
+        <Route path="/addons/waiter-calling" element={<WaiterCallingAddon />} />
+        <Route path="/addons/qr-pay" element={<QrPayAddon />} />
+        <Route path="/addons/sms-marketing" element={<SmsMarketingAddon />} />
+        <Route path="/addons/feedback" element={<FeedbackAddon />} />
         <Route path="/creator-admin" element={<ProtectedRoute><RoleGuard allowed={["owner"]} redirectTo="/tables"><CreatorAdmin /></RoleGuard></ProtectedRoute>} />
 
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
