@@ -201,6 +201,14 @@ const CreatorAdmin = () => {
   const [directoryFilter, setDirectoryFilter] = useState<"all" | "expired" | "new24h">("all");
   const [leadsSearch, setLeadsSearch] = useState("");
   const [healthChecks, setHealthChecks] = useState<{ name: string; latency: number | null; ok: boolean }[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [nowIST, setNowIST] = useState(new Date());
+
+  // Live IST clock — tick every second
+  useEffect(() => {
+    const id = setInterval(() => setNowIST(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   // Wholesale state
   const [wsProducts, setWsProducts] = useState<any[]>([]);
