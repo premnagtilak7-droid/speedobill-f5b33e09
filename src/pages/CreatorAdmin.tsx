@@ -848,20 +848,46 @@ const CreatorAdmin = () => {
       >
         {/* Desktop header */}
         <div
-          className="hidden md:flex h-14 items-center justify-between px-6 lg:px-8"
-          style={{ backgroundColor: "rgba(10,15,30,0.85)", borderBottom: "1px solid #1E2D4A", backdropFilter: "blur(12px)" }}
+          className="hidden md:flex h-16 items-center justify-between px-6 lg:px-8 sticky top-0 z-20"
+          style={{ backgroundColor: "rgba(10,15,30,0.85)", borderBottom: "1px solid #1E2D4A", backdropFilter: "blur(12px)", fontFamily: "Inter, sans-serif" }}
         >
           <div>
-            <h2 className="text-base font-semibold text-white tracking-tight">{TABS.find(t => t.id === activeTab)?.label}</h2>
+            <h2 className="text-[22px] md:text-[26px] font-bold text-white tracking-tight leading-tight">
+              {TABS.find(t => t.id === activeTab)?.label}
+            </h2>
             <p className="text-[11px]" style={{ color: "#7A8AAB" }}>SpeedoBill Enterprise • Platform Admin</p>
           </div>
           <div className="flex items-center gap-3">
+            {/* Live IST clock */}
+            <div className="hidden lg:flex flex-col items-end leading-tight">
+              <span className="text-xs font-semibold text-white tabular-nums">
+                {nowIST.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true, timeZone: "Asia/Kolkata" })}
+                <span className="text-[10px] ml-1 tabular-nums" style={{ color: "#7A8AAB" }}>
+                  :{nowIST.toLocaleTimeString("en-IN", { second: "2-digit", timeZone: "Asia/Kolkata" }).split(":").pop()?.split(" ")[0]}
+                </span>
+              </span>
+              <span className="text-[10px]" style={{ color: "#7A8AAB" }}>
+                {nowIST.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" })}
+              </span>
+            </div>
+            {/* All Systems badge */}
+            <div
+              className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold"
+              style={{ backgroundColor: "rgba(16,185,129,0.12)", color: "#10B981", border: "1px solid rgba(16,185,129,0.3)" }}
+            >
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ backgroundColor: "#10B981" }} />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#10B981" }} />
+              </span>
+              All Systems Operational
+            </div>
             <Button
-              variant="outline" size="sm" onClick={fetchData}
-              className="gap-1.5 h-8 text-xs rounded-xl text-[#E5EAF5] hover:text-white transition-colors duration-200"
+              variant="outline" size="sm"
+              onClick={async () => { setIsRefreshing(true); await fetchData(); setTimeout(() => setIsRefreshing(false), 600); }}
+              className="gap-1.5 h-8 text-xs rounded-xl text-[#E5EAF5] hover:text-white transition-all duration-200"
               style={{ backgroundColor: "#131C35", borderColor: "#1E2D4A" }}
             >
-              <RefreshCw className="h-3.5 w-3.5" /> Refresh
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} /> Refresh
             </Button>
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold"
