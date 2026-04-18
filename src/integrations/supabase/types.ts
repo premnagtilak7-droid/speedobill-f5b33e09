@@ -100,6 +100,80 @@ export type Database = {
           },
         ]
       }
+      broadcast_reads: {
+        Row: {
+          broadcast_id: string
+          id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          broadcast_id: string
+          id?: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          broadcast_id?: string
+          id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_reads_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "broadcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      broadcasts: {
+        Row: {
+          created_at: string
+          created_by: string
+          email_recipients_count: number
+          expires_at: string
+          id: string
+          message: string
+          sent_via_email: boolean
+          style: string
+          target_chefs: boolean
+          target_managers: boolean
+          target_owners: boolean
+          target_waiters: boolean
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          email_recipients_count?: number
+          expires_at?: string
+          id?: string
+          message: string
+          sent_via_email?: boolean
+          style?: string
+          target_chefs?: boolean
+          target_managers?: boolean
+          target_owners?: boolean
+          target_waiters?: boolean
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          email_recipients_count?: number
+          expires_at?: string
+          id?: string
+          message?: string
+          sent_via_email?: boolean
+          style?: string
+          target_chefs?: boolean
+          target_managers?: boolean
+          target_owners?: boolean
+          target_waiters?: boolean
+        }
+        Relationships: []
+      }
       bug_reports: {
         Row: {
           created_at: string
