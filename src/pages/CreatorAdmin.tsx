@@ -139,19 +139,28 @@ const CreatorAdmin = () => {
 
   const fetchData = async () => {
     setLoading(true);
-    const [licRes, hotelRes, profileRes, wsRes, wsInqRes] = await Promise.all([
-      supabase.from("licenses").select("*").order("created_at", { ascending: false }),
-      supabase.from("hotels").select("id, name, owner_id, subscription_tier, subscription_expiry, created_at, phone"),
-      supabase.from("profiles").select("user_id, full_name, role, hotel_id, subscription_status, trial_ends_at, created_at"),
-      supabase.from("wholesale_products" as any).select("*").order("created_at", { ascending: false }),
-      supabase.from("wholesale_inquiries" as any).select("*").order("created_at", { ascending: false }),
-    ]);
-    if (licRes.data) setLicenses(licRes.data);
-    if (hotelRes.data) setHotels(hotelRes.data as any);
-    if (profileRes.data) setProfiles(profileRes.data as any);
-    if (wsRes.data) setWsProducts(wsRes.data as any);
-    if (wsInqRes.data) setWsInquiries(wsInqRes.data as any);
-    setLoading(false);
+    try {
+      // Use admin-stats edge function (service role) to bypass RLS for platform-wide data
+      const [adminRes, licRes, wsRes, wsInqRes] = await Promise.all([
+        supabase.functions.invoke("admin-stats"),
+        supabase.from("licenses").select("*").order("created_at", { ascending: false }),
+        supabase.from("wholesale_products" as any).select("*").order("created_at", { ascending: false }),
+        supabase.from("wholesale_inquiries" as any).select("*").order("created_at", { ascending: false }),
+      ]);
+
+      if (adminRes.error) {
+        console.error("admin-stats error:", adminRes.error);
+        toast.error("Failed to load platform data");
+      } else if (adminRes.data) {
+        setHotels((adminRes.data.hotels ?? []) as any);
+        setProfiles((adminRes.data.profiles ?? []) as any);
+      }
+      if (licRes.data) setLicenses(licRes.data);
+      if (wsRes.data) setWsProducts(wsRes.data as any);
+      if (wsInqRes.data) setWsInquiries(wsInqRes.data as any);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { if (isCreator) fetchData(); }, [isCreator]);
@@ -268,9 +277,9 @@ const CreatorAdmin = () => {
   ].filter(d => d.value > 0), [ownerCount, waiterCount, chefCount]);
 
   const revenueByTier = useMemo(() => [
-    { tier: "Basic", revenue: usedKeys.filter(l => l.tier === "basic").length * 199 },
-    { tier: "Premium", revenue: usedKeys.filter(l => l.tier === "premium").length * 399 },
-  ], [usedKeys]);
+    { tier: "Basic", revenue: basicSubs * 199, fill: "#F97316" },
+    { tier: "Premium", revenue: premiumSubs * 399, fill: "#6366F1" },
+  ], [basicSubs, premiumSubs]);
 
   const activityFeed = useMemo(() => {
     const activities: { icon: any; text: string; time: string; color: string }[] = [];
@@ -340,10 +349,24 @@ const CreatorAdmin = () => {
     toast.success("CSV downloaded!");
   };
 
-  const sendBroadcast = () => {
+  const sendBroadcast = async () => {
     if (!broadcastMsg.trim()) return;
-    const targets = [broadcastTargets.owners && "Owners", broadcastTargets.waiters && "Waiters", broadcastTargets.chefs && "Chefs"].filter(Boolean).join(", ");
-    toast.success(`Broadcast sent as ${broadcastStyle} to: ${targets || "All"}`);
+    const { data, error } = await supabase.functions.invoke("send-broadcast", {
+      body: {
+        message: broadcastMsg.trim(),
+        style: broadcastStyle,
+        targets: {
+          owners: broadcastTargets.owners,
+          waiters: broadcastTargets.waiters,
+          chefs: broadcastTargets.chefs,
+        },
+      },
+    });
+    if (error) {
+      toast.error("Broadcast failed: " + (error.message || "Try again"));
+      return;
+    }
+    toast.success(`Broadcast sent! ${data?.recipients_in_app ?? 0} in-app, ${data?.emails_sent ?? 0} emails`);
     setBroadcastMsg("");
   };
 
