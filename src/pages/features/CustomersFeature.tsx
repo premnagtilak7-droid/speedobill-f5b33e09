@@ -8,6 +8,7 @@ const CustomersFeature = () => (
     titleAccent="Customer Relationships"
     subtitle="Know your regulars, reward their loyalty, and turn one-time guests into fans for life."
     screenshotLabel="Customer CRM Dashboard"
+    mockup="customers"
     features={[
       { icon: UserCircle, title: "Customer Profiles", description: "Capture name, phone, birthday, and dietary preferences automatically." },
       { icon: History, title: "Visit History", description: "Full timeline of orders, spend, and visit frequency for every guest." },

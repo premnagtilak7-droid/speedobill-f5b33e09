@@ -8,6 +8,7 @@ const ReportsFeature = () => (
     titleAccent="Smarter Decisions"
     subtitle="Know your top sellers, busiest hours, and best staff at a glance — every single day."
     screenshotLabel="Analytics Dashboard"
+    mockup="reports"
     features={[
       { icon: TrendingUp, title: "Daily Sales Summary", description: "Revenue, orders, and average bill — auto-updated in real time." },
       { icon: PieChart, title: "Item-wise Profit Report", description: "See which dishes drive profit and which to drop from the menu." },

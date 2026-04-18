@@ -8,6 +8,7 @@ const InventoryFeature = () => (
     titleAccent="Stock Again"
     subtitle="Real-time stock tracking, recipe auto-deduction, and instant low-stock alerts on your phone."
     screenshotLabel="Inventory Dashboard"
+    mockup="inventory"
     features={[
       { icon: Bell, title: "Live Low-Stock Alerts", description: "Push notifications the moment any ingredient hits its threshold." },
       { icon: ChefHat, title: "Recipe Auto-Deduction", description: "Sell a dish — ingredients deduct automatically based on the recipe." },
