@@ -17,8 +17,13 @@ import {
   MessageSquare, RefreshCw, Wifi, Database, Server,
   Clock, UserPlus, ArrowUpRight, ArrowDownRight, Share2,
   Filter, Mail, Phone, RotateCcw, Megaphone, Target,
-  Globe, Layers, Store, Package, Plus, Minus, Trash2
+  Globe, Layers, Store, Package, Plus, Minus, Trash2,
+  Sparkles, CheckCircle2, Building2,
 } from "lucide-react";
+
+// Pricing constants (single source of truth)
+const PRICE_BASIC = 199;
+const PRICE_PREMIUM = 499;
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar
@@ -46,11 +51,12 @@ const generateKeyCode = () => {
   return `SB-${seg()}-${seg()}-${seg()}-${seg()}`;
 };
 
-type TabId = "command" | "directory" | "revenue" | "vault" | "broadcast" | "console" | "wholesale";
+type TabId = "command" | "directory" | "leads" | "revenue" | "vault" | "broadcast" | "console" | "wholesale";
 
 const TABS: { id: TabId; label: string; shortLabel: string; icon: any }[] = [
   { id: "command", label: "Executive Command", shortLabel: "Command", icon: Crown },
   { id: "directory", label: "Client Directory", shortLabel: "Directory", icon: Users },
+  { id: "leads", label: "Demo Leads", shortLabel: "Leads", icon: Sparkles },
   { id: "revenue", label: "Revenue & Payments", shortLabel: "Revenue", icon: CreditCard },
   { id: "wholesale", label: "Wholesale Store", shortLabel: "Wholesale", icon: Store },
   { id: "vault", label: "License Vault", shortLabel: "Licenses", icon: Key },
@@ -112,6 +118,10 @@ const CreatorAdmin = () => {
   const [licenses, setLicenses] = useState<License[]>([]);
   const [hotels, setHotels] = useState<HotelInfo[]>([]);
   const [profiles, setProfiles] = useState<ProfileInfo[]>([]);
+  const [demoLeads, setDemoLeads] = useState<any[]>([]);
+  const [contactedLeads, setContactedLeads] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("speedo_contacted_leads") || "[]")); } catch { return new Set(); }
+  });
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [tier, setTier] = useState("basic");
@@ -123,6 +133,8 @@ const CreatorAdmin = () => {
   const [hotelSearch, setHotelSearch] = useState("");
   const [directorySearch, setDirectorySearch] = useState("");
   const [directoryFilter, setDirectoryFilter] = useState<"all" | "expired" | "new24h">("all");
+  const [leadsSearch, setLeadsSearch] = useState("");
+  const [healthChecks, setHealthChecks] = useState<{ name: string; latency: number | null; ok: boolean }[]>([]);
 
   // Wholesale state
   const [wsProducts, setWsProducts] = useState<any[]>([]);
@@ -141,11 +153,12 @@ const CreatorAdmin = () => {
     setLoading(true);
     try {
       // Use admin-stats edge function (service role) to bypass RLS for platform-wide data
-      const [adminRes, licRes, wsRes, wsInqRes] = await Promise.all([
+      const [adminRes, licRes, wsRes, wsInqRes, leadsRes] = await Promise.all([
         supabase.functions.invoke("admin-stats"),
         supabase.from("licenses").select("*").order("created_at", { ascending: false }),
         supabase.from("wholesale_products" as any).select("*").order("created_at", { ascending: false }),
         supabase.from("wholesale_inquiries" as any).select("*").order("created_at", { ascending: false }),
+        supabase.from("demo_leads").select("*").order("created_at", { ascending: false }),
       ]);
 
       if (adminRes.error) {
@@ -158,19 +171,77 @@ const CreatorAdmin = () => {
       if (licRes.data) setLicenses(licRes.data);
       if (wsRes.data) setWsProducts(wsRes.data as any);
       if (wsInqRes.data) setWsInquiries(wsInqRes.data as any);
+      if (leadsRes.data) setDemoLeads(leadsRes.data);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { if (isCreator) fetchData(); }, [isCreator]);
+  // Real system health check — pings actual services
+  const runHealthCheck = async () => {
+    const checks: { name: string; latency: number | null; ok: boolean }[] = [];
+
+    // Database ping (lightweight count)
+    let t = performance.now();
+    try {
+      const { error } = await supabase.from("hotels").select("id", { count: "exact", head: true });
+      checks.push({ name: "Supabase Database", latency: Math.round(performance.now() - t), ok: !error });
+    } catch { checks.push({ name: "Supabase Database", latency: null, ok: false }); }
+
+    // Auth ping
+    t = performance.now();
+    try {
+      const { error } = await supabase.auth.getSession();
+      checks.push({ name: "Auth Service", latency: Math.round(performance.now() - t), ok: !error });
+    } catch { checks.push({ name: "Auth Service", latency: null, ok: false }); }
+
+    // Edge function ping (admin-stats already runs)
+    t = performance.now();
+    try {
+      const { error } = await supabase.functions.invoke("admin-stats");
+      checks.push({ name: "Edge Functions", latency: Math.round(performance.now() - t), ok: !error });
+    } catch { checks.push({ name: "Edge Functions", latency: null, ok: false }); }
+
+    // Storage ping
+    t = performance.now();
+    try {
+      const { error } = await supabase.storage.from("menu-images").list("", { limit: 1 });
+      checks.push({ name: "Storage CDN", latency: Math.round(performance.now() - t), ok: !error });
+    } catch { checks.push({ name: "Storage CDN", latency: null, ok: false }); }
+
+    setHealthChecks(checks);
+  };
+
+  useEffect(() => { if (isCreator) { fetchData(); runHealthCheck(); } }, [isCreator]);
 
   // Auto-refresh every 30 seconds
   useEffect(() => {
     if (!isCreator) return;
-    const iv = setInterval(() => fetchData(), 30000);
+    const iv = setInterval(() => { fetchData(); runHealthCheck(); }, 30000);
     return () => clearInterval(iv);
   }, [isCreator]);
+
+  const markLeadContacted = (id: string) => {
+    setContactedLeads(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      try { localStorage.setItem("speedo_contacted_leads", JSON.stringify(Array.from(next))); } catch {}
+      return next;
+    });
+    toast.success("Marked as contacted");
+  };
+
+  const exportLeadsCSV = () => {
+    const rows = [["Name", "Business", "City", "WhatsApp", "Submitted", "Status"].join(",")];
+    demoLeads.forEach(l => {
+      const status = contactedLeads.has(l.id) ? "Contacted" : "New";
+      rows.push([l.owner_name, l.restaurant_name, l.city, l.whatsapp_number, l.created_at, status].map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","));
+    });
+    const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "speedo-demo-leads.csv"; a.click();
+    toast.success("CSV downloaded!");
+  };
 
   const addWholesaleProduct = async () => {
     if (!wsNewName || !wsNewPrice) return;
@@ -195,20 +266,27 @@ const CreatorAdmin = () => {
   const usedKeys = licenses.filter(l => l.is_used);
   const unusedKeys = licenses.filter(l => !l.is_used);
 
+  // A hotel counts as "active" if its tier is paid (basic/premium) AND not past expiry.
+  // Trials default to premium tier with NULL expiry — those count as trial, not active.
   const getHotelStatus = (hotel: HotelInfo) => {
-    if (hotel.subscription_expiry && new Date(hotel.subscription_expiry) > new Date()) return "active";
-    const p = profiles.find(pr => pr.hotel_id === hotel.id);
-    if (p?.subscription_status === "trial") return "trial";
+    const tier = hotel.subscription_tier;
+    const exp = hotel.subscription_expiry ? new Date(hotel.subscription_expiry) : null;
+    const now = new Date();
+    if (tier && tier !== "free" && exp && exp > now) return "active";
+    if (tier && tier !== "free" && !exp) return "trial"; // paid tier, no expiry set = trial
+    if (tier === "free") return "trial";
     return "expired";
   };
 
   const activeHotels = hotels.filter(h => getHotelStatus(h) === "active").length;
   const trialHotels = hotels.filter(h => getHotelStatus(h) === "trial").length;
   const expiredHotels = hotels.filter(h => getHotelStatus(h) === "expired").length;
-  const lifetimeRevenue = usedKeys.reduce((s, l) => s + (l.tier === "premium" ? 399 : 199), 0);
   const basicSubs = hotels.filter(h => h.subscription_tier === "basic" && getHotelStatus(h) === "active").length;
   const premiumSubs = hotels.filter(h => h.subscription_tier === "premium" && getHotelStatus(h) === "active").length;
-  const mrr = (basicSubs * 199) + (premiumSubs * 399);
+  // Lifetime revenue: prefer license-based (real activations), fall back to estimating from active subs
+  const licenseRevenue = usedKeys.reduce((s, l) => s + (l.tier === "premium" ? PRICE_PREMIUM : PRICE_BASIC), 0);
+  const lifetimeRevenue = licenseRevenue || (basicSubs * PRICE_BASIC + premiumSubs * PRICE_PREMIUM);
+  const mrr = (basicSubs * PRICE_BASIC) + (premiumSubs * PRICE_PREMIUM);
   const churnRate = hotels.length > 0 ? ((expiredHotels / hotels.length) * 100).toFixed(1) : "0";
 
   const ownerCount = profiles.filter(p => p.role === "owner").length;
@@ -221,6 +299,11 @@ const CreatorAdmin = () => {
     const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
     return profiles.filter(p => p.created_at >= weekAgo).length;
   }, [profiles]);
+
+  const newHotelsThisWeek = useMemo(() => {
+    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+    return hotels.filter(h => h.created_at >= weekAgo).length;
+  }, [hotels]);
 
   const expiringIn7Days = useMemo(() => {
     const now = new Date();
@@ -277,8 +360,8 @@ const CreatorAdmin = () => {
   ].filter(d => d.value > 0), [ownerCount, waiterCount, chefCount]);
 
   const revenueByTier = useMemo(() => [
-    { tier: "Basic", revenue: basicSubs * 199, fill: "#F97316" },
-    { tier: "Premium", revenue: premiumSubs * 399, fill: "#6366F1" },
+    { tier: "Basic", revenue: basicSubs * PRICE_BASIC, fill: "#F97316" },
+    { tier: "Premium", revenue: premiumSubs * PRICE_PREMIUM, fill: "#EA580C" },
   ], [basicSubs, premiumSubs]);
 
   const activityFeed = useMemo(() => {
@@ -552,15 +635,18 @@ const CreatorAdmin = () => {
             {activeTab === "command" && (
               <TabPanel key="command">
                 <div className="space-y-6">
-                  {/* Metric Cards - 6 cards */}
-                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                  {/* Metric Cards - 7 cards */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     <GradientMetricCard label="Total Hotels" value={hotels.length} icon={Hotel} gradient="bg-gradient-to-br from-orange-500/40 via-orange-500/10 to-transparent dark:from-orange-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="Active Subscriptions" value={activeHotels} change={`${premiumSubs} premium`} changeUp icon={ShieldCheck} gradient="bg-gradient-to-br from-emerald-500/40 via-emerald-500/10 to-transparent dark:from-emerald-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="Active Subscriptions" value={activeHotels} change={`${basicSubs} basic · ${premiumSubs} premium`} changeUp icon={ShieldCheck} gradient="bg-gradient-to-br from-emerald-500/40 via-emerald-500/10 to-transparent dark:from-emerald-500/25 dark:to-transparent" />
                     <GradientMetricCard label="Monthly MRR" value={`₹${mrr.toLocaleString()}`} icon={TrendingUp} gradient="bg-gradient-to-br from-indigo-500/40 via-indigo-500/10 to-transparent dark:from-indigo-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="New Signups (7d)" value={newSignupsThisWeek} icon={UserPlus} gradient="bg-gradient-to-br from-cyan-500/40 via-cyan-500/10 to-transparent dark:from-cyan-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="Lifetime Revenue" value={`₹${lifetimeRevenue.toLocaleString()}`} change="+15%" changeUp icon={IndianRupee} gradient="bg-gradient-to-br from-amber-500/40 via-amber-500/10 to-transparent dark:from-amber-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="Lifetime Revenue" value={`₹${lifetimeRevenue.toLocaleString()}`} icon={IndianRupee} gradient="bg-gradient-to-br from-amber-500/40 via-amber-500/10 to-transparent dark:from-amber-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="New Users (7d)" value={newSignupsThisWeek} icon={UserPlus} gradient="bg-gradient-to-br from-cyan-500/40 via-cyan-500/10 to-transparent dark:from-cyan-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="New Hotels (7d)" value={newHotelsThisWeek} icon={Building2} gradient="bg-gradient-to-br from-sky-500/40 via-sky-500/10 to-transparent dark:from-sky-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="Demo Leads" value={demoLeads.length} icon={Sparkles} gradient="bg-gradient-to-br from-pink-500/40 via-pink-500/10 to-transparent dark:from-pink-500/25 dark:to-transparent" />
                     <GradientMetricCard label="Churn Rate" value={`${churnRate}%`} icon={Activity} gradient="bg-gradient-to-br from-red-500/30 via-red-500/10 to-transparent dark:from-red-500/20 dark:to-transparent" />
                   </div>
+
 
                   {/* User Analytics + Subscription Analytics side by side */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -915,7 +1001,7 @@ const CreatorAdmin = () => {
                                 <td className="px-5 py-3"><code className="font-mono text-xs text-muted-foreground">{lic.key_code}</code></td>
                                 <td className="px-5 py-3 text-xs capitalize text-foreground">{lic.tier}</td>
                                 <td className="px-5 py-3 text-xs text-muted-foreground truncate max-w-[120px]">{hotel?.name || "—"}</td>
-                                <td className="px-5 py-3 text-xs font-semibold text-foreground">₹{lic.tier === "premium" ? 399 : 199}</td>
+                                <td className="px-5 py-3 text-xs font-semibold text-foreground">₹{lic.tier === "premium" ? PRICE_PREMIUM : PRICE_BASIC}</td>
                                 <td className="px-5 py-3 text-xs text-muted-foreground">{lic.used_at ? new Date(lic.used_at).toLocaleDateString() : "—"}</td>
                               </tr>
                             );
@@ -1098,7 +1184,7 @@ const CreatorAdmin = () => {
                           <SelectTrigger className="h-10 rounded-xl"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="basic">Basic — ₹199/mo</SelectItem>
-                            <SelectItem value="premium">Premium — ₹399/mo</SelectItem>
+                            <SelectItem value="premium">Premium — ₹499/mo</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
