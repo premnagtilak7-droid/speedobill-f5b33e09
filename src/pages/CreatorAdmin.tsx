@@ -491,67 +491,133 @@ const CreatorAdmin = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-background transition-colors duration-300">
-
+    <div
+      className="flex min-h-screen font-[Inter] text-[#E5EAF5]"
+      style={{ backgroundColor: "#0A0F1E", fontFamily: "'Inter', system-ui, sans-serif" }}
+    >
       {/* ═══════ MOBILE TOP BAR ═══════ */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between border-b border-border/40 bg-white/80 dark:bg-black/60 backdrop-blur-2xl px-4 md:hidden">
-        <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary/60 active:scale-95 transition-all">
-          <Menu className="h-5 w-5 text-foreground" />
+      <div
+        className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between px-4 md:hidden"
+        style={{ backgroundColor: "rgba(10,15,30,0.92)", borderBottom: "1px solid #1E2D4A", backdropFilter: "blur(16px)" }}
+      >
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="p-2 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-white/5 active:scale-95 transition-all duration-200"
+        >
+          <Menu className="h-5 w-5 text-[#E5EAF5]" />
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 via-indigo-500 to-emerald-500 flex items-center justify-center shadow-md">
-            <Crown className="h-3.5 w-3.5 text-white" />
+          <div
+            className="relative w-8 h-8 rounded-xl flex items-center justify-center"
+            style={{
+              background: "linear-gradient(135deg, #F97316, #EA580C)",
+              boxShadow: "0 0 20px rgba(249,115,22,0.55), 0 0 40px rgba(249,115,22,0.25)",
+            }}
+          >
+            <Zap className="h-4 w-4 text-white" fill="white" strokeWidth={2.5} />
           </div>
-          <span className="font-bold text-sm text-foreground">Speedo Enterprise</span>
+          <span className="font-bold text-sm text-white tracking-tight">Speedo Enterprise</span>
         </div>
-        <button onClick={toggleTheme} className="p-2 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary/60">
-          {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
-        </button>
+        <div className="w-9" />
       </div>
 
       {/* ═══════ MOBILE SIDEBAR OVERLAY ═══════ */}
       <AnimatePresence>
         {sidebarOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] md:hidden" onClick={() => setSidebarOpen(false)}>
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-            <motion.aside initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }} transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="absolute left-0 top-0 bottom-0 w-72 bg-white/90 dark:bg-black/80 backdrop-blur-2xl border-r border-border/40 flex flex-col p-4" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 via-indigo-500 to-emerald-500 flex items-center justify-center shadow-lg">
-                    <Crown className="h-4 w-4 text-white" />
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <motion.aside
+              initial={{ x: -300 }} animate={{ x: 0 }} exit={{ x: -300 }}
+              transition={{ type: "spring", damping: 26, stiffness: 280 }}
+              className="absolute left-0 top-0 bottom-0 w-[280px] flex flex-col"
+              style={{ backgroundColor: "#0A0F1E", borderRight: "1px solid #1E2D4A" }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Brand */}
+              <div className="flex items-center justify-between px-5 pt-6 pb-5" style={{ borderBottom: "1px solid #1E2D4A" }}>
+                <div className="flex items-center gap-3">
+                  <div
+                    className="relative w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: "linear-gradient(135deg, #F97316, #EA580C)",
+                      boxShadow: "0 0 24px rgba(249,115,22,0.55), 0 0 48px rgba(249,115,22,0.28)",
+                    }}
+                  >
+                    <Zap className="h-5 w-5 text-white" fill="white" strokeWidth={2.5} />
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-foreground">Speedo Enterprise</p>
-                    <p className="text-[10px] text-muted-foreground">God Mode</p>
+                  <div className="min-w-0">
+                    <p className="text-[15px] font-bold text-white leading-none tracking-tight">Speedo Enterprise</p>
+                    <span
+                      className="inline-flex items-center mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
+                      style={{ backgroundColor: "rgba(249,115,22,0.15)", color: "#F97316", border: "1px solid rgba(249,115,22,0.35)" }}
+                    >
+                      God Mode • V4
+                    </span>
                   </div>
                 </div>
-                <button onClick={() => setSidebarOpen(false)} className="p-2 rounded-xl hover:bg-secondary min-h-[44px] min-w-[44px] flex items-center justify-center">
-                  <X className="h-5 w-5 text-muted-foreground" />
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  className="p-2 rounded-xl hover:bg-white/5 min-h-[40px] min-w-[40px] flex items-center justify-center transition-colors duration-200"
+                >
+                  <X className="h-5 w-5 text-[#7A8AAB]" />
                 </button>
               </div>
-              <nav className="flex-1 space-y-1">
+
+              {/* Nav */}
+              <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
                 {TABS.map(tab => {
                   const active = activeTab === tab.id;
                   return (
-                    <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSidebarOpen(false); }}
-                      className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all min-h-[44px] active:scale-[0.97] ${
-                        active ? "bg-orange-500/10 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400 font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                      }`}>
-                      <tab.icon className={`h-[18px] w-[18px] ${active ? "text-orange-600 dark:text-orange-400" : ""}`} />
-                      <span>{tab.label}</span>
+                    <button
+                      key={tab.id}
+                      onClick={() => { setActiveTab(tab.id); setSidebarOpen(false); }}
+                      className="group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium min-h-[44px] active:scale-[0.98] transition-all duration-200"
+                      style={
+                        active
+                          ? {
+                              background: "linear-gradient(90deg, rgba(249,115,22,0.18), rgba(249,115,22,0.04))",
+                              color: "#FFFFFF",
+                              boxShadow: "inset 3px 0 0 #F97316, 0 0 20px rgba(249,115,22,0.15)",
+                            }
+                          : { color: "#9AA8C7" }
+                      }
+                      onMouseEnter={e => { if (!active) e.currentTarget.style.color = "#FFFFFF"; }}
+                      onMouseLeave={e => { if (!active) e.currentTarget.style.color = "#9AA8C7"; }}
+                    >
+                      <span className="text-base leading-none w-5 text-center">{tab.emoji}</span>
+                      <span className="truncate">{tab.label}</span>
+                      {active && <div className="ml-auto w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#F97316", boxShadow: "0 0 8px #F97316" }} />}
                     </button>
                   );
                 })}
               </nav>
-              <div className="border-t border-border/40 pt-3 space-y-1">
-                <button onClick={toggleTheme} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 min-h-[44px]">
-                  {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
-                  <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-                </button>
-                <Button variant="ghost" className="w-full justify-start gap-3 text-destructive hover:bg-destructive/10 rounded-xl min-h-[44px]" onClick={signOut}>
-                  <LogOut className="h-[18px] w-[18px]" /><span>Sign Out</span>
-                </Button>
+
+              {/* Footer profile */}
+              <div className="px-3 py-3" style={{ borderTop: "1px solid #1E2D4A" }}>
+                <div className="flex items-center gap-3 px-2 py-2 rounded-xl" style={{ backgroundColor: "#131C35", border: "1px solid #1E2D4A" }}>
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                    style={{ background: "linear-gradient(135deg, #F97316, #EA580C)", boxShadow: "0 0 12px rgba(249,115,22,0.4)" }}
+                  >SB</div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-white truncate">{user?.email?.split("@")[0] || "speedobill7"}</p>
+                    <p className="text-[10px] text-[#7A8AAB] truncate">{user?.email || "speedobill7@gmail.com"}</p>
+                  </div>
+                  <button
+                    onClick={signOut}
+                    title="Sign out"
+                    className="p-2 rounded-lg flex items-center justify-center transition-colors duration-200"
+                    style={{ color: "#EF4444" }}
+                    onMouseEnter={e => { e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.12)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </motion.aside>
           </motion.div>
@@ -562,70 +628,149 @@ const CreatorAdmin = () => {
       <aside
         onMouseEnter={() => setSidebarHovered(true)}
         onMouseLeave={() => setSidebarHovered(false)}
-        className={`hidden md:flex flex-col border-r border-border/40 dark:border-white/[0.08] bg-white/70 dark:bg-white/[0.03] backdrop-blur-2xl sticky top-0 h-screen transition-all duration-300 ease-out ${expanded ? "w-60" : "w-[68px]"}`}
+        className={`hidden md:flex flex-col sticky top-0 h-screen transition-all duration-200 ease-out ${expanded ? "w-[260px]" : "w-[70px]"}`}
+        style={{ backgroundColor: "#0A0F1E", borderRight: "1px solid #1E2D4A" }}
       >
-        <div className={`flex items-center gap-2.5 py-5 mb-2 ${expanded ? "px-4" : "px-0 justify-center"}`}>
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 via-indigo-500 to-emerald-500 flex items-center justify-center shadow-lg flex-shrink-0">
-            <Crown className="h-4 w-4 text-white" />
+        {/* Brand */}
+        <div
+          className={`flex items-center gap-3 py-5 ${expanded ? "px-5" : "px-0 justify-center"}`}
+          style={{ borderBottom: "1px solid #1E2D4A" }}
+        >
+          <div
+            className="relative w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+            style={{
+              background: "linear-gradient(135deg, #F97316, #EA580C)",
+              boxShadow: "0 0 22px rgba(249,115,22,0.55), 0 0 44px rgba(249,115,22,0.28)",
+            }}
+          >
+            <Zap className="h-5 w-5 text-white" fill="white" strokeWidth={2.5} />
           </div>
           {expanded && (
             <div className="min-w-0 overflow-hidden">
-              <p className="text-sm font-bold text-foreground leading-none whitespace-nowrap">Speedo Enterprise</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5 whitespace-nowrap">God Mode • V4</p>
+              <p className="text-[14px] font-bold text-white leading-none whitespace-nowrap tracking-tight">Speedo Enterprise</p>
+              <span
+                className="inline-flex items-center mt-1.5 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider"
+                style={{ backgroundColor: "rgba(249,115,22,0.15)", color: "#F97316", border: "1px solid rgba(249,115,22,0.35)" }}
+              >
+                God Mode • V4
+              </span>
             </div>
           )}
         </div>
 
-        <nav className={`flex-1 space-y-1 overflow-y-auto overflow-x-hidden ${expanded ? "px-3" : "px-2"}`}>
-          {expanded && <p className="px-2 mb-2 text-[10px] font-semibold text-muted-foreground tracking-widest uppercase">Navigation</p>}
+        {/* Nav */}
+        <nav className={`flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1 ${expanded ? "px-3" : "px-2"}`}>
+          {expanded && (
+            <p className="px-3 mb-2 text-[10px] font-semibold tracking-[0.15em] uppercase" style={{ color: "#5B6B8E" }}>
+              Navigation
+            </p>
+          )}
           {TABS.map(tab => {
             const active = activeTab === tab.id;
             return (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
                 title={!expanded ? tab.label : undefined}
-                className={`w-full flex items-center gap-3 rounded-xl text-sm transition-all min-h-[42px] active:scale-[0.97] ${expanded ? "px-3 py-2.5" : "px-0 py-2.5 justify-center"} ${
+                className={`group relative w-full flex items-center gap-3 rounded-xl text-sm font-medium min-h-[42px] active:scale-[0.98] transition-all duration-200 ${
+                  expanded ? "px-3 py-2.5" : "px-0 py-2.5 justify-center"
+                }`}
+                style={
                   active
-                    ? "bg-gradient-to-r from-orange-500/10 to-indigo-500/10 dark:from-orange-500/15 dark:to-indigo-500/10 text-orange-600 dark:text-orange-400 font-semibold shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                }`}>
-                <tab.icon className={`h-[18px] w-[18px] flex-shrink-0 ${active ? "text-orange-600 dark:text-orange-400" : ""}`} />
+                    ? {
+                        background: "linear-gradient(90deg, rgba(249,115,22,0.18), rgba(249,115,22,0.04))",
+                        color: "#FFFFFF",
+                        boxShadow: `${expanded ? "inset 3px 0 0 #F97316, " : ""}0 0 18px rgba(249,115,22,0.15)`,
+                      }
+                    : { color: "#9AA8C7" }
+                }
+                onMouseEnter={e => {
+                  if (!active) {
+                    e.currentTarget.style.color = "#FFFFFF";
+                    e.currentTarget.style.transform = expanded ? "translateX(3px)" : "scale(1.05)";
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!active) {
+                    e.currentTarget.style.color = "#9AA8C7";
+                    e.currentTarget.style.transform = "translateX(0) scale(1)";
+                  }
+                }}
+              >
+                <span className="text-base leading-none w-5 text-center flex-shrink-0">{tab.emoji}</span>
                 {expanded && <span className="truncate whitespace-nowrap">{tab.label}</span>}
-                {active && expanded && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-orange-500 flex-shrink-0" />}
+                {active && expanded && (
+                  <div className="ml-auto w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: "#F97316", boxShadow: "0 0 8px #F97316" }} />
+                )}
               </button>
             );
           })}
         </nav>
 
-        <div className={`border-t border-border/40 dark:border-white/[0.08] pt-3 mt-2 space-y-1 pb-3 ${expanded ? "px-3" : "px-2"}`}>
-          <button onClick={toggleTheme} title={!expanded ? (theme === "dark" ? "Light Mode" : "Dark Mode") : undefined}
-            className={`w-full flex items-center gap-3 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors min-h-[42px] ${expanded ? "px-3 py-2.5" : "px-0 py-2.5 justify-center"}`}>
-            {theme === "dark" ? <Sun className="h-[18px] w-[18px] flex-shrink-0" /> : <Moon className="h-[18px] w-[18px] flex-shrink-0" />}
-            {expanded && <span className="whitespace-nowrap">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
-          </button>
-          <button onClick={signOut} title={!expanded ? "Sign Out" : undefined}
-            className={`w-full flex items-center gap-3 rounded-xl text-sm text-destructive hover:bg-destructive/10 transition-colors min-h-[42px] ${expanded ? "px-3 py-2.5" : "px-0 py-2.5 justify-center"}`}>
-            <LogOut className="h-[18px] w-[18px] flex-shrink-0" />
-            {expanded && <span className="whitespace-nowrap">Sign Out</span>}
-          </button>
+        {/* Footer admin card */}
+        <div className={`py-3 ${expanded ? "px-3" : "px-2"}`} style={{ borderTop: "1px solid #1E2D4A" }}>
+          {expanded ? (
+            <div className="flex items-center gap-3 px-2.5 py-2.5 rounded-xl" style={{ backgroundColor: "#131C35", border: "1px solid #1E2D4A" }}>
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                style={{ background: "linear-gradient(135deg, #F97316, #EA580C)", boxShadow: "0 0 12px rgba(249,115,22,0.4)" }}
+              >SB</div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-white truncate">{user?.email?.split("@")[0] || "speedobill7"}</p>
+                <p className="text-[10px] truncate" style={{ color: "#7A8AAB" }}>{user?.email || "speedobill7@gmail.com"}</p>
+              </div>
+              <button
+                onClick={signOut}
+                title="Sign out"
+                className="p-2 rounded-lg flex items-center justify-center transition-colors duration-200"
+                style={{ color: "#EF4444" }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.12)"; }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; }}
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={signOut}
+              title="Sign out"
+              className="w-full flex items-center justify-center py-2.5 rounded-xl transition-colors duration-200"
+              style={{ color: "#EF4444" }}
+              onMouseEnter={e => { e.currentTarget.style.backgroundColor = "rgba(239,68,68,0.12)"; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; }}
+            >
+              <LogOut className="h-[18px] w-[18px]" />
+            </button>
+          )}
         </div>
       </aside>
 
       {/* ═══════ MAIN CONTENT ═══════ */}
-      <main className="flex-1 min-h-screen pt-14 pb-[72px] md:pt-0 md:pb-0 overflow-x-hidden transition-colors duration-300">
+      <main
+        className="flex-1 min-h-screen pt-14 pb-[72px] md:pt-0 md:pb-0 overflow-x-hidden transition-colors duration-200"
+        style={{ backgroundColor: "#0A0F1E", color: "#E5EAF5" }}
+      >
         {/* Desktop header */}
-        <div className="hidden md:flex h-14 items-center justify-between px-6 lg:px-8 border-b border-border/40 dark:border-white/[0.08] bg-white/50 dark:bg-white/[0.02] backdrop-blur-xl">
+        <div
+          className="hidden md:flex h-14 items-center justify-between px-6 lg:px-8"
+          style={{ backgroundColor: "rgba(10,15,30,0.85)", borderBottom: "1px solid #1E2D4A", backdropFilter: "blur(12px)" }}
+        >
           <div>
-            <h2 className="text-base font-semibold text-foreground">{TABS.find(t => t.id === activeTab)?.label}</h2>
-            <p className="text-[11px] text-muted-foreground">SpeedoBill Enterprise • Platform Admin</p>
+            <h2 className="text-base font-semibold text-white tracking-tight">{TABS.find(t => t.id === activeTab)?.label}</h2>
+            <p className="text-[11px]" style={{ color: "#7A8AAB" }}>SpeedoBill Enterprise • Platform Admin</p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" onClick={fetchData} className="gap-1.5 h-8 text-xs rounded-xl border-border/40">
+            <Button
+              variant="outline" size="sm" onClick={fetchData}
+              className="gap-1.5 h-8 text-xs rounded-xl text-[#E5EAF5] hover:text-white transition-colors duration-200"
+              style={{ backgroundColor: "#131C35", borderColor: "#1E2D4A" }}
+            >
               <RefreshCw className="h-3.5 w-3.5" /> Refresh
             </Button>
-            <button onClick={toggleTheme} className="p-2 rounded-xl hover:bg-secondary/60 transition-all min-h-[36px] min-w-[36px] flex items-center justify-center">
-              {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
-            </button>
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-500 via-indigo-500 to-emerald-500 flex items-center justify-center text-white text-xs font-bold shadow-md">SB</div>
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold"
+              style={{ background: "linear-gradient(135deg, #F97316, #EA580C)", boxShadow: "0 0 14px rgba(249,115,22,0.45)" }}
+            >SB</div>
           </div>
         </div>
 
