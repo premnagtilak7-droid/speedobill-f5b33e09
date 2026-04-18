@@ -17,8 +17,13 @@ import {
   MessageSquare, RefreshCw, Wifi, Database, Server,
   Clock, UserPlus, ArrowUpRight, ArrowDownRight, Share2,
   Filter, Mail, Phone, RotateCcw, Megaphone, Target,
-  Globe, Layers, Store, Package, Plus, Minus, Trash2
+  Globe, Layers, Store, Package, Plus, Minus, Trash2,
+  Sparkles, CheckCircle2, Building2,
 } from "lucide-react";
+
+// Pricing constants (single source of truth)
+const PRICE_BASIC = 199;
+const PRICE_PREMIUM = 499;
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar
