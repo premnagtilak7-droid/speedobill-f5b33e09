@@ -128,9 +128,9 @@ const MobileNavbar = () => {
             </nav>
 
             <div className="border-t p-4" style={{ borderColor: "#1e2a45" }}>
-              <Link to="/auth" onClick={close}>
-                <Button className="w-full font-semibold">{t("nav.getStarted")}</Button>
-              </Link>
+              <a href="/#demo" onClick={close}>
+                <Button className="w-full font-semibold">Book a Demo</Button>
+              </a>
             </div>
           </div>
         </SheetContent>

@@ -40,9 +40,9 @@ const FeaturePage = ({
           <ArrowLeft className="h-4 w-4" />
           Back to Home
         </Link>
-        <Link to="/auth">
-          <Button size="sm" className="font-semibold">Start Free Trial</Button>
-        </Link>
+        <a href="/#demo">
+          <Button size="sm" className="font-semibold">Book a Free Demo</Button>
+        </a>
       </div>
 
       {/* Hero */}
@@ -103,9 +103,9 @@ const FeaturePage = ({
           <p className="mt-4 text-base text-slate-300 sm:text-lg">
             No credit card required · 7-day free trial · Cancel anytime
           </p>
-          <Link to="/auth" className="mt-8 inline-block">
-            <Button size="lg" className="font-semibold">Start Free Trial</Button>
-          </Link>
+          <a href="/#demo" className="mt-8 inline-block">
+            <Button size="lg" className="font-semibold">Book a Free Demo</Button>
+          </a>
         </div>
       </section>
 

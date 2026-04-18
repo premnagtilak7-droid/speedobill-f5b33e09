@@ -487,15 +487,25 @@ const AppLayout = () => {
       {/* Main content */}
       <main className="flex-1 min-h-screen md:h-screen overflow-x-hidden overflow-y-auto pb-[72px] pt-[calc(56px+env(safe-area-inset-top))] md:pb-0 md:pt-0">
         {/* Desktop top bar */}
-        <div className="hidden md:flex sticky top-0 z-30 h-12 shrink-0 items-center justify-end gap-2 px-6 glass-topbar">
-          <LanguageSwitcher />
-          <NotificationBell />
-          <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-secondary/60 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center">
-            {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
-          </button>
-          <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
-            <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">{userInitials}</AvatarFallback>
-          </Avatar>
+        <div className="hidden md:flex sticky top-0 z-30 h-12 shrink-0 items-center justify-between gap-2 px-6 glass-topbar">
+          <a
+            href="/"
+            aria-label="Back to website"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/60 px-3 py-1 text-xs font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-orange-500"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+            Back to Website
+          </a>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <NotificationBell />
+            <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-secondary/60 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center">
+              {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
+            </button>
+            <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
+              <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">{userInitials}</AvatarFallback>
+            </Avatar>
+          </div>
         </div>
         <SectionErrorBoundary section="Page Content">
           <Suspense

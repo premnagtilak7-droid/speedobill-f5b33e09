@@ -120,11 +120,11 @@ const LandingNavbar = () => {
           <Link to="/auth">
             <Button variant="ghost" size="sm">{t("nav.login")}</Button>
           </Link>
-          <Link to="/auth">
+          <a href="/#demo">
             <Button size="sm" className="font-semibold">
-              {t("nav.getStarted")}
+              Book a Demo
             </Button>
-          </Link>
+          </a>
         </div>
       </div>
     </header>
