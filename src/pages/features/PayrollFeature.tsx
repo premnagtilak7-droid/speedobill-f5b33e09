@@ -8,6 +8,7 @@ const PayrollFeature = () => (
     titleAccent="With Ease"
     subtitle="Attendance, shifts, salaries, and leaves — all in one place. Pay accurately, on time, every time."
     screenshotLabel="Staff Management Panel"
+    mockup="payroll"
     features={[
       { icon: Clock, title: "Attendance Tracking", description: "Clock-in/clock-out logs with PIN authentication for every staff member." },
       { icon: CalendarDays, title: "Shift Management", description: "Schedule morning, evening, and night shifts with smart conflict alerts." },

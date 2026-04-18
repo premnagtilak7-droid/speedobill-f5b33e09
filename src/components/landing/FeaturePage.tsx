@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Check, type LucideIcon } from "lucide-react";
+import { ArrowLeft, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LandingFooter from "@/components/landing/LandingFooter";
+import DashboardMockup, { type MockupVariant } from "@/components/landing/DashboardMockup";
 
 export type FeatureItem = {
   icon: LucideIcon;
@@ -16,6 +17,7 @@ interface FeaturePageProps {
   subtitle: string;
   features: FeatureItem[];
   screenshotLabel: string;
+  mockup?: MockupVariant;
 }
 
 const FeaturePage = ({
@@ -25,6 +27,7 @@ const FeaturePage = ({
   subtitle,
   features,
   screenshotLabel,
+  mockup = "generic",
 }: FeaturePageProps) => {
   return (
     <div className="min-h-screen" style={{ background: "linear-gradient(180deg, #0a0e1a 0%, #0f172a 100%)" }}>
@@ -80,29 +83,9 @@ const FeaturePage = ({
         </div>
       </section>
 
-      {/* Screenshot placeholder */}
-      <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6 lg:px-8">
-        <div
-          className="relative overflow-hidden rounded-3xl p-1"
-          style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.4), rgba(249,115,22,0.05))" }}
-        >
-          <div
-            className="flex aspect-[16/9] flex-col items-center justify-center rounded-[1.4rem] p-10 text-center"
-            style={{ backgroundColor: "#0a0e1a", border: "1px solid #1e2a45" }}
-          >
-            <div
-              className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl"
-              style={{ backgroundColor: "rgba(249, 115, 22, 0.12)" }}
-            >
-              <Check className="h-7 w-7 text-orange-500" />
-            </div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-orange-400">Product Preview</p>
-            <h3 className="mt-2 text-2xl font-bold text-white sm:text-3xl">{screenshotLabel}</h3>
-            <p className="mt-3 max-w-md text-sm text-slate-400">
-              Live screenshot coming soon. See it in action with a free trial.
-            </p>
-          </div>
-        </div>
+      {/* Dashboard mockup */}
+      <section className="mx-auto max-w-3xl px-4 pb-20 sm:px-6 lg:px-8">
+        <DashboardMockup variant={mockup} label={screenshotLabel} />
       </section>
 
       {/* CTA */}

@@ -8,6 +8,7 @@ const BillingFeature = () => (
     titleAccent="GST Billing"
     subtitle="Print thermal receipts, send WhatsApp bills, and accept split payments — all in seconds."
     screenshotLabel="Counter Billing Screen"
+    mockup="billing"
     features={[
       { icon: Receipt, title: "GST Auto-Calculation", description: "5% GST applied automatically on every bill — no manual math." },
       { icon: MessageSquare, title: "WhatsApp Receipts", description: "Send digital bills directly to customer WhatsApp instantly." },
