@@ -384,6 +384,23 @@ const SettingsPage = () => {
         </CardContent>
       </Card>
 
+      {/* Rate us */}
+      <Card>
+        <CardContent className="p-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold">Enjoying SpeedoBill?</p>
+            <p className="text-xs text-muted-foreground">Leave us a review on the Play Store ⭐</p>
+          </div>
+          <a
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button variant="outline" size="sm">Rate us</Button>
+          </a>
+        </CardContent>
+      </Card>
+
       {/* Footer */}
       <div className="text-center space-y-2 pb-4">
         <a href="https://speedobill.in/privacy" target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">Privacy Policy</a>
