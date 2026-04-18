@@ -18,7 +18,7 @@ import {
   Clock, UserPlus, ArrowUpRight, ArrowDownRight, Share2,
   Filter, Mail, Phone, RotateCcw, Megaphone, Target,
   Globe, Layers, Store, Package, Plus, Minus, Trash2,
-  Sparkles, CheckCircle2, Building2,
+  Sparkles, CheckCircle2, Building2, AlertTriangle,
 } from "lucide-react";
 
 // Pricing constants (single source of truth)
@@ -892,6 +892,10 @@ const CreatorAdmin = () => {
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} /> Refresh
             </Button>
+            <AdminNotifications onNavigate={(target) => {
+              const m = target.match(/tab=([a-z]+)/);
+              if (m && TABS.some(t => t.id === m[1])) setActiveTab(m[1] as TabId);
+            }} />
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold"
               style={{ background: "linear-gradient(135deg, #F97316, #EA580C)", boxShadow: "0 0 14px rgba(249,115,22,0.45)" }}
