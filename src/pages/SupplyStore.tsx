@@ -388,7 +388,7 @@ const SupplyStore = () => {
                   )}
                 </Button>
                 <p className="text-[10px] text-muted-foreground text-center">
-                  Your inquiry will be sent to Mangal Multiproduct via WhatsApp
+                  Your inquiry will be sent to SpeedoBill via WhatsApp
                 </p>
               </div>
             </motion.div>

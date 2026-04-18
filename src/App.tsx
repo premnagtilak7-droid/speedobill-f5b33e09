@@ -9,8 +9,14 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import RoleGuard from "@/components/RoleGuard";
 import PlanGuard from "@/components/PlanGuard";
 import AppLayout from "@/components/AppLayout";
-import { lazy, useEffect } from "react";
+import { lazy, useEffect, Suspense } from "react";
 import SpeedoBot from "@/components/SpeedoBot";
+
+const PageFallback = () => (
+  <div className="min-h-screen bg-[#0f1629] flex items-center justify-center">
+    <div className="text-orange-500 text-xl">Loading...</div>
+  </div>
+);
 
 import ScrollToTop from "@/components/ScrollToTop";
 
@@ -144,6 +150,7 @@ const AppRoutes = () => {
   return (
     <>
       <ScrollToTop />
+      <Suspense fallback={<PageFallback />}>
       <Routes>
         <Route path="/" element={user ? <Navigate to={defaultAuthenticatedRoute} replace /> : <LandingPage />} />
         <Route path="/auth" element={user ? <Navigate to={defaultAuthenticatedRoute} replace /> : <Auth />} />
@@ -212,6 +219,7 @@ const AppRoutes = () => {
 
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
     </>
   );
 };

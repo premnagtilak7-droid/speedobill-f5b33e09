@@ -75,7 +75,7 @@ class ErrorBoundary extends Component<Props, State> {
                 Try to Recover
               </button>
             </div>
-            <p className="text-[11px] text-slate-600">SpeedoBill v8.0.0 • © 2026 Mangal Multiproduct</p>
+            <p className="text-[11px] text-slate-600">SpeedoBill v1.0.0 • © 2026 SpeedoBill. All rights reserved.</p>
           </div>
         </div>
       );
