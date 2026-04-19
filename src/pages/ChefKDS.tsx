@@ -113,11 +113,12 @@ const ChefKDS = () => {
     // Show tickets assigned to this chef OR unassigned
     const myTickets = kotList.filter(k => !k.assigned_chef_id || k.assigned_chef_id === user?.id);
 
-    // Sound for new pending tickets
+    // Sound + flash for new pending tickets
     const newIds = new Set(myTickets.map(t => t.id));
     const brandNew = myTickets.filter(t => !prevIdsRef.current.has(t.id) && t.status === "pending");
     if (brandNew.length > 0 && prevIdsRef.current.size > 0) {
-      playLoudBell();
+      if (soundOn) playLoudBell();
+      setFlashKey(k => k + 1);
       toast.info(`🔔 ${brandNew.length} new order${brandNew.length > 1 ? "s" : ""}!`, { duration: 4000 });
     }
     prevIdsRef.current = newIds;
@@ -137,14 +138,19 @@ const ChefKDS = () => {
       setItems({});
     }
 
-    // Fetch table numbers
+    // Fetch table numbers + order sources
     const tableIds = [...new Set(kotList.map(k => k.table_id))];
-    if (tableIds.length > 0) {
-      const { data: tbls } = await supabase.from("restaurant_tables").select("id, table_number").in("id", tableIds);
-      const map: Record<string, number> = {};
-      (tbls || []).forEach(t => { map[t.id] = t.table_number; });
-      setTableMap(map);
-    }
+    const orderIds = [...new Set(kotList.map(k => k.order_id))];
+    const [tblRes, ordRes] = await Promise.all([
+      tableIds.length ? supabase.from("restaurant_tables").select("id, table_number").in("id", tableIds) : Promise.resolve({ data: [] as any[] }),
+      orderIds.length ? supabase.from("orders").select("id, order_source").in("id", orderIds) : Promise.resolve({ data: [] as any[] }),
+    ]);
+    const tMap: Record<string, number> = {};
+    (tblRes.data || []).forEach((t: any) => { tMap[t.id] = t.table_number; });
+    setTableMap(tMap);
+    const sMap: Record<string, string> = {};
+    (ordRes.data || []).forEach((o: any) => { sMap[o.id] = o.order_source || "dine-in"; });
+    setOrderSourceMap(sMap);
 
     setLoading(false);
   }, [hotelId, user?.id]);
