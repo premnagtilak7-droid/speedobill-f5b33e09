@@ -248,12 +248,35 @@ const ChefKDS = () => {
     const diff = Math.max(0, Math.floor((now - new Date(s).getTime()) / 1000));
     return `${Math.floor(diff / 60)}:${(diff % 60).toString().padStart(2, '0')}`;
   };
+  // Time-tier border color: green ≤5m, yellow 5–10m, red >10m
+  const tierBorder = (createdAt: string, status: string) => {
+    if (status === "ready") return "border-l-4 border-l-emerald-500";
+    const m = getElapsedMin(createdAt);
+    if (m >= 10) return "border-l-4 border-l-red-500 animate-pulse";
+    if (m >= 5) return "border-l-4 border-l-yellow-500";
+    return "border-l-4 border-l-emerald-500";
+  };
 
   const lowStock = ingredients.filter(i => i.current_stock <= i.min_threshold);
   const oosItems = menuItems.filter(m => !m.is_available);
+  const isRush = pending.length + preparing.length >= RUSH_THRESHOLD;
 
   return (
-    <div className="p-4 md:p-6 space-y-4 max-w-6xl mx-auto">
+    <div className="relative p-4 md:p-6 space-y-4 max-w-6xl mx-auto">
+      {/* Orange flash border on new orders */}
+      <AnimatePresence>
+        {flashKey > 0 && (
+          <motion.div
+            key={flashKey}
+            initial={{ opacity: 0.85 }}
+            animate={{ opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            className="pointer-events-none fixed inset-0 z-[55] ring-[6px] ring-inset ring-orange-500"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
@@ -267,10 +290,48 @@ const ChefKDS = () => {
             </p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => activeTab === "orders" ? fetchData() : fetchIngredients()}>
-          <RefreshCw className="h-4 w-4 mr-1" /> Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSoundOn(s => !s)}
+            className={`h-9 px-3 rounded-lg border transition-colors flex items-center gap-1.5 text-xs font-medium ${
+              soundOn
+                ? "border-primary/40 text-primary bg-primary/10"
+                : "border-border text-muted-foreground bg-card hover:bg-secondary/60"
+            }`}
+            aria-label={soundOn ? "Mute alerts" : "Unmute alerts"}
+            title={soundOn ? "Sound ON — click to mute" : "Sound OFF — click to enable"}
+          >
+            {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            <span className="hidden sm:inline">{soundOn ? "Sound On" : "Muted"}</span>
+          </button>
+          {preparing.length > 0 && activeTab === "orders" && (
+            <Button
+              size="sm"
+              disabled={bulkBusy}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white gap-1"
+              onClick={markAllReady}
+            >
+              <CheckCheck className="h-4 w-4" />
+              Mark All Ready ({preparing.length})
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={() => activeTab === "orders" ? fetchData() : fetchIngredients()}>
+            <RefreshCw className="h-4 w-4 mr-1" /> Refresh
+          </Button>
+        </div>
       </div>
+
+      {/* Rush hour banner */}
+      {isRush && activeTab === "orders" && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl px-4 py-3 bg-orange-500/15 border border-orange-500/40 text-orange-600 dark:text-orange-400 flex items-center gap-3 font-semibold text-sm"
+        >
+          <Flame className="h-5 w-5" />
+          🔥 Rush Hour — {pending.length + preparing.length} orders pending. Stay focused, team!
+        </motion.div>
+      )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
