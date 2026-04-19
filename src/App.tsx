@@ -53,6 +53,7 @@ const OrderHistory = lazy(() => import("./pages/OrderHistory"));
 const CreatorAdmin = lazy(() => import("./pages/CreatorAdmin"));
 const ChefKDS = lazy(() => import("./pages/ChefKDS"));
 const CustomerOrder = lazy(() => import("./pages/CustomerOrder"));
+const MenuRedirect = lazy(() => import("./pages/MenuRedirect"));
 const IncomingOrders = lazy(() => import("./pages/IncomingOrders"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const CounterOrderPage = lazy(() => import("./pages/CounterOrder"));
@@ -137,7 +138,8 @@ const AppRoutes = () => {
       location.pathname !== "/creator-admin" &&
       location.pathname !== "/auth" &&
       location.pathname !== "/reset-password" &&
-      !location.pathname.startsWith("/order/")
+      !location.pathname.startsWith("/order/") &&
+      !location.pathname.startsWith("/menu/")
     ) {
       navigate("/creator-admin", { replace: true });
     }
@@ -172,6 +174,7 @@ const AppRoutes = () => {
         <Route path="/terms" element={<TermsConditions />} />
         <Route path="/support" element={<SupportPage />} />
         <Route path="/order/:tableId" element={<CustomerOrder />} />
+        <Route path="/menu/:hotelId/:tableNumber" element={<MenuRedirect />} />
         <Route path="/features/billing" element={<BillingFeature />} />
         <Route path="/features/inventory" element={<InventoryFeature />} />
         <Route path="/features/reports" element={<ReportsFeature />} />

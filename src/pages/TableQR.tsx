@@ -18,24 +18,30 @@ interface TableInfo {
 const TableQR = () => {
   const { hotelId } = useAuth();
   const [tables, setTables] = useState<TableInfo[]>([]);
+  const [hotelName, setHotelName] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [zipping, setZipping] = useState(false);
 
   useEffect(() => {
     if (!hotelId) return;
     (async () => {
-      const { data } = await supabase
-        .from("restaurant_tables")
-        .select("id, table_number, section_name")
-        .eq("hotel_id", hotelId)
-        .order("table_number");
-      setTables(data || []);
+      const [tablesRes, hotelRes] = await Promise.all([
+        supabase
+          .from("restaurant_tables")
+          .select("id, table_number, section_name")
+          .eq("hotel_id", hotelId)
+          .order("table_number"),
+        supabase.from("hotels").select("name").eq("id", hotelId).maybeSingle(),
+      ]);
+      setTables(tablesRes.data || []);
+      setHotelName(hotelRes.data?.name || "");
       setLoading(false);
     })();
   }, [hotelId]);
 
-  const getOrderUrl = (tableId: string) =>
-    `${window.location.origin}/order/${tableId}`;
+  // White-label public menu URL: /menu/:hotelId/:tableNumber
+  const getOrderUrl = (table: TableInfo) =>
+    `${window.location.origin}/menu/${hotelId}/${table.table_number}`;
 
   const renderQrPng = (table: TableInfo): Promise<Blob> =>
     new Promise((resolve, reject) => {
@@ -60,9 +66,9 @@ const TableQR = () => {
           ctx.fillStyle = "#666666";
           ctx.fillText(table.section_name || "", 256, 520);
           ctx.fillText("Scan to order", 256, 548);
-          ctx.font = "bold 14px sans-serif";
+          ctx.font = "bold 16px sans-serif";
           ctx.fillStyle = "#F97316";
-          ctx.fillText("Powered by SpeedoBill", 256, 600);
+          ctx.fillText(hotelName || "Scan to Order", 256, 600);
         }
         canvas.toBlob((blob) => {
           if (blob) resolve(blob);
@@ -111,7 +117,7 @@ const TableQR = () => {
   };
 
   const shareQR = async (table: TableInfo) => {
-    const url = getOrderUrl(table.id);
+    const url = getOrderUrl(table);
     if (navigator.share) {
       try { await navigator.share({ title: `Table ${table.table_number} - Order`, url }); } catch {}
     } else {
@@ -178,7 +184,7 @@ const TableQR = () => {
                   <div className="bg-white rounded-xl p-3 inline-block mx-auto ring-1 ring-border/30">
                     <QRCodeSVG
                       id={`qr-${table.id}`}
-                      value={getOrderUrl(table.id)}
+                      value={getOrderUrl(table)}
                       size={120}
                       level="M"
                       includeMargin={false}
