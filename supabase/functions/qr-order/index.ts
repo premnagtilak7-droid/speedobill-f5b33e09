@@ -74,10 +74,18 @@ Deno.serve(async (req) => {
         .eq("hotel_id", table.hotel_id)
         .maybeSingle();
 
+      // Fetch hotel branding (white-label)
+      const { data: hotel } = await admin
+        .from("hotels")
+        .select("name, logo_url, business_type")
+        .eq("id", table.hotel_id)
+        .maybeSingle();
+
       return json({
-        table: { id: table.id, table_number: table.table_number, hotel_id: table.hotel_id, status: table.status },
+        table: { id: table.id, table_number: table.table_number, hotel_id: table.hotel_id, status: table.status, section_name: (table as any).section_name },
         menu: menu || [],
         loyalty_config: loyaltyConfig || null,
+        hotel: hotel || null,
       });
     }
 
