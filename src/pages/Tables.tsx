@@ -29,35 +29,46 @@ interface ChefProfile { user_id: string; full_name: string | null; }
 const formatCurrency = (v: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(v);
 
-/* Status colors per spec: Empty=green, Occupied=orange, Reserved=blue, Cleaning=yellow */
-const tableStyles: Record<string, { stripe: string; dot: string; pill: string; label: string; glow: string }> = {
+/* Status colors per spec: Empty=green, Occupied=orange, Reserved=blue, Cleaning=yellow.
+   Hard-coded dark navy theme — Tables page must stay dark even when app is in light mode. */
+const tableStyles: Record<string, {
+  tint: string; stripe: string; dot: string; pill: string; pillText: string; label: string; glow: string;
+}> = {
   empty: {
-    stripe: "bg-emerald-500",
+    tint: "#0f2a1a",
+    stripe: "#10B981",
     dot: "bg-emerald-400",
-    pill: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
+    pill: "bg-emerald-500/20 border-emerald-500/40",
+    pillText: "text-emerald-300",
     label: "Empty",
-    glow: "hover:shadow-[0_8px_24px_-6px_hsl(142_71%_45%/0.35)]",
+    glow: "hover:shadow-[0_10px_28px_-8px_rgba(16,185,129,0.45)]",
   },
   occupied: {
-    stripe: "bg-primary",
-    dot: "bg-primary",
-    pill: "bg-primary/15 text-primary border border-primary/30",
+    tint: "#2a1a0f",
+    stripe: "#F97316",
+    dot: "bg-orange-400",
+    pill: "bg-orange-500/20 border-orange-500/40",
+    pillText: "text-orange-300",
     label: "Occupied",
-    glow: "hover:shadow-[0_8px_24px_-6px_hsl(var(--primary)/0.45)]",
+    glow: "hover:shadow-[0_10px_28px_-8px_rgba(249,115,22,0.55)]",
   },
   reserved: {
-    stripe: "bg-sky-500",
-    dot: "bg-sky-400",
-    pill: "bg-sky-500/15 text-sky-400 border border-sky-500/30",
+    tint: "#0f1a2a",
+    stripe: "#3B82F6",
+    dot: "bg-blue-400",
+    pill: "bg-blue-500/20 border-blue-500/40",
+    pillText: "text-blue-300",
     label: "Reserved",
-    glow: "hover:shadow-[0_8px_24px_-6px_hsl(217_91%_60%/0.35)]",
+    glow: "hover:shadow-[0_10px_28px_-8px_rgba(59,130,246,0.45)]",
   },
   cleaning: {
-    stripe: "bg-amber-500",
+    tint: "#2a240f",
+    stripe: "#F59E0B",
     dot: "bg-amber-400",
-    pill: "bg-amber-500/15 text-amber-400 border border-amber-500/30",
+    pill: "bg-amber-500/20 border-amber-500/40",
+    pillText: "text-amber-300",
     label: "Cleaning",
-    glow: "hover:shadow-[0_8px_24px_-6px_hsl(45_93%_47%/0.35)]",
+    glow: "hover:shadow-[0_10px_28px_-8px_rgba(245,158,11,0.45)]",
   },
 };
 
@@ -703,96 +714,125 @@ const Tables = () => {
 
   /* ════════════════════ RENDER ════════════════════ */
   return (
-    <div className="mx-auto max-w-7xl space-y-4 p-4 md:p-6">
+    <div
+      className="mx-auto max-w-7xl space-y-4 p-4 md:p-6 -m-4 md:-m-6 min-h-[calc(100vh-4rem)]"
+      style={{ background: "#0A0F1E" }}
+    >
       {/* header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-4 md:pt-6 px-4 md:px-6">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Tables</h1>
-          <p className="text-sm text-muted-foreground">Tap a table to order · Cleaning → tap to mark empty</p>
+          <h1 className="text-xl font-bold text-white">Tables</h1>
+          <p className="text-sm text-slate-400">Tap a table to order · Cleaning → tap to mark empty</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => setReserveOpen(true)}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setReserveOpen(true)}
+            className="border-orange-500/60 bg-transparent text-orange-400 hover:bg-orange-500/10 hover:text-orange-300"
+          >
             <CalendarCheck className="mr-1 h-4 w-4" /> Reserve
           </Button>
           {isOwner && (
-            <Button size="sm" onClick={() => setAddOpen(true)}>
+            <Button
+              size="sm"
+              onClick={() => setAddOpen(true)}
+              className="bg-orange-500 text-white hover:bg-orange-600"
+            >
               <Plus className="mr-1 h-4 w-4" /> Add Tables
             </Button>
           )}
         </div>
       </div>
 
-      {/* Counter billing banner */}
-      {counterBillingEnabled && (
-        <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary/10 px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Store className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">Counter Billing is ON — use Counter for takeaway orders</span>
+      <div className="px-4 md:px-6 space-y-4 pb-6">
+        {/* Counter billing banner */}
+        {counterBillingEnabled && (
+          <div className="flex items-center justify-between rounded-2xl border border-orange-500/30 bg-orange-500/10 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <Store className="h-4 w-4 text-orange-400" />
+              <span className="text-sm font-medium text-white">Counter Billing is ON — use Counter for takeaway orders</span>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => window.location.href = "/counter"}
+              className="gap-1.5 bg-orange-500 text-white hover:bg-orange-600"
+            >
+              <Store className="h-3.5 w-3.5" /> Go to Counter
+            </Button>
           </div>
-          <Button size="sm" variant="default" onClick={() => window.location.href = "/counter"} className="gap-1.5">
-            <Store className="h-3.5 w-3.5" /> Go to Counter
-          </Button>
-        </div>
-      )}
+        )}
 
-      {/* status legend */}
-      <div className="flex flex-wrap gap-4 text-xs">
-        {Object.entries(tableStyles).map(([status, s]) => (
-          <div key={status} className="flex items-center gap-1.5">
-            <div className={`h-3 w-3 rounded-full ${s.dot}`} />
-            <span className="capitalize text-muted-foreground">{s.label}</span>
+        {/* status legend */}
+        <div
+          className="flex flex-wrap gap-3 rounded-2xl border px-4 py-3"
+          style={{ background: "#131C35", borderColor: "#1E2D4A" }}
+        >
+          {Object.entries(tableStyles).map(([status, s]) => (
+            <div
+              key={status}
+              className="flex items-center gap-2 rounded-full border px-3 py-1 text-xs"
+              style={{ background: s.tint, borderColor: `${s.stripe}55` }}
+            >
+              <span className="h-2.5 w-2.5 rounded-full" style={{ background: s.stripe }} />
+              <span className="font-medium text-white">{s.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* table grid */}
+        {loading ? (
+          <TableMapSkeleton />
+        ) : tables.length === 0 ? (
+          <div
+            className="py-16 text-center rounded-2xl border"
+            style={{ background: "#131C35", borderColor: "#1E2D4A" }}
+          >
+            <Users className="mx-auto mb-3 h-12 w-12 text-slate-500 opacity-50" />
+            <p className="text-sm text-slate-400">No tables yet. Add some to get started.</p>
           </div>
-        ))}
-      </div>
-
-      {/* table grid */}
-      {loading ? (
-        <TableMapSkeleton />
-      ) : tables.length === 0 ? (
-        <div className="py-16 text-center text-muted-foreground">
-          <Users className="mx-auto mb-3 h-12 w-12 opacity-30" />
-          <p className="text-sm">No tables yet. Add some to get started.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {tables.map((table) => {
-            const s = tableStyles[table.status] || tableStyles.empty;
-            return (
-              <div
-                key={table.id}
-                onClick={() => table.status === "cleaning" ? markCleaningDone(table.id) : void loadTableWorkspace(table)}
-                className={`group relative cursor-pointer rounded-2xl overflow-hidden border border-border/60 bg-card transition-all duration-200 hover:-translate-y-[2px] ${s.glow} animate-pop-in`}
-              >
-                <div className={`h-1 w-full ${s.stripe}`} />
-                <div className="p-4 text-center">
-                  <p className="text-[28px] font-extrabold text-foreground leading-none tnum">{table.table_number}</p>
-                  <div className="mt-2 flex items-center justify-center gap-1 text-xs text-muted-foreground">
-                    <Users className="h-3 w-3" /> {table.capacity}
-                  </div>
-                  <span className={`mt-2.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${s.pill}`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
-                    {s.label}
-                  </span>
-                  {table.status === "cleaning" && (
-                    <div className="mt-2 flex items-center justify-center gap-1 text-[10px] font-semibold text-amber-400">
-                      <Check className="h-3 w-3" /> Tap to mark empty
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {tables.map((table) => {
+              const s = tableStyles[table.status] || tableStyles.empty;
+              return (
+                <div
+                  key={table.id}
+                  onClick={() => table.status === "cleaning" ? markCleaningDone(table.id) : void loadTableWorkspace(table)}
+                  className={`group relative cursor-pointer rounded-2xl overflow-hidden border transition-all duration-200 hover:-translate-y-[2px] ${s.glow} animate-pop-in`}
+                  style={{ background: s.tint, borderColor: "#1E2D4A" }}
+                >
+                  <div className="h-[3px] w-full" style={{ background: s.stripe }} />
+                  <div className="p-4 text-center">
+                    <p className="text-[28px] font-extrabold text-white leading-none tnum">{table.table_number}</p>
+                    <div className="mt-2 flex items-center justify-center gap-1 text-xs text-slate-400">
+                      <Users className="h-3 w-3" /> {table.capacity}
                     </div>
+                    <span className={`mt-2.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${s.pill} ${s.pillText}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+                      {s.label}
+                    </span>
+                    {table.status === "cleaning" && (
+                      <div className="mt-2 flex items-center justify-center gap-1 text-[10px] font-semibold text-amber-300">
+                        <Check className="h-3 w-3" /> Tap to mark empty
+                      </div>
+                    )}
+                  </div>
+                  {isOwner && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); void deleteTable(table.id); }}
+                      className="absolute right-1.5 top-2.5 rounded-full bg-black/40 backdrop-blur p-1 text-red-400 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/20"
+                      aria-label="Delete table"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
                   )}
                 </div>
-                {isOwner && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); void deleteTable(table.id); }}
-                    className="absolute right-1.5 top-2.5 rounded-full bg-background/70 backdrop-blur p-1 text-destructive opacity-0 transition-opacity group-hover:opacity-100 hover:bg-destructive/15"
-                    aria-label="Delete table"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* ── Add Tables Dialog ── */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
