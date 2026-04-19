@@ -13,6 +13,8 @@ import { useIncomingOrders } from "@/hooks/useIncomingOrders";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import RestaurantIllustration from "@/components/dashboard/RestaurantIllustration";
+import LowStockMiniChart from "@/components/dashboard/LowStockMiniChart";
 
 interface LowStockItem {
   name: string;
@@ -33,17 +35,22 @@ interface CounterWaiterStat {
   bills: number;
 }
 
-const metricGradients = [
-  { bar: "gradient-bar-violet", iconBg: "gradient-bar-violet" },
-  { bar: "gradient-bar-cyan", iconBg: "gradient-bar-cyan" },
-  { bar: "gradient-bar-emerald", iconBg: "gradient-bar-emerald" },
-  { bar: "gradient-bar-amber", iconBg: "gradient-bar-amber" },
-  { bar: "gradient-bar-rose", iconBg: "gradient-bar-rose" },
-  { bar: "gradient-bar-teal", iconBg: "gradient-bar-teal" },
-  { bar: "gradient-bar-cyan", iconBg: "gradient-bar-cyan" },
-  { bar: "gradient-bar-amber", iconBg: "gradient-bar-amber" },
-  { bar: "gradient-bar-emerald", iconBg: "gradient-bar-emerald" },
-];
+// Per-label accent: { ringColor, iconBg, iconText, glow }
+// Falls back to "primary" (orange) for anything not mapped.
+const accentByLabel: Record<string, { ring: string; bg: string; text: string; shadow: string }> = {
+  "Today's Sale":         { ring: "from-primary/60",   bg: "bg-primary/15",      text: "text-primary",      shadow: "shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)]" },
+  "Counter Sales":        { ring: "from-primary/60",   bg: "bg-primary/15",      text: "text-primary",      shadow: "shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)]" },
+  "Top Counter Waiter":   { ring: "from-violet-500/60",bg: "bg-violet-500/15",   text: "text-violet-400",   shadow: "shadow-[0_0_20px_-4px_hsl(263_70%_58%/0.6)]" },
+  "Total Revenue":        { ring: "from-primary/60",   bg: "bg-primary/15",      text: "text-primary",      shadow: "shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)]" },
+  "Orders Today":         { ring: "from-sky-500/60",   bg: "bg-sky-500/15",      text: "text-sky-400",      shadow: "shadow-[0_0_20px_-4px_hsl(217_91%_60%/0.6)]" },
+  "Active Tables":        { ring: "from-emerald-500/60",bg: "bg-emerald-500/15", text: "text-emerald-400",  shadow: "shadow-[0_0_20px_-4px_hsl(142_71%_45%/0.6)]" },
+  "Pending KOT":          { ring: "from-rose-500/60",  bg: "bg-rose-500/15",     text: "text-rose-400",     shadow: "shadow-[0_0_20px_-4px_hsl(0_72%_51%/0.6)]" },
+  "Incoming Orders":      { ring: "from-amber-500/60", bg: "bg-amber-500/15",    text: "text-amber-400",    shadow: "shadow-[0_0_20px_-4px_hsl(38_92%_50%/0.6)]" },
+  "Bills Pending 45m+":   { ring: "from-rose-500/60",  bg: "bg-rose-500/15",     text: "text-rose-400",     shadow: "shadow-[0_0_20px_-4px_hsl(0_72%_51%/0.6)]" },
+  "Avg Turnover":         { ring: "from-teal-500/60",  bg: "bg-teal-500/15",     text: "text-teal-400",     shadow: "shadow-[0_0_20px_-4px_hsl(168_76%_42%/0.6)]" },
+  "No-Shows (7d)":        { ring: "from-rose-500/60",  bg: "bg-rose-500/15",     text: "text-rose-400",     shadow: "shadow-[0_0_20px_-4px_hsl(0_72%_51%/0.6)]" },
+};
+const defaultAccent = { ring: "from-primary/60", bg: "bg-primary/15", text: "text-primary", shadow: "shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)]" };
 
 const Dashboard = () => {
   const { role, hotelId, user } = useAuth();
@@ -234,27 +241,65 @@ const Dashboard = () => {
 
   return (
     <div className="p-5 md:p-6 space-y-5 max-w-[1400px] mx-auto">
-      {/* Welcome banner */}
-      <div
-        className="rounded-2xl p-5 md:p-6 relative overflow-hidden animate-pop-in"
-        style={{
-          background: "linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)",
-          border: "1px solid hsl(var(--primary) / 0.3)",
-        }}
-      >
-        <div className="absolute -top-10 -right-10 w-[200px] h-[200px] pointer-events-none"
-          style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.12), transparent 70%)" }}
-        />
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 relative z-10">
-          <div>
-            <h1 className="text-xl md:text-[22px] font-bold text-foreground">
-              Good {now.getHours() < 12 ? "morning" : now.getHours() < 17 ? "afternoon" : "evening"}, {userName} 👋
-            </h1>
-            <p className="text-[13px] text-muted-foreground mt-1">Here's what's happening at your canteen today</p>
-          </div>
-          <div className="text-right">
-            <p className="text-lg font-semibold text-muted-foreground/70 tnum">{timeStr}</p>
-            <p className="text-xs text-muted-foreground/50">{dateStr}</p>
+      {/* Welcome banner — gradient navy card with orange left rail + restaurant illustration */}
+      <div className="relative overflow-hidden rounded-2xl animate-pop-in shadow-[0_8px_40px_-12px_hsl(var(--primary)/0.25)]">
+        {/* Orange left accent rail */}
+        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary" />
+        {/* Gradient background */}
+        <div
+          className="relative px-5 md:px-7 py-5 md:py-6"
+          style={{
+            background:
+              "linear-gradient(135deg, hsl(222 39% 16%) 0%, hsl(240 33% 10%) 100%)",
+            border: "1px solid hsl(var(--primary) / 0.18)",
+          }}
+        >
+          {/* Soft orange glow */}
+          <div
+            className="absolute -top-16 -right-10 w-[260px] h-[260px] pointer-events-none"
+            style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.18), transparent 70%)" }}
+          />
+          {/* Decorative SVG */}
+          <RestaurantIllustration className="hidden sm:block absolute right-3 bottom-0 h-[140px] w-auto opacity-90 pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-xl md:text-[24px] font-bold text-white tracking-tight">
+                Good {now.getHours() < 12 ? "morning" : now.getHours() < 17 ? "afternoon" : "evening"}, {userName} 👋
+              </h1>
+              <p className="text-[13px] text-white/60 mt-1">
+                Here's what's happening at your restaurant today
+              </p>
+              <div className="mt-3 flex items-center gap-2 flex-wrap">
+                {(() => {
+                  const planLabel =
+                    subStatus === "trial"
+                      ? "Free Trial"
+                      : subPlan
+                      ? subPlan.charAt(0).toUpperCase() + subPlan.slice(1) + " Plan"
+                      : "Free Plan";
+                  const tone =
+                    subStatus === "trial"
+                      ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                      : subPlan === "premium"
+                      ? "bg-violet-500/15 text-violet-300 border-violet-500/30"
+                      : subPlan === "basic"
+                      ? "bg-primary/15 text-primary border-primary/30"
+                      : "bg-white/5 text-white/60 border-white/10";
+                  return (
+                    <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${tone}`}>
+                      <Crown className="h-3 w-3" />
+                      {planLabel}
+                      {subStatus === "trial" && daysLeft !== null && ` · ${daysLeft}d left`}
+                    </span>
+                  );
+                })()}
+              </div>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-2xl font-bold text-white tnum leading-none">{timeStr}</p>
+              <p className="text-[11px] text-white/50 mt-1.5">{dateStr}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -361,36 +406,46 @@ const Dashboard = () => {
         return null;
       })()}
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
-        {quickStats.map((stat, i) => (
-          <div
-            key={stat.label}
-            className="rounded-xl overflow-hidden animate-pop-in glass-card hover-lift"
-            style={{
-              animationDelay: `${i * 40}ms`,
-            }}
-          >
-            <div className={`h-[2.5px] ${metricGradients[i]?.bar || "gradient-bar-violet"}`} />
-            <div className="px-3 py-2.5">
-              <div className="flex items-center justify-between mb-1.5">
-                <div className={`h-6 w-6 rounded-md flex items-center justify-center ${metricGradients[i]?.iconBg || "gradient-bar-violet"}`}>
-                  <stat.icon size={12} className="text-white" />
+      {/* Metric Cards — gradient top border, accent icon circle, big numeric, hover lift */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {quickStats.map((stat, i) => {
+          const a = accentByLabel[stat.label] ?? defaultAccent;
+          return (
+            <div
+              key={stat.label}
+              className={`group relative rounded-xl overflow-hidden animate-pop-in glass-card transition-all duration-200 hover:-translate-y-[3px] hover:${a.shadow}`}
+              style={{ animationDelay: `${i * 40}ms` }}
+            >
+              {/* Top gradient border (accent → transparent) */}
+              <div className={`h-[3px] w-full bg-gradient-to-r ${a.ring} to-transparent`} />
+              <div className="px-4 py-3.5">
+                <div className="flex items-start justify-between mb-3">
+                  <div
+                    className={`h-10 w-10 rounded-full flex items-center justify-center ${a.bg} ${a.text} ring-1 ring-inset ring-current/20 transition-shadow duration-200 group-hover:${a.shadow}`}
+                  >
+                    <stat.icon size={18} strokeWidth={2.25} />
+                  </div>
+                  {stat.trend && (
+                    <span
+                      className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        stat.up
+                          ? "bg-emerald-500/15 text-emerald-400"
+                          : "bg-destructive/15 text-destructive"
+                      }`}
+                    >
+                      {stat.up ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                      {stat.trend}
+                    </span>
+                  )}
                 </div>
-                {stat.trend && (
-                  <span className={`inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-                    stat.up ? "bg-emerald/[0.12] text-emerald" : "bg-destructive/[0.12] text-destructive"
-                  }`}>
-                    {stat.up ? <TrendingUp size={9} /> : <TrendingDown size={9} />}
-                    {stat.trend}
-                  </span>
-                )}
+                <p className="text-[26px] md:text-[30px] font-extrabold text-foreground tnum leading-none tracking-tight">
+                  {stat.value}
+                </p>
+                <p className="label-caps text-[10px] mt-2 tracking-wider">{stat.label}</p>
               </div>
-              <p className="text-lg md:text-xl font-bold text-foreground tnum leading-tight">{stat.value}</p>
-              <p className="label-caps text-[9px] mt-0.5 tracking-wider">{stat.label}</p>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
 
@@ -434,55 +489,90 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Inventory Overview */}
+      {/* Inventory Overview — with mini bar chart of top 5 low-stock ingredients */}
       {role === "owner" && (
-        <div className="rounded-xl p-4 animate-pop-in cursor-pointer"
-          style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.5)" }}
+        <div
+          className="rounded-xl p-4 animate-pop-in cursor-pointer glass-card hover:-translate-y-[2px] transition-transform"
           onClick={() => navigate("/stock-analytics")}
         >
           <div className="flex items-center gap-2 mb-3">
-            <div className="h-7 w-7 rounded-lg flex items-center justify-center gradient-bar-emerald">
-              <Package size={13} className="text-white" />
+            <div className="h-8 w-8 rounded-full flex items-center justify-center bg-emerald-500/15 text-emerald-400 ring-1 ring-inset ring-emerald-500/30">
+              <Package size={15} />
             </div>
             <span className="text-sm font-semibold text-foreground">Inventory Overview</span>
+            <span className="ml-auto text-[10px] text-muted-foreground">Tap for details →</span>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <p className="text-lg font-bold text-foreground">{totalIngredients}</p>
-              <p className="text-[10px] text-muted-foreground">Ingredients</p>
+              <p className="text-2xl font-extrabold text-foreground tnum leading-none">{totalIngredients}</p>
+              <p className="text-[10px] text-muted-foreground mt-1.5">Ingredients</p>
             </div>
             <div>
-              <p className="text-lg font-bold text-warning">{lowStockIngredients.length}</p>
-              <p className="text-[10px] text-muted-foreground">Low Stock</p>
+              <p className="text-2xl font-extrabold text-warning tnum leading-none">{lowStockIngredients.length}</p>
+              <p className="text-[10px] text-muted-foreground mt-1.5">Low Stock</p>
             </div>
             <div>
-              <p className="text-lg font-bold text-destructive">{wastageCount30d}</p>
-              <p className="text-[10px] text-muted-foreground">Wastage (30d)</p>
+              <p className="text-2xl font-extrabold text-destructive tnum leading-none">{wastageCount30d}</p>
+              <p className="text-[10px] text-muted-foreground mt-1.5">Wastage (30d)</p>
             </div>
           </div>
+
+          {lowStockIngredients.length > 0 ? (
+            <>
+              <p className="mt-4 mb-1 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                Top 5 Low Stock
+              </p>
+              <LowStockMiniChart items={lowStockIngredients} />
+            </>
+          ) : (
+            <p className="mt-4 text-[11px] text-muted-foreground text-center py-2">
+              All ingredients above minimum threshold ✓
+            </p>
+          )}
         </div>
       )}
 
-      {/* Quick Actions */}
+      {/* Quick Actions — larger cards, gradient backgrounds, scale on hover */}
       <div>
-        <h2 className="text-[13px] font-semibold mb-2 text-muted-foreground uppercase tracking-wider">Quick Actions</h2>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-          {actionCards.map((card, i) => (
+        <h2 className="text-[11px] font-bold mb-3 text-muted-foreground uppercase tracking-widest">
+          Quick Actions
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+          {actionCards.map((card, i) => {
+            const isPrimary = card.label === "New Order";
+            return (
               <button
-              key={card.label}
-              className="rounded-xl p-3 text-left animate-pop-in group btn-press glass-card hover-lift"
-              style={{
-                animationDelay: `${(i + 5) * 40}ms`,
-              }}
-              onClick={() => navigate(card.to)}
-            >
-              <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${card.gradient} mb-2 transition-transform duration-200 group-hover:scale-110`}>
-                <card.icon size={15} className="text-white" />
-              </div>
-              <p className="text-xs font-semibold text-foreground leading-tight">{card.label}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight hidden md:block">{card.desc}</p>
-            </button>
-          ))}
+                key={card.label}
+                onClick={() => navigate(card.to)}
+                className={`group relative rounded-2xl p-4 text-left animate-pop-in btn-press overflow-hidden transition-all duration-200 hover:scale-[1.05] hover:shadow-[0_12px_32px_-8px_hsl(var(--primary)/0.4)] ${
+                  isPrimary
+                    ? "sm:col-span-1 md:col-span-1 ring-2 ring-primary/40"
+                    : ""
+                }`}
+                style={{
+                  animationDelay: `${(i + 5) * 40}ms`,
+                  background: isPrimary
+                    ? "linear-gradient(135deg, hsl(var(--primary) / 0.18), hsl(var(--primary) / 0.04))"
+                    : "linear-gradient(135deg, hsl(var(--card) / 0.95), hsl(var(--card) / 0.6))",
+                  border: isPrimary
+                    ? "1px solid hsl(var(--primary) / 0.4)"
+                    : "1px solid hsl(var(--border) / 0.4)",
+                }}
+              >
+                <div
+                  className={`h-12 w-12 rounded-xl flex items-center justify-center ${card.gradient} mb-3 shadow-lg transition-transform duration-200 group-hover:scale-110 group-hover:rotate-[-4deg]`}
+                >
+                  <card.icon size={24} className="text-white" strokeWidth={2.25} />
+                </div>
+                <p className={`font-bold text-foreground leading-tight ${isPrimary ? "text-sm" : "text-[13px]"}`}>
+                  {card.label}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight hidden md:block">
+                  {card.desc}
+                </p>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

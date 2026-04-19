@@ -22,6 +22,7 @@ import { useIncomingOrders } from "@/hooks/useIncomingOrders";
 import { supabase } from "@/integrations/supabase/client";
 import { primeNotificationEngine } from "@/lib/notification-sounds";
 import { WaiterReadyBanner } from "@/components/WaiterReadyBanner";
+import SidebarPlanBadge from "@/components/SidebarPlanBadge";
 
 interface NavItem {
   label: string;
@@ -337,15 +338,22 @@ const AppLayout = () => {
     <button
       key={item.path + item.label}
       onClick={() => handleNav(item.path, onClick)}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 min-h-[44px] active:scale-[0.97] ${
+      className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 min-h-[44px] active:scale-[0.97] ${
         isActive
-          ? "bg-primary/10 text-primary font-semibold"
+          ? "bg-gradient-to-r from-primary/20 via-primary/10 to-transparent text-primary font-semibold shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.18)]"
           : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
       }`}
     >
-      <item.icon className={`h-[18px] w-[18px] flex-shrink-0 ${isActive ? "text-primary" : ""}`} />
+      {/* Active left rail */}
+      {isActive && (
+        <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)]" />
+      )}
+      <item.icon
+        className={`h-[18px] w-[18px] flex-shrink-0 transition-colors ${
+          isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+        }`}
+      />
       {!isCollapsed && <span className="truncate">{item.label}</span>}
-      {isActive && !isCollapsed && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
     </button>
   );
 
@@ -366,15 +374,19 @@ const AppLayout = () => {
       </div>
 
       <nav ref={navScrollRef} className="flex-1 overflow-y-auto px-2 pb-4">
-        <div className="space-y-5">
-          {navSections.map((section) => (
+        <div className="space-y-4">
+          {navSections.map((section, idx) => (
             <div key={section.title}>
+              {/* Subtle divider between sections */}
+              {idx > 0 && !collapsed && (
+                <div className="mx-3 mb-3 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+              )}
               {!collapsed && (
-                <p className="px-3 mb-1.5 text-[10px] font-semibold text-muted-foreground tracking-widest uppercase">
+                <p className="px-3 mb-1 text-[9px] font-bold text-muted-foreground/70 tracking-[0.18em] uppercase">
                   {section.title}
                 </p>
               )}
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {section.items.map((item) => (
                   renderNavButton(item, onItemClick, location.pathname === item.path, collapsed)
                 ))}
@@ -382,8 +394,13 @@ const AppLayout = () => {
             </div>
           ))}
 
+          {/* Subscription plan badge */}
+          <div className="px-1">
+            <SidebarPlanBadge collapsed={collapsed} />
+          </div>
+
           {/* Bottom actions inside scroll area */}
-          <div className="border-t border-border pt-3 space-y-1">
+          <div className="border-t border-border/60 pt-3 space-y-1">
             <BugReportButton collapsed={collapsed} />
             <button
               onClick={toggleTheme}
