@@ -81,6 +81,8 @@ const tableStyles: Record<string, StatusStyle> = {
 
 const Tables = () => {
   const { user, hotelId, role } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const { density, setDensity } = useGridDensity("qb_tables_density");
   const isOwner = role === "owner";
   const [counterBillingEnabled, setCounterBillingEnabled] = useState(false);
