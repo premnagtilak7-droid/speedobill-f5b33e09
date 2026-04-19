@@ -198,6 +198,7 @@ const Dashboard = () => {
     { label: "Pending KOT", value: String(pendingKOT), icon: Clock, trend: null, up: false },
     { label: "Orders Today", value: String(totalOrders), icon: ShoppingBag, trend: null, up: true },
     ...(incomingCount > 0 ? [{ label: "Incoming Orders", value: String(incomingCount), icon: Bell, trend: "NEW" as string | null, up: true }] : []),
+    ...(stuckBillsCount > 0 ? [{ label: "Bills Pending 45m+", value: String(stuckBillsCount), icon: AlertTriangle, trend: "URGENT" as string | null, up: false }] : []),
     ...(role === "owner" ? [
       { label: "Avg Turnover", value: tableTurnover, icon: Clock, trend: null, up: true },
       { label: "No-Shows (7d)", value: String(noShows), icon: AlertTriangle, trend: null, up: false },
