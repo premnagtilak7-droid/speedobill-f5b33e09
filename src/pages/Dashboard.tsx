@@ -15,6 +15,10 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import RestaurantIllustration from "@/components/dashboard/RestaurantIllustration";
 import LowStockMiniChart from "@/components/dashboard/LowStockMiniChart";
+import RecentActivityFeed from "@/components/dashboard/RecentActivityFeed";
+import QuickBillSearch from "@/components/dashboard/QuickBillSearch";
+import TodayAtAGlance from "@/components/dashboard/TodayAtAGlance";
+import BirthdayAlerts from "@/components/dashboard/BirthdayAlerts";
 
 interface LowStockItem {
   name: string;
