@@ -489,55 +489,90 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Inventory Overview */}
+      {/* Inventory Overview — with mini bar chart of top 5 low-stock ingredients */}
       {role === "owner" && (
-        <div className="rounded-xl p-4 animate-pop-in cursor-pointer"
-          style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.5)" }}
+        <div
+          className="rounded-xl p-4 animate-pop-in cursor-pointer glass-card hover:-translate-y-[2px] transition-transform"
           onClick={() => navigate("/stock-analytics")}
         >
           <div className="flex items-center gap-2 mb-3">
-            <div className="h-7 w-7 rounded-lg flex items-center justify-center gradient-bar-emerald">
-              <Package size={13} className="text-white" />
+            <div className="h-8 w-8 rounded-full flex items-center justify-center bg-emerald-500/15 text-emerald-400 ring-1 ring-inset ring-emerald-500/30">
+              <Package size={15} />
             </div>
             <span className="text-sm font-semibold text-foreground">Inventory Overview</span>
+            <span className="ml-auto text-[10px] text-muted-foreground">Tap for details →</span>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <p className="text-lg font-bold text-foreground">{totalIngredients}</p>
-              <p className="text-[10px] text-muted-foreground">Ingredients</p>
+              <p className="text-2xl font-extrabold text-foreground tnum leading-none">{totalIngredients}</p>
+              <p className="text-[10px] text-muted-foreground mt-1.5">Ingredients</p>
             </div>
             <div>
-              <p className="text-lg font-bold text-warning">{lowStockIngredients.length}</p>
-              <p className="text-[10px] text-muted-foreground">Low Stock</p>
+              <p className="text-2xl font-extrabold text-warning tnum leading-none">{lowStockIngredients.length}</p>
+              <p className="text-[10px] text-muted-foreground mt-1.5">Low Stock</p>
             </div>
             <div>
-              <p className="text-lg font-bold text-destructive">{wastageCount30d}</p>
-              <p className="text-[10px] text-muted-foreground">Wastage (30d)</p>
+              <p className="text-2xl font-extrabold text-destructive tnum leading-none">{wastageCount30d}</p>
+              <p className="text-[10px] text-muted-foreground mt-1.5">Wastage (30d)</p>
             </div>
           </div>
+
+          {lowStockIngredients.length > 0 ? (
+            <>
+              <p className="mt-4 mb-1 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+                Top 5 Low Stock
+              </p>
+              <LowStockMiniChart items={lowStockIngredients} />
+            </>
+          ) : (
+            <p className="mt-4 text-[11px] text-muted-foreground text-center py-2">
+              All ingredients above minimum threshold ✓
+            </p>
+          )}
         </div>
       )}
 
-      {/* Quick Actions */}
+      {/* Quick Actions — larger cards, gradient backgrounds, scale on hover */}
       <div>
-        <h2 className="text-[13px] font-semibold mb-2 text-muted-foreground uppercase tracking-wider">Quick Actions</h2>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-          {actionCards.map((card, i) => (
+        <h2 className="text-[11px] font-bold mb-3 text-muted-foreground uppercase tracking-widest">
+          Quick Actions
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+          {actionCards.map((card, i) => {
+            const isPrimary = card.label === "New Order";
+            return (
               <button
-              key={card.label}
-              className="rounded-xl p-3 text-left animate-pop-in group btn-press glass-card hover-lift"
-              style={{
-                animationDelay: `${(i + 5) * 40}ms`,
-              }}
-              onClick={() => navigate(card.to)}
-            >
-              <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${card.gradient} mb-2 transition-transform duration-200 group-hover:scale-110`}>
-                <card.icon size={15} className="text-white" />
-              </div>
-              <p className="text-xs font-semibold text-foreground leading-tight">{card.label}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight hidden md:block">{card.desc}</p>
-            </button>
-          ))}
+                key={card.label}
+                onClick={() => navigate(card.to)}
+                className={`group relative rounded-2xl p-4 text-left animate-pop-in btn-press overflow-hidden transition-all duration-200 hover:scale-[1.05] hover:shadow-[0_12px_32px_-8px_hsl(var(--primary)/0.4)] ${
+                  isPrimary
+                    ? "sm:col-span-1 md:col-span-1 ring-2 ring-primary/40"
+                    : ""
+                }`}
+                style={{
+                  animationDelay: `${(i + 5) * 40}ms`,
+                  background: isPrimary
+                    ? "linear-gradient(135deg, hsl(var(--primary) / 0.18), hsl(var(--primary) / 0.04))"
+                    : "linear-gradient(135deg, hsl(var(--card) / 0.95), hsl(var(--card) / 0.6))",
+                  border: isPrimary
+                    ? "1px solid hsl(var(--primary) / 0.4)"
+                    : "1px solid hsl(var(--border) / 0.4)",
+                }}
+              >
+                <div
+                  className={`h-12 w-12 rounded-xl flex items-center justify-center ${card.gradient} mb-3 shadow-lg transition-transform duration-200 group-hover:scale-110 group-hover:rotate-[-4deg]`}
+                >
+                  <card.icon size={24} className="text-white" strokeWidth={2.25} />
+                </div>
+                <p className={`font-bold text-foreground leading-tight ${isPrimary ? "text-sm" : "text-[13px]"}`}>
+                  {card.label}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight hidden md:block">
+                  {card.desc}
+                </p>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
