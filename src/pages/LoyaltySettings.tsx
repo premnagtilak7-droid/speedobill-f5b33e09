@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { writeAudit } from "@/lib/audit";
 import { Crown, Gift, Target, Banknote, Sparkles, Save } from "lucide-react";
 import { motion } from "framer-motion";
 import TopLoyaltyCustomers from "@/components/loyalty/TopLoyaltyCustomers";
@@ -25,10 +26,13 @@ const LoyaltySettings = () => {
     min_bill_value: 0,
   });
   const [existingId, setExistingId] = useState<string | null>(null);
+  const [enrolledCount, setEnrolledCount] = useState(0);
+  const [redeemedThisMonth, setRedeemedThisMonth] = useState(0);
 
   useEffect(() => {
     if (!hotelId) return;
     (async () => {
+      // Config
       const { data } = await supabase
         .from("hotel_loyalty_configs" as any)
         .select("*")
@@ -45,6 +49,30 @@ const LoyaltySettings = () => {
           min_bill_value: (data as any).min_bill_value,
         });
       }
+
+      // Enrolled customers (any customer with loyalty_points > 0 or visit_count > 0)
+      const { count: enrolled } = await supabase
+        .from("customers")
+        .select("id", { count: "exact", head: true })
+        .eq("hotel_id", hotelId)
+        .or("loyalty_points.gt.0,visit_count.gt.0");
+      setEnrolledCount(enrolled ?? 0);
+
+      // Rewards claimed this month
+      const monthStart = new Date();
+      monthStart.setDate(1);
+      monthStart.setHours(0, 0, 0, 0);
+      const { data: claimedRows } = await supabase
+        .from("customers")
+        .select("rewards_claimed, updated_at")
+        .eq("hotel_id", hotelId)
+        .gte("updated_at", monthStart.toISOString());
+      const totalClaimed = (claimedRows || []).reduce(
+        (sum, r: any) => sum + (Number(r.rewards_claimed) || 0),
+        0
+      );
+      setRedeemedThisMonth(totalClaimed);
+
       setLoading(false);
     })();
   }, [hotelId]);
@@ -65,7 +93,15 @@ const LoyaltySettings = () => {
     }
 
     if (error) toast.error("Save failed: " + error.message);
-    else toast.success("Loyalty settings saved!");
+    else {
+      toast.success("Loyalty settings saved!");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) void writeAudit({
+        hotelId, action: "loyalty_updated", performedBy: user.id,
+        performerName: user.email || null,
+        details: `Loyalty ${config.enabled ? "enabled" : "disabled"} • ${config.visit_goal} visits • ${config.reward_description}`,
+      });
+    }
     setSaving(false);
   };
 
@@ -83,9 +119,32 @@ const LoyaltySettings = () => {
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Crown className="h-6 w-6 text-primary" /> Loyalty Program
         </h1>
-        <Badge variant={config.enabled ? "default" : "secondary"} className="text-sm">
+        <Badge
+          className={`text-sm ${
+            config.enabled
+              ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/40"
+              : "bg-destructive/20 text-destructive border-destructive/40"
+          }`}
+          variant="outline"
+        >
           {config.enabled ? "✅ Active" : "❌ Disabled"}
         </Badge>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-3">
+        <Card className="glass-card">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">Enrolled customers</p>
+            <p className="text-2xl font-bold mt-1">{enrolledCount}</p>
+          </CardContent>
+        </Card>
+        <Card className="glass-card">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">Rewards redeemed (this month)</p>
+            <p className="text-2xl font-bold mt-1">{redeemedThisMonth}</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Master Switch */}

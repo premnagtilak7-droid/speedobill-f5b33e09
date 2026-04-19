@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { writeAudit } from "@/lib/audit";
 import { Eye, EyeOff, Zap, ChefHat, BarChart3, Grid3X3, UtensilsCrossed, ScrollText, ShieldCheck, ShieldAlert } from "lucide-react";
 import { getScopedStorageKey } from "@/lib/backend-cache";
 import { Progress } from "@/components/ui/progress";
@@ -139,8 +140,27 @@ const Auth = () => {
     if (normalizedHotelCode) cacheStaffHotelCode(email, normalizedHotelCode);
 
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error, data } = await supabase.auth.signInWithPassword({ email, password });
     if (error) toast.error(error.message);
+    else if (data.user) {
+      // Audit: staff login (best-effort; hotel_id may be unknown until profile loads)
+      try {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("hotel_id, full_name, role")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
+        if (prof?.hotel_id) {
+          void writeAudit({
+            hotelId: prof.hotel_id,
+            action: "staff_login",
+            performedBy: data.user.id,
+            performerName: prof.full_name || data.user.email || null,
+            details: `${prof.role || "Staff"} logged in`,
+          });
+        }
+      } catch { /* swallow */ }
+    }
     setLoading(false);
   };
 

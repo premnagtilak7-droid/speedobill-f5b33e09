@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
+import { writeAudit } from "@/lib/audit";
 import { Settings, Copy, Key, Shield, FileText, ExternalLink, Volume2, Upload, Image as ImageIcon, QrCode, Trash2 } from "lucide-react";
 import InstallAppPrompt from "@/components/InstallAppPrompt";
 import { useNavigate } from "react-router-dom";
@@ -108,7 +109,15 @@ const SettingsPage = () => {
       receipt_footer: receiptFooter.trim(),
     } as any).eq("id", hotelId);
     if (error) toast.error("Save failed: " + error.message);
-    else toast.success("Settings saved!");
+    else {
+      toast.success("Settings saved!");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && hotelId) void writeAudit({
+        hotelId, action: "settings_changed", performedBy: user.id,
+        performerName: user.email || null,
+        details: `Hotel settings updated (GST ${gstEnabled ? "on" : "off"}, tax ${parsedTax || 5}%)`,
+      });
+    }
     setSaving(false);
   };
 
