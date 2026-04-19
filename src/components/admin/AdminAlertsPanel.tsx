@@ -99,6 +99,45 @@ export function AdminAlertsPanel({
       });
     });
 
+    // CRITICAL — KOT pile-up (8+ pending) per hotel
+    pendingKotsByHotel.filter(p => p.count >= 8).forEach(p => {
+      list.push({
+        id: `kot-pileup-${p.hotel_id}`,
+        severity: "critical",
+        title: `${p.hotel_name} has ${p.count} pending KOT orders`,
+        description: `Kitchen is overloaded — orders may be delayed. Notify the team.`,
+        timestamp: new Date().toISOString(),
+        actionLabel: "View",
+        onAction: () => onNavigate("directory"),
+      });
+    });
+
+    // CRITICAL — bills pending 45+ minutes
+    stuckBills.forEach(b => {
+      list.push({
+        id: `stuck-bill-${b.order_id}`,
+        severity: "critical",
+        title: `${b.hotel_name} — Table ${b.table_number ?? "?"} bill pending ${b.minutes_pending}m`,
+        description: `Active order open for ${b.minutes_pending} minutes without billing. Check on the table.`,
+        timestamp: new Date().toISOString(),
+        actionLabel: "View",
+        onAction: () => onNavigate("directory"),
+      });
+    });
+
+    // WARNING — waiter not logged in today
+    inactiveWaiters.forEach(w => {
+      list.push({
+        id: `waiter-inactive-${w.user_id}`,
+        severity: "warning",
+        title: `${w.full_name} (${w.hotel_name}) not logged in today`,
+        description: `No clock-in recorded. Confirm shift coverage.`,
+        timestamp: new Date().toISOString(),
+        actionLabel: "View",
+        onAction: () => onNavigate("directory"),
+      });
+    });
+
     // WARNING — expiring in 7 days
     const expiringSoon = hotels.filter(h => {
       if (!h.subscription_expiry) return false;
