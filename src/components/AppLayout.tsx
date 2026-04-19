@@ -75,6 +75,7 @@ const ownerSections: NavSection[] = [
     title: "INSIGHTS",
     items: [
       { label: "Analytics", icon: BarChart3, path: "/analytics" },
+      { label: "Reports", icon: FileText, path: "/reports" },
       { label: "Loyalty Program", icon: Store, path: "/loyalty-settings" },
       { label: "Audit Log", icon: ScrollText, path: "/audit-log" },
     ],
@@ -124,6 +125,7 @@ const managerSections: NavSection[] = [
     title: "INSIGHTS",
     items: [
       { label: "Analytics", icon: BarChart3, path: "/analytics" },
+      { label: "Reports", icon: FileText, path: "/reports" },
       { label: "Order History", icon: ScrollText, path: "/order-history" },
     ],
   },

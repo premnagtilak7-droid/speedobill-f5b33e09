@@ -10,17 +10,22 @@ import {
   BarChart3, TrendingUp, TrendingDown, IndianRupee, ShoppingCart,
   Users, UtensilsCrossed, Clock, ArrowUpRight, ArrowDownRight,
   CreditCard, Banknote, Smartphone, Receipt, ChefHat, Star,
-  CalendarDays, Filter, Hash
+  CalendarDays, Filter, Hash, Download, FileSpreadsheet, Search,
+  ArrowUpDown, Trophy, Medal, Award
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
+import { generatePdfReport, downloadPdf, downloadCSV, estimateMenuItemCosts, fmtINR } from "@/lib/report-utils";
 
 const COLORS = {
   primary: "hsl(25, 95%, 53%)",
