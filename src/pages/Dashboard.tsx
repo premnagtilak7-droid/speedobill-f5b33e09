@@ -35,17 +35,22 @@ interface CounterWaiterStat {
   bills: number;
 }
 
-const metricGradients = [
-  { bar: "gradient-bar-violet", iconBg: "gradient-bar-violet" },
-  { bar: "gradient-bar-cyan", iconBg: "gradient-bar-cyan" },
-  { bar: "gradient-bar-emerald", iconBg: "gradient-bar-emerald" },
-  { bar: "gradient-bar-amber", iconBg: "gradient-bar-amber" },
-  { bar: "gradient-bar-rose", iconBg: "gradient-bar-rose" },
-  { bar: "gradient-bar-teal", iconBg: "gradient-bar-teal" },
-  { bar: "gradient-bar-cyan", iconBg: "gradient-bar-cyan" },
-  { bar: "gradient-bar-amber", iconBg: "gradient-bar-amber" },
-  { bar: "gradient-bar-emerald", iconBg: "gradient-bar-emerald" },
-];
+// Per-label accent: { ringColor, iconBg, iconText, glow }
+// Falls back to "primary" (orange) for anything not mapped.
+const accentByLabel: Record<string, { ring: string; bg: string; text: string; shadow: string }> = {
+  "Today's Sale":         { ring: "from-primary/60",   bg: "bg-primary/15",      text: "text-primary",      shadow: "shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)]" },
+  "Counter Sales":        { ring: "from-primary/60",   bg: "bg-primary/15",      text: "text-primary",      shadow: "shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)]" },
+  "Top Counter Waiter":   { ring: "from-violet-500/60",bg: "bg-violet-500/15",   text: "text-violet-400",   shadow: "shadow-[0_0_20px_-4px_hsl(263_70%_58%/0.6)]" },
+  "Total Revenue":        { ring: "from-primary/60",   bg: "bg-primary/15",      text: "text-primary",      shadow: "shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)]" },
+  "Orders Today":         { ring: "from-sky-500/60",   bg: "bg-sky-500/15",      text: "text-sky-400",      shadow: "shadow-[0_0_20px_-4px_hsl(217_91%_60%/0.6)]" },
+  "Active Tables":        { ring: "from-emerald-500/60",bg: "bg-emerald-500/15", text: "text-emerald-400",  shadow: "shadow-[0_0_20px_-4px_hsl(142_71%_45%/0.6)]" },
+  "Pending KOT":          { ring: "from-rose-500/60",  bg: "bg-rose-500/15",     text: "text-rose-400",     shadow: "shadow-[0_0_20px_-4px_hsl(0_72%_51%/0.6)]" },
+  "Incoming Orders":      { ring: "from-amber-500/60", bg: "bg-amber-500/15",    text: "text-amber-400",    shadow: "shadow-[0_0_20px_-4px_hsl(38_92%_50%/0.6)]" },
+  "Bills Pending 45m+":   { ring: "from-rose-500/60",  bg: "bg-rose-500/15",     text: "text-rose-400",     shadow: "shadow-[0_0_20px_-4px_hsl(0_72%_51%/0.6)]" },
+  "Avg Turnover":         { ring: "from-teal-500/60",  bg: "bg-teal-500/15",     text: "text-teal-400",     shadow: "shadow-[0_0_20px_-4px_hsl(168_76%_42%/0.6)]" },
+  "No-Shows (7d)":        { ring: "from-rose-500/60",  bg: "bg-rose-500/15",     text: "text-rose-400",     shadow: "shadow-[0_0_20px_-4px_hsl(0_72%_51%/0.6)]" },
+};
+const defaultAccent = { ring: "from-primary/60", bg: "bg-primary/15", text: "text-primary", shadow: "shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)]" };
 
 const Dashboard = () => {
   const { role, hotelId, user } = useAuth();
