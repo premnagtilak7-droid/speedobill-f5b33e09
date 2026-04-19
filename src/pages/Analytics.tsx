@@ -925,6 +925,97 @@ const Analytics = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Ranked Top Items Table */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-primary" /> Top Selling Items
+          </CardTitle>
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input value={itemSearch} onChange={(e) => setItemSearch(e.target.value)} placeholder="Search items…" className="pl-8 h-9" />
+          </div>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          {sortedItems.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">No items sold in this period</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">#</TableHead>
+                  <TableHead><button onClick={() => toggleSort("name")} className="flex items-center gap-1 hover:text-foreground">Item <ArrowUpDown className="h-3 w-3" /></button></TableHead>
+                  <TableHead><button onClick={() => toggleSort("category")} className="flex items-center gap-1 hover:text-foreground">Category <ArrowUpDown className="h-3 w-3" /></button></TableHead>
+                  <TableHead className="text-right"><button onClick={() => toggleSort("qty")} className="flex items-center gap-1 hover:text-foreground ml-auto">Qty <ArrowUpDown className="h-3 w-3" /></button></TableHead>
+                  <TableHead className="text-right"><button onClick={() => toggleSort("revenue")} className="flex items-center gap-1 hover:text-foreground ml-auto">Revenue <ArrowUpDown className="h-3 w-3" /></button></TableHead>
+                  <TableHead className="text-right"><button onClick={() => toggleSort("margin")} className="flex items-center gap-1 hover:text-foreground ml-auto">Margin <ArrowUpDown className="h-3 w-3" /></button></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedItems.slice(0, 25).map((it, i) => {
+                  const rankIcon = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
+                  return (
+                    <TableRow key={it.name} className={i < 3 && itemSort.key === "revenue" && itemSort.dir === "desc" ? "bg-primary/5" : ""}>
+                      <TableCell className="font-mono text-xs">{rankIcon ?? `#${i + 1}`}</TableCell>
+                      <TableCell className="font-medium">{it.name}</TableCell>
+                      <TableCell><Badge variant="secondary" className="text-[10px]">{it.category}</Badge></TableCell>
+                      <TableCell className="text-right tabular-nums">{it.qty}</TableCell>
+                      <TableCell className="text-right tabular-nums font-semibold">{fmtCurrency(it.revenue)}</TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {it.margin !== null ? (
+                          <span className={it.margin >= 50 ? "text-green-500" : it.margin >= 25 ? "text-amber-500" : "text-red-500"}>
+                            {it.margin.toFixed(0)}%
+                          </span>
+                        ) : <span className="text-muted-foreground">—</span>}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Daily Payment Summary */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <CreditCard className="h-4 w-4 text-primary" /> Daily Payment Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          {dailyPaymentSummary.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">No billed orders in this period</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Cash</TableHead>
+                  <TableHead className="text-right">UPI</TableHead>
+                  <TableHead className="text-right">Card</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">Orders</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {dailyPaymentSummary.map((d) => (
+                  <TableRow key={d.date}>
+                    <TableCell className="font-medium">{d.date}</TableCell>
+                    <TableCell className="text-right tabular-nums">{fmtCurrency(d.cash)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{fmtCurrency(d.upi)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{fmtCurrency(d.card)}</TableCell>
+                    <TableCell className="text-right tabular-nums font-semibold">{fmtCurrency(d.total)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{d.orders}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
