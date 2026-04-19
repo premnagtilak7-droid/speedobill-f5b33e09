@@ -69,10 +69,17 @@ const StaffPage = () => {
       });
     }
 
-    const normalizedStaff = rawStaff.map((member: any) => ({
-      ...member,
-      role: roleMap[member.user_id] || member.role || "waiter",
-    }));
+    const normalizedStaff = rawStaff.map((member: any) => {
+      const fallbackFromEmail = member.email ? String(member.email).split("@")[0] : "";
+      const displayName = (member.full_name && String(member.full_name).trim())
+        || fallbackFromEmail
+        || "Unnamed Staff";
+      return {
+        ...member,
+        full_name: displayName,
+        role: roleMap[member.user_id] || member.role || "waiter",
+      };
+    });
 
     setStaff(normalizedStaff);
     setHotel(hotelRes.data);

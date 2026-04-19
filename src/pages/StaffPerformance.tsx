@@ -14,10 +14,15 @@ const StaffPerformance = () => {
   useEffect(() => {
     if (!hotelId) return;
     Promise.all([
-      supabase.from("profiles").select("user_id, full_name, role").eq("hotel_id", hotelId),
+      supabase.from("profiles").select("user_id, full_name, email, role").eq("hotel_id", hotelId),
       supabase.from("orders").select("waiter_id, total, status").eq("hotel_id", hotelId).eq("status", "billed"),
     ]).then(([staffRes, ordersRes]) => {
-      setStaff((staffRes.data || []).filter((s: any) => s.role !== "owner"));
+      const normalized = (staffRes.data || []).map((s: any) => {
+        const fallback = s.email ? String(s.email).split("@")[0] : "";
+        const display = (s.full_name && String(s.full_name).trim()) || fallback || "Unnamed Staff";
+        return { ...s, full_name: display };
+      });
+      setStaff(normalized.filter((s: any) => s.role !== "owner"));
       setOrders(ordersRes.data || []);
       setLoading(false);
     });
