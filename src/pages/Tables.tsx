@@ -551,6 +551,20 @@ const Tables = () => {
         : null;
 
       toast.success(sendToKds ? (assignedChefName ? `Sent to ${assignedChefName} ✓` : "Sent to KDS ✓") : "Order saved ✓");
+
+      // Audit: order placed
+      if (orderId) {
+        void writeAudit({
+          hotelId,
+          action: "order_placed",
+          performedBy: user.id,
+          performerName: user.email || null,
+          tableNumber: selectedTable.table_number,
+          orderId,
+          details: `${orderItems.length} item(s) • ₹${grandTotal.toFixed(2)}${sendToKds ? " • sent to KDS" : ""}`,
+        });
+      }
+
       // Update seat flags
       setSeatFlags((prev) => ({ ...prev, [tableSplit]: true }));
       await fetchTables();
@@ -624,6 +638,18 @@ const Tables = () => {
       if (!remaining || remaining.length === 0) {
         await supabase.from("restaurant_tables").update({ status: "cleaning" }).eq("id", selectedTable.id);
       }
+
+      // Audit: bill generated
+      void writeAudit({
+        hotelId,
+        action: "order_billed",
+        performedBy: user.id,
+        performerName: user.email || null,
+        tableNumber: selectedTable.table_number,
+        orderId: activeOrderId,
+        details: `Bill ₹${finalTotal.toFixed(2)} (${pmLabel})${isComplimentary ? " — complimentary" : ""}`,
+      });
+
       toast.success(isComplimentary ? "Complimentary bill settled ✓" : `Bill settled! ${lookedUpCustomer ? `+${pointsEarned} loyalty pts` : ""}`);
       resetPanelState(); await fetchTables();
     } catch (e: any) { toast.error(e.message); } finally { setSavingMode(null); }

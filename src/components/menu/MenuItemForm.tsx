@@ -125,6 +125,13 @@ const MenuItemForm = ({ open, onOpenChange, editItem, hotelId, categories, onSav
         const { error } = await supabase.from("menu_items").update(updates).eq("id", editItem.id);
         if (error) throw error;
         toast.success("Item updated");
+        // Audit
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) void writeAudit({
+          hotelId, action: "menu_updated", performedBy: user.id,
+          performerName: user.email || null,
+          details: `Updated "${name.trim()}" • ₹${basePrice}`,
+        });
       } else {
         if (currentCount >= menuLimit) { toast.error("Menu limit reached"); setSaving(false); return; }
         const { error } = await supabase.from("menu_items").insert([{
@@ -134,6 +141,13 @@ const MenuItemForm = ({ open, onOpenChange, editItem, hotelId, categories, onSav
         }]);
         if (error) throw error;
         toast.success("Item added");
+        // Audit
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) void writeAudit({
+          hotelId, action: "menu_added", performedBy: user.id,
+          performerName: user.email || null,
+          details: `Added "${name.trim()}" in ${category} • ₹${basePrice}`,
+        });
       }
       onSaved();
       onOpenChange(false);

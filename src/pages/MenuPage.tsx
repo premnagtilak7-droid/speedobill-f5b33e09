@@ -155,17 +155,27 @@ const MenuPage = () => {
 
   const deleteItem = useCallback(async (id: string) => {
     try {
+      // Look up name first for audit detail
+      const target = items.find((i) => i.id === id);
       const { error } = await supabase.from("menu_items").delete().eq("id", id);
       if (error) {
         toast.error(`Delete failed [${error.code}]: ${error.message}`);
         return;
+      }
+      if (hotelId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) void writeAudit({
+          hotelId, action: "menu_deleted", performedBy: user.id,
+          performerName: user.email || null,
+          details: `Deleted "${target?.name || "menu item"}"`,
+        });
       }
       toast.success("Item deleted");
       fetchItems();
     } catch (err: any) {
       toast.error(`Delete error: ${err.message}`);
     }
-  }, [fetchItems]);
+  }, [fetchItems, items, hotelId]);
 
   const renderMenuCard = useCallback((item: MenuItem) => (
     <DenseMenuCard
