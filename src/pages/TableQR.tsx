@@ -18,24 +18,30 @@ interface TableInfo {
 const TableQR = () => {
   const { hotelId } = useAuth();
   const [tables, setTables] = useState<TableInfo[]>([]);
+  const [hotelName, setHotelName] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [zipping, setZipping] = useState(false);
 
   useEffect(() => {
     if (!hotelId) return;
     (async () => {
-      const { data } = await supabase
-        .from("restaurant_tables")
-        .select("id, table_number, section_name")
-        .eq("hotel_id", hotelId)
-        .order("table_number");
-      setTables(data || []);
+      const [tablesRes, hotelRes] = await Promise.all([
+        supabase
+          .from("restaurant_tables")
+          .select("id, table_number, section_name")
+          .eq("hotel_id", hotelId)
+          .order("table_number"),
+        supabase.from("hotels").select("name").eq("id", hotelId).maybeSingle(),
+      ]);
+      setTables(tablesRes.data || []);
+      setHotelName(hotelRes.data?.name || "");
       setLoading(false);
     })();
   }, [hotelId]);
 
-  const getOrderUrl = (tableId: string) =>
-    `${window.location.origin}/order/${tableId}`;
+  // White-label public menu URL: /menu/:hotelId/:tableNumber
+  const getOrderUrl = (table: TableInfo) =>
+    `${window.location.origin}/menu/${hotelId}/${table.table_number}`;
 
   const renderQrPng = (table: TableInfo): Promise<Blob> =>
     new Promise((resolve, reject) => {
