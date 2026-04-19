@@ -242,11 +242,24 @@ const ChefKDS = () => {
     : orderFilter === "pending" ? pending
     : orderFilter === "preparing" ? preparing : ready;
 
-  const getElapsedMin = (c: string) => Math.floor((now - new Date(c).getTime()) / 60000);
-  const isUrgent = (c: string) => (now - new Date(c).getTime()) > URGENT_MS;
-  const formatTimer = (s: string) => {
-    const diff = Math.max(0, Math.floor((now - new Date(s).getTime()) / 1000));
-    return `${Math.floor(diff / 60)}:${(diff % 60).toString().padStart(2, '0')}`;
+  const getElapsedMin = (c: string) => {
+    const ts = new Date(c).getTime();
+    if (!ts || isNaN(ts)) return 0;
+    return Math.max(0, Math.floor((now - ts) / 60000));
+  };
+  const isUrgent = (c: string) => {
+    const m = getElapsedMin(c);
+    return m * 60 * 1000 > URGENT_MS;
+  };
+  // Format elapsed time as "5m 30s" — cap at "999m+" for very old tickets
+  const formatElapsed = (s: string) => {
+    const ts = new Date(s).getTime();
+    if (!ts || isNaN(ts)) return "0m 0s";
+    const diffSec = Math.max(0, Math.floor((now - ts) / 1000));
+    const totalMin = Math.floor(diffSec / 60);
+    if (totalMin >= 999) return "999m+";
+    const sec = diffSec % 60;
+    return `${totalMin}m ${sec.toString().padStart(2, "0")}s`;
   };
   // Time-tier border color: green ≤5m, yellow 5–10m, red >10m
   const tierBorder = (createdAt: string, status: string) => {
@@ -433,12 +446,10 @@ const ChefKDS = () => {
                             )}
                           </div>
                         </div>
-                        <div className={`text-right ${urgent ? "text-destructive" : "text-muted-foreground"}`}>
+                        <div className={`text-right ${urgent ? "text-destructive" : elapsed >= 5 ? "text-yellow-600" : "text-emerald-600"}`}>
                           <Clock className="h-5 w-5 inline-block mb-0.5" />
-                          <div className="text-2xl font-mono font-bold">
-                            {ticket.status === "preparing" && ticket.started_at
-                              ? formatTimer(ticket.started_at)
-                              : `${elapsed}m`}
+                          <div className="text-2xl font-mono font-bold tabular-nums">
+                            {formatElapsed(ticket.status === "preparing" && ticket.started_at ? ticket.started_at : ticket.created_at)}
                           </div>
                           {ticket.status === "preparing" && (
                             <span className="text-[10px] text-amber-500">🔥 cooking</span>
