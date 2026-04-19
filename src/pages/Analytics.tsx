@@ -406,7 +406,7 @@ const Analytics = () => {
       .sort((a, b) => b.value - a.value);
   }, [billedOrders]);
 
-  // ─── Top Selling Items ───
+  // ─── Top Selling Items (with category + profit margin from COGS estimate) ───
   const topItems = useMemo(() => {
     const map: Record<string, { qty: number; revenue: number }> = {};
     (orderItems ?? []).forEach((i) => {
@@ -415,10 +415,20 @@ const Analytics = () => {
       map[i.name].revenue += i.price * i.quantity;
     });
     return Object.entries(map)
-      .map(([name, { qty, revenue }]) => ({ name, qty, revenue }))
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 10);
-  }, [orderItems]);
+      .map(([name, { qty, revenue }]) => ({
+        name,
+        qty,
+        revenue,
+        category: itemCategoryMap[name] || "—",
+        margin: costMap[name]?.margin ?? null,
+      }));
+  }, [orderItems, itemCategoryMap, costMap]);
+
+  const topItemKPI = useMemo(() => {
+    return [...topItems].sort((a, b) => b.qty - a.qty)[0] ?? null;
+  }, [topItems]);
+
+  const topItemsByRevenue = useMemo(() => [...topItems].sort((a, b) => b.revenue - a.revenue).slice(0, 10), [topItems]);
 
   // ─── Staff Performance ───
   const staffPerf = useMemo(() => {
@@ -457,11 +467,109 @@ const Analytics = () => {
     return hourMap.filter((h) => h.orders > 0 || (h.hour >= 8 && h.hour <= 23));
   }, [billedOrders]);
 
+  // ─── Peak hour info ───
+  const peakHourValue = useMemo(() => {
+    if (!peakHours.length) return null;
+    return peakHours.reduce((max, h) => (h.orders > max.orders ? h : max), peakHours[0]);
+  }, [peakHours]);
+
+  // ─── Daily Payment Summary (per-day cash/upi/card totals) ───
+  const dailyPaymentSummary = useMemo(() => {
+    const days = eachDayOfInterval({ start: from, end: to });
+    return days.map((d) => {
+      const dayBills = billedOrders.filter((o) => isSameDay(new Date(o.created_at), d));
+      const cash = dayBills.filter((o) => o.payment_method === "cash").reduce((s, o) => s + Number(o.total), 0);
+      const upi = dayBills.filter((o) => o.payment_method === "upi").reduce((s, o) => s + Number(o.total), 0);
+      const card = dayBills.filter((o) => o.payment_method === "card").reduce((s, o) => s + Number(o.total), 0);
+      const other = dayBills.filter((o) => !["cash", "upi", "card"].includes(o.payment_method)).reduce((s, o) => s + Number(o.total), 0);
+      return {
+        date: format(d, "dd MMM"),
+        cash, upi, card, other,
+        total: cash + upi + card + other,
+        orders: dayBills.length,
+      };
+    }).filter((r) => r.orders > 0).reverse();
+  }, [billedOrders, from, to]);
+
   // ─── Discount Stats ───
   const discountedOrders = useMemo(() => billedOrders.filter((o) => Number(o.discount_percent) > 0), [billedOrders]);
   const avgDiscount = discountedOrders.length > 0
     ? discountedOrders.reduce((s, o) => s + Number(o.discount_percent), 0) / discountedOrders.length
     : 0;
+
+  // ─── Items table sort + search state ───
+  const [itemSearch, setItemSearch] = useState("");
+  const [itemSort, setItemSort] = useState<{ key: "qty" | "revenue" | "margin" | "name" | "category"; dir: "asc" | "desc" }>({ key: "revenue", dir: "desc" });
+  const sortedItems = useMemo(() => {
+    const filtered = topItems.filter((i) => i.name.toLowerCase().includes(itemSearch.toLowerCase()));
+    const dir = itemSort.dir === "asc" ? 1 : -1;
+    return [...filtered].sort((a, b) => {
+      const av = a[itemSort.key] as any;
+      const bv = b[itemSort.key] as any;
+      if (av === null || av === undefined) return 1;
+      if (bv === null || bv === undefined) return -1;
+      if (typeof av === "string") return av.localeCompare(bv) * dir;
+      return (av - bv) * dir;
+    });
+  }, [topItems, itemSearch, itemSort]);
+
+  function toggleSort(key: typeof itemSort.key) {
+    setItemSort((s) => s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "desc" });
+  }
+
+  // ─── Export handlers ───
+  const rangeLabel = DATE_RANGES.find((d) => d.value === range)?.label ?? range;
+  function exportPdf() {
+    const doc = generatePdfReport({
+      title: "Business Analytics",
+      hotelName: hotelInfo?.name,
+      subtitle: hotelInfo?.address || "",
+      periodLabel: rangeLabel,
+      summary: [
+        { label: "Revenue", value: fmtINR(totalRevenue + counterTotal) },
+        { label: "Orders", value: String(billedOrders.length + (counterOrders ?? []).length) },
+        { label: "Avg Bill", value: fmtINR(avgOrderValue) },
+        { label: "Top Item", value: topItemKPI?.name?.slice(0, 18) ?? "—" },
+      ],
+      tables: [
+        { title: "Top Selling Items", head: ["#", "Item", "Category", "Qty", "Revenue", "Margin %"],
+          body: topItemsByRevenue.map((it, i) => [
+            String(i + 1), it.name, it.category, String(it.qty), fmtINR(it.revenue),
+            it.margin !== null ? `${it.margin.toFixed(0)}%` : "—",
+          ]),
+        },
+        { title: "Daily Payment Summary", head: ["Date", "Cash", "UPI", "Card", "Total", "Orders"],
+          body: dailyPaymentSummary.map((d) => [d.date, fmtINR(d.cash), fmtINR(d.upi), fmtINR(d.card), fmtINR(d.total), String(d.orders)]),
+        },
+        { title: "Staff Performance", head: ["Staff", "Orders", "Revenue"],
+          body: staffPerf.map((s) => [s.name, String(s.orders), fmtINR(s.revenue)]),
+        },
+      ],
+    });
+    downloadPdf(doc, `analytics-${format(new Date(), "yyyyMMdd-HHmm")}.pdf`);
+  }
+
+  function exportCsv() {
+    const rows: (string | number)[][] = [];
+    rows.push(["Business Analytics"]);
+    rows.push([`Period: ${rangeLabel}`, `Hotel: ${hotelInfo?.name ?? ""}`]);
+    rows.push([]);
+    rows.push(["Revenue", fmtINR(totalRevenue + counterTotal)]);
+    rows.push(["Orders", billedOrders.length + (counterOrders ?? []).length]);
+    rows.push(["Avg Bill", fmtINR(avgOrderValue)]);
+    rows.push(["Top Item", topItemKPI?.name ?? "—"]);
+    rows.push([]);
+    rows.push(["Top Selling Items"]);
+    rows.push(["#", "Item", "Category", "Qty", "Revenue", "Margin %"]);
+    topItemsByRevenue.forEach((it, i) => rows.push([
+      i + 1, it.name, it.category, it.qty, it.revenue, it.margin !== null ? Number(it.margin.toFixed(1)) : "—",
+    ]));
+    rows.push([]);
+    rows.push(["Daily Payment Summary"]);
+    rows.push(["Date", "Cash", "UPI", "Card", "Other", "Total", "Orders"]);
+    dailyPaymentSummary.forEach((d) => rows.push([d.date, d.cash, d.upi, d.card, d.other, d.total, d.orders]));
+    downloadCSV(`analytics-${format(new Date(), "yyyyMMdd-HHmm")}.csv`, rows);
+  }
 
   const isLoading = ordersLoading;
 
