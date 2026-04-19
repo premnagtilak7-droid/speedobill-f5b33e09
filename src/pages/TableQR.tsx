@@ -117,7 +117,7 @@ const TableQR = () => {
   };
 
   const shareQR = async (table: TableInfo) => {
-    const url = getOrderUrl(table.id);
+    const url = getOrderUrl(table);
     if (navigator.share) {
       try { await navigator.share({ title: `Table ${table.table_number} - Order`, url }); } catch {}
     } else {
@@ -184,7 +184,7 @@ const TableQR = () => {
                   <div className="bg-white rounded-xl p-3 inline-block mx-auto ring-1 ring-border/30">
                     <QRCodeSVG
                       id={`qr-${table.id}`}
-                      value={getOrderUrl(table.id)}
+                      value={getOrderUrl(table)}
                       size={120}
                       level="M"
                       includeMargin={false}
