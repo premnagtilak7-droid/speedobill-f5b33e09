@@ -112,14 +112,14 @@ const OrderHistory = () => {
       billed_at: o.billed_at,
       table_number: tableMap.get(o.table_id) || 0,
       waiter_id: o.waiter_id,
-      waiter_name: waiterMap.get(o.waiter_id) || "Unknown",
+      waiter_name: waiterMap.get(o.waiter_id) || "Staff",
       order_source: o.order_source || "dine-in",
       items: itemsMap.get(o.id) || [],
     }));
 
     setOrders(pageNum === 0 ? enriched : (prev) => [...prev, ...enriched]);
     setLoading(false);
-  }, [hotelId, selectedDate, role, user]);
+  }, [hotelId, rangeKey, selectedDate, role, user]);
 
   useEffect(() => {
     if (!hotelId) return;
@@ -207,12 +207,24 @@ const OrderHistory = () => {
             {role === "waiter" ? "My Bills" : "Order History"}
           </h1>
           <p className="text-muted-foreground mt-1">
-            {role === "waiter" ? "Your bills for the selected date" : "View all orders by date"}
+            {role === "waiter" ? "Your bills for the selected period" : "View orders across the selected period"}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <CalendarDays className="h-4 w-4 text-muted-foreground" />
-          <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="w-auto" />
+          <Select value={rangeKey} onValueChange={(v) => setRangeKey(v as RangeKey)}>
+            <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="7days">Last 7 Days</SelectItem>
+              <SelectItem value="30days">Last 30 Days</SelectItem>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="custom">Custom Date</SelectItem>
+            </SelectContent>
+          </Select>
+          {rangeKey === "custom" && (
+            <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="w-auto" />
+          )}
         </div>
       </div>
 
@@ -229,7 +241,7 @@ const OrderHistory = () => {
       ) : orders.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <ScrollText className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p>No orders found for {format(new Date(selectedDate), "dd MMM yyyy")}</p>
+          <p>No orders found for the selected period</p>
         </div>
       ) : (
         <div className="space-y-3">
