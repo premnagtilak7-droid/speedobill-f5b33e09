@@ -129,6 +129,45 @@ export function useRoleNotifications() {
     return () => { supabase.removeChannel(channel); };
   }, [hotelId, role, user?.id]);
 
+  // ── Waiter: new KOT assigned to me (table assignment) ──
+  useEffect(() => {
+    if (!hotelId || !user || role !== "waiter") return;
+    const channel = supabase
+      .channel(`waiter-assigned-notif-${hotelId}-${Date.now()}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "kot_tickets", filter: `hotel_id=eq.${hotelId}` },
+        async (payload) => {
+          const kot = payload.new as any;
+          if (kot.assigned_waiter_id !== user.id) return;
+          const { data: tbl } = await supabase
+            .from("restaurant_tables")
+            .select("table_number")
+            .eq("id", kot.table_id)
+            .maybeSingle();
+          const tableNum = tbl?.table_number || "?";
+          playSoftDing();
+          if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+            navigator.vibrate?.([80, 40, 80]);
+          }
+          sendBrowserNotif(
+            "📋 Table Assigned",
+            `Table ${tableNum} assigned to you`,
+            `assigned-${kot.id}`
+          );
+          pushNotification({
+            id: `assigned-${kot.id}`,
+            title: "Table Assigned",
+            body: `Table ${tableNum} assigned to you`,
+            type: "order",
+            createdAt: Date.now(),
+          });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [hotelId, role, user?.id]);
+
   // ── Waiter: order marked "ready" ──
   useEffect(() => {
     if (!hotelId || !user || (role !== "waiter" && role !== "owner" && role !== "manager")) return;
