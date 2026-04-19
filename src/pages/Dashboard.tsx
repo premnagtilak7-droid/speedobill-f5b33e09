@@ -308,7 +308,8 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Subscription Status Card */}
+      {/* Quick Bill Search */}
+      {hotelId && <QuickBillSearch hotelId={hotelId} />}
       {(() => {
         const formattedExpiry = expiresAt
           ? new Date(expiresAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
@@ -449,11 +450,15 @@ const Dashboard = () => {
               </div>
             </div>
           );
-        })}
       </div>
 
+      {/* Today at a Glance */}
+      {hotelId && <TodayAtAGlance hotelId={hotelId} />}
 
-      {/* Low Stock */}
+      {/* Birthday Alerts (only renders if there are upcoming birthdays) */}
+      {hotelId && role === "owner" && <BirthdayAlerts hotelId={hotelId} />}
+
+
       {role === "owner" && lowStockItems.length > 0 && (
         <div className="rounded-xl p-4 animate-pop-in"
           style={{ background: "hsl(var(--card))", border: "1px solid rgba(245,158,11,0.2)" }}
@@ -579,6 +584,9 @@ const Dashboard = () => {
           })}
         </div>
       </div>
+
+      {/* Recent Activity Feed */}
+      {hotelId && <RecentActivityFeed hotelId={hotelId} />}
     </div>
   );
 };
