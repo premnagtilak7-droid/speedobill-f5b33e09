@@ -119,9 +119,32 @@ const LoyaltySettings = () => {
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Crown className="h-6 w-6 text-primary" /> Loyalty Program
         </h1>
-        <Badge variant={config.enabled ? "default" : "secondary"} className="text-sm">
+        <Badge
+          className={`text-sm ${
+            config.enabled
+              ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/40"
+              : "bg-destructive/20 text-destructive border-destructive/40"
+          }`}
+          variant="outline"
+        >
           {config.enabled ? "✅ Active" : "❌ Disabled"}
         </Badge>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-3">
+        <Card className="glass-card">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">Enrolled customers</p>
+            <p className="text-2xl font-bold mt-1">{enrolledCount}</p>
+          </CardContent>
+        </Card>
+        <Card className="glass-card">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">Rewards redeemed (this month)</p>
+            <p className="text-2xl font-bold mt-1">{redeemedThisMonth}</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Master Switch */}
