@@ -23,6 +23,24 @@ interface DemoLeadLite {
   created_at: string;
 }
 
+interface PendingKotsRow {
+  hotel_id: string;
+  hotel_name: string;
+  count: number;
+}
+interface InactiveWaiterRow {
+  user_id: string;
+  full_name: string;
+  hotel_name: string;
+}
+interface StuckBillRow {
+  order_id: string;
+  hotel_id: string;
+  hotel_name: string;
+  table_number: number | null;
+  minutes_pending: number;
+}
+
 interface Props {
   hotels: HotelLite[];
   profiles: ProfileLite[];
@@ -31,6 +49,9 @@ interface Props {
   totalRevenue: number;
   onNavigate: (tab: string) => void;
   onContactLead?: (lead: DemoLeadLite) => void;
+  pendingKotsByHotel?: PendingKotsRow[];
+  inactiveWaiters?: InactiveWaiterRow[];
+  stuckBills?: StuckBillRow[];
 }
 
 type AlertItem = {
@@ -49,7 +70,10 @@ const SEV_STYLE = {
   info:     { color: "#3B82F6", bg: "rgba(59,130,246,0.08)", border: "rgba(59,130,246,0.35)", label: "Info",     icon: Info },
 };
 
-export function AdminAlertsPanel({ hotels, profiles, demoLeads, contactedLeadIds, totalRevenue, onNavigate, onContactLead }: Props) {
+export function AdminAlertsPanel({
+  hotels, profiles, demoLeads, contactedLeadIds, totalRevenue, onNavigate, onContactLead,
+  pendingKotsByHotel = [], inactiveWaiters = [], stuckBills = [],
+}: Props) {
   const [dismissed, setDismissed] = useState<string[]>([]);
 
   const alerts = useMemo<AlertItem[]>(() => {
