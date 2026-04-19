@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { ChefHat } from "lucide-react";
 import { toast } from "sonner";
+import { writeAudit } from "@/lib/audit";
 import TableMapSkeleton from "@/components/skeletons/TableMapSkeleton";
 
 /* ────────── types ────────── */

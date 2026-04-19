@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { writeAudit } from "@/lib/audit";
 import { ImagePlus, X, Loader2, Plus, Trash2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 
