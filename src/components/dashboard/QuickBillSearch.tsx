@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, forwardRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, Receipt, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ interface BillResult {
   customer_name?: string;
 }
 
-const QuickBillSearch = ({ hotelId }: Props) => {
+const QuickBillSearch = forwardRef<HTMLDivElement, Props>(({ hotelId }, _ref) => {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -190,6 +190,8 @@ const QuickBillSearch = ({ hotelId }: Props) => {
       )}
     </div>
   );
-};
+});
+
+QuickBillSearch.displayName = "QuickBillSearch";
 
 export default QuickBillSearch;

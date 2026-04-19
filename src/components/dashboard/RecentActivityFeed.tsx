@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, forwardRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Activity, ShoppingBag, Receipt, UserCircle, Package, Bell } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -16,7 +16,7 @@ interface Props {
   hotelId: string;
 }
 
-const RecentActivityFeed = ({ hotelId }: Props) => {
+const RecentActivityFeed = forwardRef<HTMLDivElement, Props>(({ hotelId }, _ref) => {
   const [items, setItems] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [seenIds, setSeenIds] = useState<Set<string>>(new Set());
@@ -207,6 +207,8 @@ const RecentActivityFeed = ({ hotelId }: Props) => {
       )}
     </div>
   );
-};
+});
+
+RecentActivityFeed.displayName = "RecentActivityFeed";
 
 export default RecentActivityFeed;

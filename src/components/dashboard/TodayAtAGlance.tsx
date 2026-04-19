@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Sparkles, Flame, Trophy, CreditCard, Users } from "lucide-react";
 
@@ -15,7 +15,7 @@ interface Glance {
   staffOnDuty: number;
 }
 
-const TodayAtAGlance = ({ hotelId }: Props) => {
+const TodayAtAGlance = forwardRef<HTMLDivElement, Props>(({ hotelId }, _ref) => {
   const [data, setData] = useState<Glance>({
     peakHour: "—",
     topItem: null,
@@ -208,6 +208,8 @@ const TodayAtAGlance = ({ hotelId }: Props) => {
       )}
     </div>
   );
-};
+});
+
+TodayAtAGlance.displayName = "TodayAtAGlance";
 
 export default TodayAtAGlance;
