@@ -29,35 +29,35 @@ interface ChefProfile { user_id: string; full_name: string | null; }
 const formatCurrency = (v: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(v);
 
-/* Stroke-only table styles using semantic status tokens */
-const tableStyles: Record<string, { border: string; dot: string; statusText: string; label: string; bg: string }> = {
+/* Status colors per spec: Empty=green, Occupied=orange, Reserved=blue, Cleaning=yellow */
+const tableStyles: Record<string, { stripe: string; dot: string; pill: string; label: string; glow: string }> = {
   empty: {
-    border: "border-table-empty",
-    dot: "bg-table-empty",
-    statusText: "text-table-empty",
+    stripe: "bg-emerald-500",
+    dot: "bg-emerald-400",
+    pill: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
     label: "Empty",
-    bg: "bg-table-empty/15 dark:bg-table-empty/12",
+    glow: "hover:shadow-[0_8px_24px_-6px_hsl(142_71%_45%/0.35)]",
   },
   occupied: {
-    border: "border-table-occupied",
-    dot: "bg-table-occupied",
-    statusText: "text-table-occupied",
+    stripe: "bg-primary",
+    dot: "bg-primary",
+    pill: "bg-primary/15 text-primary border border-primary/30",
     label: "Occupied",
-    bg: "bg-table-occupied/10 dark:bg-table-occupied/12",
+    glow: "hover:shadow-[0_8px_24px_-6px_hsl(var(--primary)/0.45)]",
   },
   reserved: {
-    border: "border-table-reserved",
-    dot: "bg-table-reserved",
-    statusText: "text-table-reserved",
+    stripe: "bg-sky-500",
+    dot: "bg-sky-400",
+    pill: "bg-sky-500/15 text-sky-400 border border-sky-500/30",
     label: "Reserved",
-    bg: "bg-table-reserved/10 dark:bg-table-reserved/12",
+    glow: "hover:shadow-[0_8px_24px_-6px_hsl(217_91%_60%/0.35)]",
   },
   cleaning: {
-    border: "border-table-cleaning",
-    dot: "bg-table-cleaning",
-    statusText: "text-table-cleaning",
+    stripe: "bg-amber-500",
+    dot: "bg-amber-400",
+    pill: "bg-amber-500/15 text-amber-400 border border-amber-500/30",
     label: "Cleaning",
-    bg: "bg-table-cleaning/12 dark:bg-table-cleaning/14",
+    glow: "hover:shadow-[0_8px_24px_-6px_hsl(45_93%_47%/0.35)]",
   },
 };
 
