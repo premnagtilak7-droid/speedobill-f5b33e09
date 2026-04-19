@@ -5,9 +5,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollText, Clock, ChevronDown, ChevronUp, CalendarDays, Printer, MessageCircle, Share2 } from "lucide-react";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import { toast } from "sonner";
+
+type RangeKey = "today" | "7days" | "30days" | "all" | "custom";
 
 const SOURCE_BADGE: Record<string, { bg: string; text: string; label: string }> = {
   "dine-in": { bg: "rgba(59,130,246,0.15)", text: "#3B82F6", label: "Dine-In" },
@@ -35,6 +38,7 @@ const PAGE_SIZE = 30;
 const OrderHistory = () => {
   const { hotelId, role, user } = useAuth();
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
+  const [rangeKey, setRangeKey] = useState<RangeKey>("30days");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -46,17 +50,25 @@ const OrderHistory = () => {
     if (!hotelId) return;
     setLoading(true);
 
-    const startOfDay = `${selectedDate}T00:00:00.000Z`;
-    const endOfDay = `${selectedDate}T23:59:59.999Z`;
-
     let query = supabase
       .from("orders")
       .select("id, status, total, created_at, billed_at, table_id, waiter_id, order_source")
       .eq("hotel_id", hotelId)
-      .gte("created_at", startOfDay)
-      .lte("created_at", endOfDay)
       .order("created_at", { ascending: false })
       .range(pageNum * PAGE_SIZE, (pageNum + 1) * PAGE_SIZE - 1);
+
+    if (rangeKey === "today") {
+      const today = new Date().toISOString().split("T")[0];
+      query = query.gte("created_at", `${today}T00:00:00.000Z`).lte("created_at", `${today}T23:59:59.999Z`);
+    } else if (rangeKey === "7days") {
+      query = query.gte("created_at", subDays(new Date(), 7).toISOString());
+    } else if (rangeKey === "30days") {
+      query = query.gte("created_at", subDays(new Date(), 30).toISOString());
+    } else if (rangeKey === "custom") {
+      query = query
+        .gte("created_at", `${selectedDate}T00:00:00.000Z`)
+        .lte("created_at", `${selectedDate}T23:59:59.999Z`);
+    }
 
     if (role === "waiter" && user) {
       query = query.eq("waiter_id", user.id);
