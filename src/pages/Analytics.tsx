@@ -586,25 +586,44 @@ const Analytics = () => {
             <p className="text-sm text-muted-foreground">Business insights & performance metrics</p>
           </div>
         </div>
-        <Select value={range} onValueChange={(v) => setRange(v as DateRange)}>
-          <SelectTrigger className="w-[180px] gap-2">
-            <CalendarDays className="h-4 w-4 text-muted-foreground" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {DATE_RANGES.map((d) => (
-              <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select value={range} onValueChange={(v) => setRange(v as DateRange)}>
+            <SelectTrigger className="w-[160px] gap-2">
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DATE_RANGES.map((d) => (
+                <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button size="sm" variant="outline" onClick={exportCsv}><FileSpreadsheet className="h-4 w-4" /> CSV</Button>
+          <Button size="sm" onClick={exportPdf}><Download className="h-4 w-4" /> PDF</Button>
+        </div>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard title="Total Revenue" value={fmtCurrency(totalRevenue + counterTotal)} icon={IndianRupee} change={pctChange(totalRevenue, prevRevenue)} loading={isLoading} />
         <StatCard title="Total Orders" value={billedOrders.length + (counterOrders ?? []).length} icon={ShoppingCart} change={pctChange(billedOrders.length, prevBilled.length)} loading={isLoading} />
-        <StatCard title="Avg Order Value" value={fmtCurrency(avgOrderValue)} icon={Receipt} change={pctChange(avgOrderValue, prevAvg)} loading={isLoading} />
-        <StatCard title="Net Profit" value={fmtCurrency(netProfit)} icon={TrendingUp} loading={isLoading} />
+        <StatCard title="Avg Bill Value" value={fmtCurrency(avgOrderValue)} icon={Receipt} change={pctChange(avgOrderValue, prevAvg)} loading={isLoading} />
+        <Card className="border-border/50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Top Selling Item</p>
+              <div className="p-1.5 rounded-lg bg-primary/10"><Trophy className="h-4 w-4 text-primary" /></div>
+            </div>
+            {topItemKPI ? (
+              <>
+                <p className="text-lg font-bold truncate">{topItemKPI.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{topItemKPI.qty} sold · {fmtCurrency(topItemKPI.revenue)}</p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">No sales yet</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Secondary Stats */}
