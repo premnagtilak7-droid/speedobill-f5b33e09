@@ -257,11 +257,76 @@ const Analytics = () => {
     enabled: !!hotelId,
   });
 
+  // ─── Menu items + recipes + purchases (for COGS / profit margin) ───
+  const { data: menuItems } = useQuery({
+    queryKey: ["analytics-menu", hotelId],
+    queryFn: async () => {
+      if (!hotelId) return [];
+      const { data, error } = await supabase
+        .from("menu_items")
+        .select("id, name, price, category")
+        .eq("hotel_id", hotelId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!hotelId,
+  });
+
+  const { data: recipes } = useQuery({
+    queryKey: ["analytics-recipes", hotelId],
+    queryFn: async () => {
+      if (!hotelId) return [];
+      const { data, error } = await supabase
+        .from("recipes")
+        .select("menu_item_id, ingredient_id, quantity_required")
+        .eq("hotel_id", hotelId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!hotelId,
+  });
+
+  const { data: purchases } = useQuery({
+    queryKey: ["analytics-purchases", hotelId],
+    queryFn: async () => {
+      if (!hotelId) return [];
+      const { data, error } = await supabase
+        .from("purchase_logs")
+        .select("ingredient_id, unit_price, quantity")
+        .eq("hotel_id", hotelId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!hotelId,
+  });
+
+  const { data: hotelInfo } = useQuery({
+    queryKey: ["analytics-hotel", hotelId],
+    queryFn: async () => {
+      if (!hotelId) return null;
+      const { data } = await supabase.from("hotels").select("name, address").eq("id", hotelId).maybeSingle();
+      return data;
+    },
+    enabled: !!hotelId,
+  });
+
   const staffMap = useMemo(() => {
     const m = new Map<string, string>();
     (profiles ?? []).forEach((p) => m.set(p.user_id, p.full_name || "Unknown"));
     return m;
   }, [profiles]);
+
+  // Per-item cost & margin from recipes + purchase history
+  const costMap = useMemo(() => {
+    if (!menuItems?.length) return {};
+    return estimateMenuItemCosts(menuItems as any, recipes ?? [], purchases ?? []);
+  }, [menuItems, recipes, purchases]);
+
+  const itemCategoryMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    (menuItems ?? []).forEach((mi) => { m[mi.name] = mi.category; });
+    return m;
+  }, [menuItems]);
 
   // ═══════════════ COMPUTED DATA ═══════════════
 
