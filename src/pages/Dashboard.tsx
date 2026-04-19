@@ -13,6 +13,8 @@ import { useIncomingOrders } from "@/hooks/useIncomingOrders";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import RestaurantIllustration from "@/components/dashboard/RestaurantIllustration";
+import LowStockMiniChart from "@/components/dashboard/LowStockMiniChart";
 
 interface LowStockItem {
   name: string;
