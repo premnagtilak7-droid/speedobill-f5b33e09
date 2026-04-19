@@ -5,9 +5,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { FileText, CalendarDays, Printer, MessageCircle, Share2, IndianRupee, Clock, ChevronDown, ChevronUp } from "lucide-react";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
+
+type RangeKey = "today" | "7days" | "30days" | "all" | "custom";
 
 interface BilledOrder {
   id: string;
@@ -25,6 +28,7 @@ const BillingHistory = () => {
   const { hotelId } = useAuth();
   const [orders, setOrders] = useState<BilledOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rangeKey, setRangeKey] = useState<RangeKey>("30days");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [hotelInfo, setHotelInfo] = useState<{ name: string; address: string; phone: string; tax_percent: number; gst_enabled: boolean } | null>(null);
@@ -32,18 +36,31 @@ const BillingHistory = () => {
   const fetchBills = useCallback(async () => {
     if (!hotelId) return;
     setLoading(true);
-    const startOfDay = `${selectedDate}T00:00:00.000Z`;
-    const endOfDay = `${selectedDate}T23:59:59.999Z`;
 
-    const { data: ordersData } = await supabase
+    let query = supabase
       .from("orders")
       .select("id, total, created_at, billed_at, table_id, waiter_id, payment_method, discount_percent")
       .eq("hotel_id", hotelId)
       .eq("status", "billed")
       .not("billed_at", "is", null)
-      .gte("billed_at", startOfDay)
-      .lte("billed_at", endOfDay)
-      .order("billed_at", { ascending: false });
+      .order("billed_at", { ascending: false })
+      .limit(500);
+
+    if (rangeKey === "today") {
+      const today = new Date().toISOString().split("T")[0];
+      query = query.gte("billed_at", `${today}T00:00:00.000Z`).lte("billed_at", `${today}T23:59:59.999Z`);
+    } else if (rangeKey === "7days") {
+      query = query.gte("billed_at", subDays(new Date(), 7).toISOString());
+    } else if (rangeKey === "30days") {
+      query = query.gte("billed_at", subDays(new Date(), 30).toISOString());
+    } else if (rangeKey === "custom") {
+      query = query
+        .gte("billed_at", `${selectedDate}T00:00:00.000Z`)
+        .lte("billed_at", `${selectedDate}T23:59:59.999Z`);
+    }
+    // "all" → no extra filter
+
+    const { data: ordersData } = await query;
 
     if (!ordersData || ordersData.length === 0) {
       setOrders([]);
@@ -83,7 +100,7 @@ const BillingHistory = () => {
 
     setOrders(enriched);
     setLoading(false);
-  }, [hotelId, selectedDate]);
+  }, [hotelId, rangeKey, selectedDate]);
 
   useEffect(() => {
     if (hotelId) {
@@ -179,9 +196,21 @@ const BillingHistory = () => {
           </h1>
           <p className="text-sm text-muted-foreground mt-1">All completed bills with thermal-style receipts</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <CalendarDays className="h-4 w-4 text-muted-foreground" />
-          <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="w-auto" />
+          <Select value={rangeKey} onValueChange={(v) => setRangeKey(v as RangeKey)}>
+            <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="7days">Last 7 Days</SelectItem>
+              <SelectItem value="30days">Last 30 Days</SelectItem>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="custom">Custom Date</SelectItem>
+            </SelectContent>
+          </Select>
+          {rangeKey === "custom" && (
+            <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="w-auto" />
+          )}
         </div>
       </div>
 
@@ -217,7 +246,7 @@ const BillingHistory = () => {
       ) : orders.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <FileText className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">No bills generated for {format(new Date(selectedDate), "dd MMM yyyy")}</p>
+          <p className="text-sm">No bills found for the selected period</p>
         </div>
       ) : (
         <div className="space-y-3">

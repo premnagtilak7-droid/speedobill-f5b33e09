@@ -46,10 +46,11 @@ const metricGradients = [
 ];
 
 const Dashboard = () => {
-  const { role, hotelId } = useAuth();
+  const { role, hotelId, user } = useAuth();
   const navigate = useNavigate();
   const { incomingCount } = useIncomingOrders();
   const { status: subStatus, daysLeft, plan: subPlan, expiresAt } = useSubscription();
+  const [ownerName, setOwnerName] = useState<string>("");
   const [todayEarnings, setTodayEarnings] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
@@ -66,6 +67,19 @@ const Dashboard = () => {
   const [counterSalesToday, setCounterSalesToday] = useState(0);
   const [counterBillsToday, setCounterBillsToday] = useState(0);
   const [topCounterWaiter, setTopCounterWaiter] = useState<CounterWaiterStat | null>(null);
+
+  // Fetch logged-in user's display name from profiles
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from("profiles").select("full_name, email").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => {
+        const fallback = user.email ? user.email.split("@")[0] : "";
+        const name = (data?.full_name || "").trim() || fallback;
+        // Use just the first name for a friendly greeting
+        const first = name.split(/\s+/)[0];
+        if (first) setOwnerName(first.charAt(0).toUpperCase() + first.slice(1));
+      });
+  }, [user?.id, user?.email]);
 
   useEffect(() => {
     if (!hotelId) return;
@@ -187,7 +201,7 @@ const Dashboard = () => {
     return () => { supabase.removeChannel(channel); };
   }, [hotelId, role]);
 
-  const userName = "there";
+  const userName = ownerName || "there";
 
   const quickStats = [
     { label: "Today's Sale", value: `₹${todayEarnings.toFixed(0)}`, icon: IndianRupee, trend: "+12%" as string | null, up: true },
