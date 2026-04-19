@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useIncomingOrders, stopTitleFlash } from "@/hooks/useIncomingOrders";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Bell, Check, Clock, ShoppingCart, X, QrCode, CheckCircle2, XCircle } from "lucide-react";
+import { Bell, Check, Clock, ShoppingCart, X, QrCode, CheckCircle2, XCircle, type LucideIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -197,7 +197,7 @@ function StatPill({
 }: {
   label: string;
   value: number;
-  icon: React.ComponentType<{ className?: string; size?: number }>;
+  icon: LucideIcon;
   accent: string;
 }) {
   return (
