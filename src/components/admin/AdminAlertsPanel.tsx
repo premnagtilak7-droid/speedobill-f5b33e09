@@ -218,7 +218,7 @@ export function AdminAlertsPanel({
     }
 
     return list.filter(a => !dismissed.includes(a.id));
-  }, [hotels, profiles, demoLeads, contactedLeadIds, totalRevenue, dismissed, onNavigate, onContactLead]);
+  }, [hotels, profiles, demoLeads, contactedLeadIds, totalRevenue, dismissed, onNavigate, onContactLead, pendingKotsByHotel, inactiveWaiters, stuckBills]);
 
   const grouped = {
     critical: alerts.filter(a => a.severity === "critical"),
