@@ -56,6 +56,7 @@ const Dashboard = () => {
   const [activeTables, setActiveTables] = useState(0);
   const [totalTables, setTotalTables] = useState(0);
   const [pendingKOT, setPendingKOT] = useState(0);
+  const [stuckBillsCount, setStuckBillsCount] = useState(0);
   const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([]);
   const [tableTurnover, setTableTurnover] = useState<string>("—");
   const [noShows, setNoShows] = useState(0);
@@ -101,6 +102,11 @@ const Dashboard = () => {
         setLowStockItems(low);
       }
       if (kotRes.data) setPendingKOT(kotRes.data.length);
+      // Stuck bills: active orders open >45m
+      const cutoff45 = new Date(Date.now() - 45 * 60 * 1000).toISOString();
+      const { data: stuckRows } = await supabase
+        .from("orders").select("id").eq("hotel_id", hotelId).eq("status", "active").lt("created_at", cutoff45);
+      setStuckBillsCount((stuckRows || []).length);
       if (totalRevenueRes.data) setTotalRevenue(totalRevenueRes.data.reduce((sum, o) => sum + Number(o.total), 0));
       if (ingredientsRes.data) {
         const allIngs = ingredientsRes.data as LowStockIngredient[];
