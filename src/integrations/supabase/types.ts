@@ -742,17 +742,22 @@ export type Database = {
         Row: {
           address: string | null
           auto_cleanup_after_bill: boolean
+          business_type: string | null
           counter_billing_enabled: boolean
           created_at: string
           easy_void_enabled: boolean
           gst_enabled: boolean
+          gst_number: string | null
           hotel_code: string
           id: string
           logo_url: string | null
           name: string
+          operating_hours: Json | null
           owner_id: string
           phone: string | null
           receipt_footer: string | null
+          receipt_header_style: string
+          show_gst_on_receipt: boolean
           subscription_expiry: string | null
           subscription_start_date: string | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
@@ -766,17 +771,22 @@ export type Database = {
         Insert: {
           address?: string | null
           auto_cleanup_after_bill?: boolean
+          business_type?: string | null
           counter_billing_enabled?: boolean
           created_at?: string
           easy_void_enabled?: boolean
           gst_enabled?: boolean
+          gst_number?: string | null
           hotel_code?: string
           id?: string
           logo_url?: string | null
           name?: string
+          operating_hours?: Json | null
           owner_id: string
           phone?: string | null
           receipt_footer?: string | null
+          receipt_header_style?: string
+          show_gst_on_receipt?: boolean
           subscription_expiry?: string | null
           subscription_start_date?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
@@ -790,17 +800,22 @@ export type Database = {
         Update: {
           address?: string | null
           auto_cleanup_after_bill?: boolean
+          business_type?: string | null
           counter_billing_enabled?: boolean
           created_at?: string
           easy_void_enabled?: boolean
           gst_enabled?: boolean
+          gst_number?: string | null
           hotel_code?: string
           id?: string
           logo_url?: string | null
           name?: string
+          operating_hours?: Json | null
           owner_id?: string
           phone?: string | null
           receipt_footer?: string | null
+          receipt_header_style?: string
+          show_gst_on_receipt?: boolean
           subscription_expiry?: string | null
           subscription_start_date?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
@@ -1314,6 +1329,7 @@ export type Database = {
           id: string
           is_active: boolean
           join_date: string | null
+          notification_preferences: Json
           notification_volume: number | null
           phone: string | null
           photo_url: string | null
@@ -1336,6 +1352,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           join_date?: string | null
+          notification_preferences?: Json
           notification_volume?: number | null
           phone?: string | null
           photo_url?: string | null
@@ -1358,6 +1375,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           join_date?: string | null
+          notification_preferences?: Json
           notification_volume?: number | null
           phone?: string | null
           photo_url?: string | null
