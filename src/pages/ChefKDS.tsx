@@ -153,7 +153,7 @@ const ChefKDS = () => {
     setOrderSourceMap(sMap);
 
     setLoading(false);
-  }, [hotelId, user?.id]);
+  }, [hotelId, user?.id, soundOn]);
 
   const fetchIngredients = useCallback(async () => {
     if (!hotelId) return;
@@ -205,6 +205,22 @@ const ChefKDS = () => {
     const { error } = await supabase.from("kot_tickets").update(updates).eq("id", kotId);
     if (error) { toast.error(error.message); return; }
     toast.success(`Marked as ${newStatus}`);
+    await fetchData();
+  };
+
+  const markAllReady = async () => {
+    if (preparing.length === 0) return;
+    if (!confirm(`Mark all ${preparing.length} cooking orders as READY?`)) return;
+    setBulkBusy(true);
+    const nowIso = new Date().toISOString();
+    const ids = preparing.map(t => t.id);
+    const { error } = await supabase
+      .from("kot_tickets")
+      .update({ status: "ready", ready_at: nowIso })
+      .in("id", ids);
+    setBulkBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`✅ ${ids.length} orders marked ready`);
     await fetchData();
   };
 
