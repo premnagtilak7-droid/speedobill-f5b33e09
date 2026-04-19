@@ -66,9 +66,9 @@ const TableQR = () => {
           ctx.fillStyle = "#666666";
           ctx.fillText(table.section_name || "", 256, 520);
           ctx.fillText("Scan to order", 256, 548);
-          ctx.font = "bold 14px sans-serif";
+          ctx.font = "bold 16px sans-serif";
           ctx.fillStyle = "#F97316";
-          ctx.fillText("Powered by SpeedoBill", 256, 600);
+          ctx.fillText(hotelName || "Scan to Order", 256, 600);
         }
         canvas.toBlob((blob) => {
           if (blob) resolve(blob);
