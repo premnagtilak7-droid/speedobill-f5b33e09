@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Save, Trash2, Layers, GripVertical, RotateCcw } from "lucide-react";
+import { Plus, Trash2, Layers, GripVertical, RotateCcw, MousePointer2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -25,11 +25,18 @@ interface Section {
   color: string;
 }
 
-const statusColors: Record<string, string> = {
-  empty: "border-table-empty bg-table-empty/20 dark:bg-table-empty/15",
-  occupied: "border-table-occupied bg-table-occupied/20 dark:bg-table-occupied/15",
-  reserved: "border-table-reserved bg-table-reserved/20 dark:bg-table-reserved/15",
-  cleaning: "border-table-cleaning bg-table-cleaning/20 dark:bg-table-cleaning/15",
+const statusBorder: Record<string, string> = {
+  empty: "border-table-empty",
+  occupied: "border-table-occupied",
+  reserved: "border-table-reserved",
+  cleaning: "border-table-cleaning",
+};
+
+const statusBg: Record<string, string> = {
+  empty: "bg-table-empty/10",
+  occupied: "bg-table-occupied/10",
+  reserved: "bg-table-reserved/10",
+  cleaning: "bg-table-cleaning/10",
 };
 
 const statusDots: Record<string, string> = {
@@ -50,12 +57,10 @@ const LayoutDesigner = () => {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-  // Add table dialog
   const [addOpen, setAddOpen] = useState(false);
   const [newCapacity, setNewCapacity] = useState("4");
   const [newSection, setNewSection] = useState("Main");
 
-  // Add section dialog
   const [sectionOpen, setSectionOpen] = useState(false);
   const [sectionName, setSectionName] = useState("");
   const [sectionColor, setSectionColor] = useState("#F97316");
@@ -73,14 +78,12 @@ const LayoutDesigner = () => {
     ]);
     const rawTables = tablesRes.data || [];
 
-    // Auto-assign grid positions to any table sitting at (0,0) so they don't stack
     const cols = 6;
     const gap = 110;
     const offsetX = 30;
     const offsetY = 30;
     const needsPosition = rawTables.filter(t => (t.position_x ?? 0) === 0 && (t.position_y ?? 0) === 0);
     if (needsPosition.length > 1) {
-      // sort tables to keep numbering order
       const sorted = [...rawTables].sort((a, b) => a.table_number - b.table_number);
       const updates: { id: string; position_x: number; position_y: number }[] = [];
       let idx = 0;
@@ -96,13 +99,12 @@ const LayoutDesigner = () => {
         return t;
       });
       setTables(positioned);
-      // persist in background
       void Promise.all(
         updates.map(u =>
           supabase.from("restaurant_tables")
             .update({ position_x: u.position_x, position_y: u.position_y })
-            .eq("id", u.id)
-        )
+            .eq("id", u.id),
+        ),
       );
     } else {
       setTables(rawTables);
@@ -113,7 +115,6 @@ const LayoutDesigner = () => {
 
   useEffect(() => { void fetchData(); }, [fetchData]);
 
-  // Real-time subscription
   useEffect(() => {
     if (!hotelId) return;
     const ch = supabase
@@ -126,7 +127,6 @@ const LayoutDesigner = () => {
   const filteredTables = activeSection === "All" ? tables : tables.filter(t => t.section_name === activeSection);
   const allSectionNames = ["All", ...new Set(sections.map(s => s.name)), ...new Set(tables.map(t => t.section_name))].filter((v, i, a) => a.indexOf(v) === i);
 
-  // Drag handlers
   const handlePointerDown = (e: React.PointerEvent, table: TableItem) => {
     e.preventDefault();
     const rect = canvasRef.current?.getBoundingClientRect();
@@ -142,8 +142,8 @@ const LayoutDesigner = () => {
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!draggingId || !canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(rect.width - 80, e.clientX - rect.left - dragOffset.x));
-    const y = Math.max(0, Math.min(rect.height - 80, e.clientY - rect.top - dragOffset.y));
+    const x = Math.max(0, Math.min(rect.width - 88, e.clientX - rect.left - dragOffset.x));
+    const y = Math.max(0, Math.min(rect.height - 88, e.clientY - rect.top - dragOffset.y));
     setTables(prev => prev.map(t => t.id === draggingId ? { ...t, position_x: Math.round(x), position_y: Math.round(y) } : t));
   };
 
@@ -219,45 +219,56 @@ const LayoutDesigner = () => {
     <div className="p-4 md:p-6 space-y-4">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center ring-1 ring-primary/30">
             <Layers className="h-6 w-6 text-primary" />
-            Layout Designer
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Drag tables to arrange your floor plan</p>
+          </div>
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold leading-tight">Floor Plan</h1>
+            <p className="text-sm text-muted-foreground">Drag tables to arrange your floor plan — changes save automatically</p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={resetPositions} className="glass-card border-border/50">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={resetPositions}>
             <RotateCcw className="h-4 w-4 mr-1" /> Reset Grid
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setSectionOpen(true)} className="glass-card border-border/50">
+          <Button variant="outline" size="sm" onClick={() => setSectionOpen(true)}>
             <Layers className="h-4 w-4 mr-1" /> Add Section
           </Button>
-          <Button size="sm" onClick={() => setAddOpen(true)} className="gradient-btn-primary">
-            <Plus className="h-4 w-4 mr-1" /> Add Table
+          <Button size="sm" onClick={() => setAddOpen(true)} className="gap-1">
+            <Plus className="h-4 w-4" /> Add Table
           </Button>
         </div>
       </div>
 
-      {/* Section tabs */}
+      {/* Section chips */}
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {allSectionNames.map(name => (
-          <button
-            key={name}
-            onClick={() => setActiveSection(name)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-              activeSection === name
-                ? "gradient-btn-primary text-white shadow-md"
-                : "glass-card text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {name}
-          </button>
-        ))}
+        {allSectionNames.map(name => {
+          const active = activeSection === name;
+          const count = name === "All" ? tables.length : tables.filter(t => t.section_name === name).length;
+          return (
+            <button
+              key={name}
+              onClick={() => setActiveSection(name)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap border ${
+                active
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-card text-muted-foreground border-border/60 hover:border-primary/40 hover:text-foreground"
+              }`}
+            >
+              {name}
+              <span className={`ml-1.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full text-[10px] ${
+                active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 text-xs text-muted-foreground glass-card px-4 py-2.5 w-fit">
+      <div className="flex items-center gap-4 text-xs text-muted-foreground rounded-xl border border-border/60 bg-card px-4 py-2.5 w-fit">
         {[
           { label: "Available", color: "bg-table-empty" },
           { label: "Occupied", color: "bg-table-occupied" },
@@ -274,46 +285,50 @@ const LayoutDesigner = () => {
       {/* Canvas */}
       <div
         ref={canvasRef}
-        className="relative w-full glass-panel overflow-hidden"
-        style={{ minHeight: 500, height: "calc(100vh - 300px)" }}
+        className="relative w-full rounded-2xl border border-border/60 bg-muted/10 overflow-hidden shadow-inner"
+        style={{ minHeight: 500, height: "calc(100vh - 320px)" }}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
-        {/* Grid pattern */}
-        <div className="absolute inset-0 opacity-[0.06] dark:opacity-[0.04]" style={{
-          backgroundImage: "radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
-        }} />
+        {/* Subtle dot grid */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.18] dark:opacity-[0.12]"
+          style={{
+            backgroundImage: "radial-gradient(circle, hsl(var(--muted-foreground) / 0.5) 1px, transparent 1px)",
+            backgroundSize: "22px 22px",
+          }}
+        />
 
         {filteredTables.map(table => {
-          const style = statusColors[table.status] || statusColors.empty;
+          const border = statusBorder[table.status] || statusBorder.empty;
+          const bg = statusBg[table.status] || statusBg.empty;
           const dot = statusDots[table.status] || statusDots.empty;
+          const isDragging = draggingId === table.id;
           return (
             <motion.div
               key={table.id}
-              className={`absolute cursor-grab active:cursor-grabbing select-none border-2 rounded-xl ${style} glass-card hover-lift flex flex-col items-center justify-center transition-shadow`}
+              className={`group absolute select-none rounded-2xl border-2 ${border} ${bg} bg-card/80 backdrop-blur-sm flex flex-col items-center justify-center cursor-grab active:cursor-grabbing transition-shadow ${
+                isDragging ? "shadow-2xl shadow-primary/30 scale-105" : "shadow-sm hover:shadow-md"
+              }`}
               style={{
                 left: table.position_x,
                 top: table.position_y,
-                width: 90,
-                height: 80,
-                zIndex: draggingId === table.id ? 50 : 1,
+                width: 92,
+                height: 88,
+                zIndex: isDragging ? 50 : 1,
               }}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: isDragging ? 1.05 : 1, opacity: 1 }}
               onPointerDown={e => handlePointerDown(e, table)}
             >
-              <GripVertical className="h-3 w-3 text-muted-foreground/40 absolute top-1 right-1" />
-              <span className="text-lg font-bold text-foreground">{table.table_number}</span>
-              <span className="text-[10px] text-muted-foreground">{table.capacity} seats</span>
-              <div className="flex items-center gap-1 mt-0.5">
-                <span className={`w-2 h-2 rounded-full ${dot}`} />
-                <span className="text-[9px] capitalize text-muted-foreground">{table.status}</span>
-              </div>
+              <GripVertical className="h-3 w-3 text-muted-foreground/30 absolute top-1 left-1" />
+              <span className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full ${dot} ring-2 ring-card`} />
+              <span className="text-2xl font-bold text-foreground leading-none">{table.table_number}</span>
+              <span className="text-[10px] text-muted-foreground mt-1">{table.capacity} seats</span>
+              <span className="text-[9px] uppercase tracking-wide text-muted-foreground/80 mt-0.5">{table.status}</span>
               <button
                 onClick={(e) => { e.stopPropagation(); deleteTable(table.id); }}
-                className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity shadow-sm"
-                style={{ opacity: 0.7 }}
+                className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <Trash2 className="h-3 w-3" />
               </button>
@@ -322,23 +337,27 @@ const LayoutDesigner = () => {
         })}
 
         {filteredTables.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-            <p>No tables in this section. Click "Add Table" to begin.</p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
+            <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
+              <MousePointer2 className="h-7 w-7 text-primary" />
+            </div>
+            <p className="font-semibold text-foreground">Drag tables to arrange your floor plan</p>
+            <p className="text-sm text-muted-foreground mt-1">Click "Add Table" above to get started.</p>
           </div>
         )}
       </div>
 
       {/* Add Table Dialog */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="glass-panel border-border/40">
+        <DialogContent>
           <DialogHeader><DialogTitle>Add New Table</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">Capacity</label>
+              <label className="text-sm font-medium mb-1 block">Capacity</label>
               <Input value={newCapacity} onChange={e => setNewCapacity(e.target.value)} type="number" min="1" placeholder="4" />
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">Section</label>
+              <label className="text-sm font-medium mb-1 block">Section</label>
               <Select value={newSection} onValueChange={setNewSection}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -348,25 +367,25 @@ const LayoutDesigner = () => {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={addTable} className="w-full gradient-btn-primary">Add Table</Button>
+            <Button onClick={addTable} className="w-full">Add Table</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Add Section Dialog */}
       <Dialog open={sectionOpen} onOpenChange={setSectionOpen}>
-        <DialogContent className="glass-panel border-border/40">
+        <DialogContent>
           <DialogHeader><DialogTitle>Add Floor Section</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">Section Name</label>
+              <label className="text-sm font-medium mb-1 block">Section Name</label>
               <Input value={sectionName} onChange={e => setSectionName(e.target.value)} placeholder="e.g. Terrace, Hall, Patio" />
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">Color</label>
+              <label className="text-sm font-medium mb-1 block">Color</label>
               <input type="color" value={sectionColor} onChange={e => setSectionColor(e.target.value)} className="w-full h-10 rounded-lg cursor-pointer" />
             </div>
-            <Button onClick={addSection} className="w-full gradient-btn-primary">Create Section</Button>
+            <Button onClick={addSection} className="w-full">Create Section</Button>
           </div>
         </DialogContent>
       </Dialog>
