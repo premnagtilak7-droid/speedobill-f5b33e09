@@ -3,13 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChefHat, Clock, CheckCircle2, Flame, AlertTriangle, RefreshCw, Package, XCircle, Filter, UtensilsCrossed } from "lucide-react";
+import { ChefHat, Clock, CheckCircle2, Flame, AlertTriangle, RefreshCw, Package, XCircle, Filter, UtensilsCrossed, Volume2, VolumeX, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { playLoudBell } from "@/lib/notification-sounds";
 import { useRoleNotifications } from "@/hooks/useRoleNotifications";
+import { safeStorage } from "@/lib/safe-storage";
 
 interface KotTicket {
   id: string;
@@ -47,12 +48,23 @@ interface MenuItem {
 }
 
 const URGENT_MS = 15 * 60 * 1000;
+const RUSH_THRESHOLD = 5;
+
+const SOURCE_BADGE: Record<string, { label: string; cls: string }> = {
+  "dine-in":   { label: "Dine-In",   cls: "bg-blue-500/15 text-blue-500 border-blue-500/30" },
+  "online-qr": { label: "QR",        cls: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30" },
+  takeaway:    { label: "Takeaway",  cls: "bg-purple-500/15 text-purple-500 border-purple-500/30" },
+  delivery:    { label: "Delivery",  cls: "bg-fuchsia-500/15 text-fuchsia-500 border-fuchsia-500/30" },
+  swiggy:      { label: "Swiggy",    cls: "bg-orange-500/15 text-orange-500 border-orange-500/30" },
+  zomato:      { label: "Zomato",    cls: "bg-red-500/15 text-red-500 border-red-500/30" },
+};
 
 const ChefKDS = () => {
   const { hotelId, user } = useAuth();
   const [tickets, setTickets] = useState<KotTicket[]>([]);
   const [items, setItems] = useState<Record<string, KotItem[]>>({});
   const [tableMap, setTableMap] = useState<Record<string, number>>({});
+  const [orderSourceMap, setOrderSourceMap] = useState<Record<string, string>>({});
   const [waiterMap, setWaiterMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(Date.now());
@@ -62,9 +74,14 @@ const ChefKDS = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [ingredientsLoading, setIngredientsLoading] = useState(false);
   const [togglingItem, setTogglingItem] = useState<string | null>(null);
+  const [soundOn, setSoundOn] = useState<boolean>(() => safeStorage.getItem("kds_sound_on") !== "0");
+  const [flashKey, setFlashKey] = useState(0);
+  const [bulkBusy, setBulkBusy] = useState(false);
   const prevIdsRef = useRef<Set<string>>(new Set());
 
   useRoleNotifications();
+
+  useEffect(() => { safeStorage.setItem("kds_sound_on", soundOn ? "1" : "0"); }, [soundOn]);
 
   // Live clock
   useEffect(() => {
