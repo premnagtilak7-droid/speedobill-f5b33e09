@@ -722,23 +722,30 @@ const Tables = () => {
   };
 
   /* ════════════════════ RENDER ════════════════════ */
+  const pageBg = isDark ? "#0A0F1E" : "#F8FAFC";
+  const cardBg = isDark ? "#131C35" : "#FFFFFF";
+  const cardBorder = isDark ? "#1E2D4A" : "#E2E8F0";
+  const cardShadow = isDark ? "none" : "0 2px 8px rgba(0,0,0,0.08)";
+  const headingColor = isDark ? "#FFFFFF" : "#0F172A";
+  const subTextColor = isDark ? "#94A3B8" : "#64748B";
+
   return (
     <div
       className="mx-auto max-w-7xl space-y-4 p-4 md:p-6 -m-4 md:-m-6 min-h-[calc(100vh-4rem)]"
-      style={{ background: "#0A0F1E" }}
+      style={{ background: pageBg }}
     >
       {/* header */}
       <div className="flex flex-wrap items-center justify-between gap-3 pt-4 md:pt-6 px-4 md:px-6">
         <div>
-          <h1 className="text-xl font-bold text-white">Tables</h1>
-          <p className="text-sm text-slate-400">Tap a table to order · Cleaning → tap to mark empty</p>
+          <h1 className="text-xl font-bold" style={{ color: headingColor }}>Tables</h1>
+          <p className="text-sm" style={{ color: subTextColor }}>Tap a table to order · Cleaning → tap to mark empty</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
             size="sm"
             variant="outline"
             onClick={() => setReserveOpen(true)}
-            className="border-orange-500/60 bg-transparent text-orange-400 hover:bg-orange-500/10 hover:text-orange-300"
+            className="border-orange-500/60 bg-transparent text-orange-500 hover:bg-orange-500/10 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300"
           >
             <CalendarCheck className="mr-1 h-4 w-4" /> Reserve
           </Button>
@@ -759,8 +766,8 @@ const Tables = () => {
         {counterBillingEnabled && (
           <div className="flex items-center justify-between rounded-2xl border border-orange-500/30 bg-orange-500/10 px-4 py-3">
             <div className="flex items-center gap-2">
-              <Store className="h-4 w-4 text-orange-400" />
-              <span className="text-sm font-medium text-white">Counter Billing is ON — use Counter for takeaway orders</span>
+              <Store className="h-4 w-4 text-orange-500 dark:text-orange-400" />
+              <span className="text-sm font-medium" style={{ color: headingColor }}>Counter Billing is ON — use Counter for takeaway orders</span>
             </div>
             <Button
               size="sm"
@@ -775,16 +782,16 @@ const Tables = () => {
         {/* status legend */}
         <div
           className="flex flex-wrap gap-3 rounded-2xl border px-4 py-3"
-          style={{ background: "#131C35", borderColor: "#1E2D4A" }}
+          style={{ background: cardBg, borderColor: cardBorder, boxShadow: cardShadow }}
         >
           {Object.entries(tableStyles).map(([status, s]) => (
             <div
               key={status}
               className="flex items-center gap-2 rounded-full border px-3 py-1 text-xs"
-              style={{ background: s.tint, borderColor: `${s.stripe}55` }}
+              style={{ background: `${s.stripe}1a`, borderColor: `${s.stripe}55` }}
             >
               <span className="h-2.5 w-2.5 rounded-full" style={{ background: s.stripe }} />
-              <span className="font-medium text-white">{s.label}</span>
+              <span className="font-medium" style={{ color: headingColor }}>{s.label}</span>
             </div>
           ))}
         </div>
@@ -795,26 +802,27 @@ const Tables = () => {
         ) : tables.length === 0 ? (
           <div
             className="py-16 text-center rounded-2xl border"
-            style={{ background: "#131C35", borderColor: "#1E2D4A" }}
+            style={{ background: cardBg, borderColor: cardBorder, boxShadow: cardShadow }}
           >
-            <Users className="mx-auto mb-3 h-12 w-12 text-slate-500 opacity-50" />
-            <p className="text-sm text-slate-400">No tables yet. Add some to get started.</p>
+            <Users className="mx-auto mb-3 h-12 w-12 opacity-50" style={{ color: subTextColor }} />
+            <p className="text-sm" style={{ color: subTextColor }}>No tables yet. Add some to get started.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {tables.map((table) => {
               const s = tableStyles[table.status] || tableStyles.empty;
+              const tint = isDark ? s.tintDark : s.tintLight;
               return (
                 <div
                   key={table.id}
                   onClick={() => table.status === "cleaning" ? markCleaningDone(table.id) : void loadTableWorkspace(table)}
                   className={`group relative cursor-pointer rounded-2xl overflow-hidden border transition-all duration-200 hover:-translate-y-[2px] ${s.glow} animate-pop-in`}
-                  style={{ background: s.tint, borderColor: "#1E2D4A" }}
+                  style={{ background: tint, borderColor: cardBorder, boxShadow: cardShadow }}
                 >
                   <div className="h-[3px] w-full" style={{ background: s.stripe }} />
                   <div className="p-4 text-center">
-                    <p className="text-[28px] font-extrabold text-white leading-none tnum">{table.table_number}</p>
-                    <div className="mt-2 flex items-center justify-center gap-1 text-xs text-slate-400">
+                    <p className="text-[28px] font-extrabold leading-none tnum" style={{ color: headingColor }}>{table.table_number}</p>
+                    <div className="mt-2 flex items-center justify-center gap-1 text-xs" style={{ color: subTextColor }}>
                       <Users className="h-3 w-3" /> {table.capacity}
                     </div>
                     <span className={`mt-2.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${s.pill} ${s.pillText}`}>
@@ -822,7 +830,7 @@ const Tables = () => {
                       {s.label}
                     </span>
                     {table.status === "cleaning" && (
-                      <div className="mt-2 flex items-center justify-center gap-1 text-[10px] font-semibold text-amber-300">
+                      <div className="mt-2 flex items-center justify-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-300">
                         <Check className="h-3 w-3" /> Tap to mark empty
                       </div>
                     )}
