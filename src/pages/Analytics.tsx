@@ -724,11 +724,12 @@ const Analytics = () => {
           </CardContent>
         </Card>
 
-        {/* Peak Hours */}
+        {/* Orders by Hour with peak highlight */}
         <Card className="border-border/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" /> Peak Hours
+              <Clock className="h-4 w-4 text-primary" /> Orders by Hour
+              {peakHourValue && <Badge variant="secondary" className="ml-auto">Peak: {peakHourValue.label}</Badge>}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -738,7 +739,11 @@ const Analytics = () => {
                 <XAxis dataKey="label" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip content={<CustomTooltip prefix="" />} />
-                <Bar dataKey="orders" name="Orders" fill={COLORS.warning} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="orders" name="Orders" radius={[4, 4, 0, 0]}>
+                  {peakHours.map((h, i) => (
+                    <Cell key={i} fill={peakHourValue && h.hour === peakHourValue.hour ? COLORS.primary : COLORS.warning} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
