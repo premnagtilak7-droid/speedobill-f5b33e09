@@ -29,35 +29,35 @@ interface ChefProfile { user_id: string; full_name: string | null; }
 const formatCurrency = (v: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(v);
 
-/* Stroke-only table styles using semantic status tokens */
-const tableStyles: Record<string, { border: string; dot: string; statusText: string; label: string; bg: string }> = {
+/* Status colors per spec: Empty=green, Occupied=orange, Reserved=blue, Cleaning=yellow */
+const tableStyles: Record<string, { stripe: string; dot: string; pill: string; label: string; glow: string }> = {
   empty: {
-    border: "border-table-empty",
-    dot: "bg-table-empty",
-    statusText: "text-table-empty",
+    stripe: "bg-emerald-500",
+    dot: "bg-emerald-400",
+    pill: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
     label: "Empty",
-    bg: "bg-table-empty/15 dark:bg-table-empty/12",
+    glow: "hover:shadow-[0_8px_24px_-6px_hsl(142_71%_45%/0.35)]",
   },
   occupied: {
-    border: "border-table-occupied",
-    dot: "bg-table-occupied",
-    statusText: "text-table-occupied",
+    stripe: "bg-primary",
+    dot: "bg-primary",
+    pill: "bg-primary/15 text-primary border border-primary/30",
     label: "Occupied",
-    bg: "bg-table-occupied/10 dark:bg-table-occupied/12",
+    glow: "hover:shadow-[0_8px_24px_-6px_hsl(var(--primary)/0.45)]",
   },
   reserved: {
-    border: "border-table-reserved",
-    dot: "bg-table-reserved",
-    statusText: "text-table-reserved",
+    stripe: "bg-sky-500",
+    dot: "bg-sky-400",
+    pill: "bg-sky-500/15 text-sky-400 border border-sky-500/30",
     label: "Reserved",
-    bg: "bg-table-reserved/10 dark:bg-table-reserved/12",
+    glow: "hover:shadow-[0_8px_24px_-6px_hsl(217_91%_60%/0.35)]",
   },
   cleaning: {
-    border: "border-table-cleaning",
-    dot: "bg-table-cleaning",
-    statusText: "text-table-cleaning",
+    stripe: "bg-amber-500",
+    dot: "bg-amber-400",
+    pill: "bg-amber-500/15 text-amber-400 border border-amber-500/30",
     label: "Cleaning",
-    bg: "bg-table-cleaning/12 dark:bg-table-cleaning/14",
+    glow: "hover:shadow-[0_8px_24px_-6px_hsl(45_93%_47%/0.35)]",
   },
 };
 
@@ -758,22 +758,33 @@ const Tables = () => {
           {tables.map((table) => {
             const s = tableStyles[table.status] || tableStyles.empty;
             return (
-              <div key={table.id}
+              <div
+                key={table.id}
                 onClick={() => table.status === "cleaning" ? markCleaningDone(table.id) : void loadTableWorkspace(table)}
-                className={`group relative cursor-pointer rounded-2xl border-2 ${s.border} ${s.bg} p-4 text-center shadow-sm hover-lift`}>
-                <p className="text-2xl font-extrabold text-foreground">{table.table_number}</p>
-                <div className="mt-1 flex items-center justify-center gap-1 text-xs text-muted-foreground">
-                  <Users className="h-3 w-3" /> {table.capacity}
-                </div>
-                <p className={`mt-1.5 text-[11px] font-semibold uppercase tracking-wider ${s.statusText}`}>{s.label}</p>
-                {table.status === "cleaning" && (
-                  <div className={`mt-2 flex items-center justify-center gap-1 text-xs font-bold ${s.statusText}`}>
-                    <Check className="h-3.5 w-3.5" /> Tap = Empty
+                className={`group relative cursor-pointer rounded-2xl overflow-hidden border border-border/60 bg-card transition-all duration-200 hover:-translate-y-[2px] ${s.glow} animate-pop-in`}
+              >
+                <div className={`h-1 w-full ${s.stripe}`} />
+                <div className="p-4 text-center">
+                  <p className="text-[28px] font-extrabold text-foreground leading-none tnum">{table.table_number}</p>
+                  <div className="mt-2 flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                    <Users className="h-3 w-3" /> {table.capacity}
                   </div>
-                )}
+                  <span className={`mt-2.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${s.pill}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
+                    {s.label}
+                  </span>
+                  {table.status === "cleaning" && (
+                    <div className="mt-2 flex items-center justify-center gap-1 text-[10px] font-semibold text-amber-400">
+                      <Check className="h-3 w-3" /> Tap to mark empty
+                    </div>
+                  )}
+                </div>
                 {isOwner && (
-                  <button onClick={(e) => { e.stopPropagation(); void deleteTable(table.id); }}
-                    className="absolute right-1.5 top-1.5 rounded-full bg-muted p-1 text-destructive opacity-0 transition-opacity group-hover:opacity-100 hover:bg-destructive/10">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); void deleteTable(table.id); }}
+                    className="absolute right-1.5 top-2.5 rounded-full bg-background/70 backdrop-blur p-1 text-destructive opacity-0 transition-opacity group-hover:opacity-100 hover:bg-destructive/15"
+                    aria-label="Delete table"
+                  >
                     <Trash2 className="h-3 w-3" />
                   </button>
                 )}

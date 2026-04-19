@@ -88,23 +88,24 @@
   }
 
   .dark {
-    --background: 240 33% 14%;
+    /* SpeedoBill Owner Dashboard — Deep Navy + Orange (spec: #0A0F1E / #131C35 / #1E2D4A / #F97316) */
+    --background: 225 51% 8%;          /* #0A0F1E */
     --foreground: 0 0% 98%;
 
-    --card: 222 39% 16%;
+    --card: 222 47% 14%;               /* #131C35 */
     --card-foreground: 0 0% 98%;
 
-    --popover: 222 39% 16%;
+    --popover: 222 47% 14%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 25 95% 53%;
+    --primary: 25 95% 53%;             /* #F97316 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 30% 22%;
-    --secondary-foreground: 0 0% 90%;
+    --secondary: 222 41% 18%;
+    --secondary-foreground: 0 0% 92%;
 
-    --muted: 222 30% 22%;
-    --muted-foreground: 222 15% 55%;
+    --muted: 222 41% 18%;
+    --muted-foreground: 220 14% 64%;
 
     --accent: 25 95% 53%;
     --accent-foreground: 0 0% 100%;
@@ -127,17 +128,17 @@
     --teal: 168 76% 42%;
     --orange: 25 95% 53%;
 
-    --border: 222 30% 22%;
-    --input: 222 30% 20%;
+    --border: 222 41% 21%;             /* #1E2D4A */
+    --input: 222 41% 18%;
     --ring: 25 95% 53%;
 
-    --sidebar-background: 240 33% 10%;
-    --sidebar-foreground: 0 0% 90%;
+    --sidebar-background: 225 51% 6%;
+    --sidebar-foreground: 0 0% 92%;
     --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 30% 20%;
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 222 30% 20%;
+    --sidebar-accent: 222 41% 16%;
+    --sidebar-accent-foreground: 0 0% 92%;
+    --sidebar-border: 222 41% 21%;
     --sidebar-ring: 25 95% 53%;
 
     --table-empty: 142 71% 45%;
@@ -145,8 +146,8 @@
     --table-reserved: 217 91% 60%;
     --table-cleaning: 45 93% 47%;
 
-    --glass: 222 39% 16%;
-    --glass-border: 222 30% 22%;
+    --glass: 222 47% 14%;
+    --glass-border: 222 41% 21%;
 
     --grad-orange: linear-gradient(135deg, #F97316, #EA580C);
     --grad-violet: linear-gradient(135deg, #F97316, #EA580C);
