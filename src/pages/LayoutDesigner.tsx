@@ -71,7 +71,42 @@ const LayoutDesigner = () => {
         .select("id, name, color")
         .eq("hotel_id", hotelId).order("sort_order"),
     ]);
-    setTables(tablesRes.data || []);
+    const rawTables = tablesRes.data || [];
+
+    // Auto-assign grid positions to any table sitting at (0,0) so they don't stack
+    const cols = 6;
+    const gap = 110;
+    const offsetX = 30;
+    const offsetY = 30;
+    const needsPosition = rawTables.filter(t => (t.position_x ?? 0) === 0 && (t.position_y ?? 0) === 0);
+    if (needsPosition.length > 1) {
+      // sort tables to keep numbering order
+      const sorted = [...rawTables].sort((a, b) => a.table_number - b.table_number);
+      const updates: { id: string; position_x: number; position_y: number }[] = [];
+      let idx = 0;
+      const positioned = sorted.map(t => {
+        if ((t.position_x ?? 0) === 0 && (t.position_y ?? 0) === 0) {
+          const x = (idx % cols) * gap + offsetX;
+          const y = Math.floor(idx / cols) * gap + offsetY;
+          idx++;
+          updates.push({ id: t.id, position_x: x, position_y: y });
+          return { ...t, position_x: x, position_y: y };
+        }
+        idx++;
+        return t;
+      });
+      setTables(positioned);
+      // persist in background
+      void Promise.all(
+        updates.map(u =>
+          supabase.from("restaurant_tables")
+            .update({ position_x: u.position_x, position_y: u.position_y })
+            .eq("id", u.id)
+        )
+      );
+    } else {
+      setTables(rawTables);
+    }
     setSections(sectionsRes.data || []);
     setLoading(false);
   }, [hotelId]);
