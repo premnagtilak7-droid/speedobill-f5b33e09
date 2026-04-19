@@ -241,27 +241,65 @@ const Dashboard = () => {
 
   return (
     <div className="p-5 md:p-6 space-y-5 max-w-[1400px] mx-auto">
-      {/* Welcome banner */}
-      <div
-        className="rounded-2xl p-5 md:p-6 relative overflow-hidden animate-pop-in"
-        style={{
-          background: "linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)",
-          border: "1px solid hsl(var(--primary) / 0.3)",
-        }}
-      >
-        <div className="absolute -top-10 -right-10 w-[200px] h-[200px] pointer-events-none"
-          style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.12), transparent 70%)" }}
-        />
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 relative z-10">
-          <div>
-            <h1 className="text-xl md:text-[22px] font-bold text-foreground">
-              Good {now.getHours() < 12 ? "morning" : now.getHours() < 17 ? "afternoon" : "evening"}, {userName} 👋
-            </h1>
-            <p className="text-[13px] text-muted-foreground mt-1">Here's what's happening at your canteen today</p>
-          </div>
-          <div className="text-right">
-            <p className="text-lg font-semibold text-muted-foreground/70 tnum">{timeStr}</p>
-            <p className="text-xs text-muted-foreground/50">{dateStr}</p>
+      {/* Welcome banner — gradient navy card with orange left rail + restaurant illustration */}
+      <div className="relative overflow-hidden rounded-2xl animate-pop-in shadow-[0_8px_40px_-12px_hsl(var(--primary)/0.25)]">
+        {/* Orange left accent rail */}
+        <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary" />
+        {/* Gradient background */}
+        <div
+          className="relative px-5 md:px-7 py-5 md:py-6"
+          style={{
+            background:
+              "linear-gradient(135deg, hsl(222 39% 16%) 0%, hsl(240 33% 10%) 100%)",
+            border: "1px solid hsl(var(--primary) / 0.18)",
+          }}
+        >
+          {/* Soft orange glow */}
+          <div
+            className="absolute -top-16 -right-10 w-[260px] h-[260px] pointer-events-none"
+            style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.18), transparent 70%)" }}
+          />
+          {/* Decorative SVG */}
+          <RestaurantIllustration className="hidden sm:block absolute right-3 bottom-0 h-[140px] w-auto opacity-90 pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-xl md:text-[24px] font-bold text-white tracking-tight">
+                Good {now.getHours() < 12 ? "morning" : now.getHours() < 17 ? "afternoon" : "evening"}, {userName} 👋
+              </h1>
+              <p className="text-[13px] text-white/60 mt-1">
+                Here's what's happening at your restaurant today
+              </p>
+              <div className="mt-3 flex items-center gap-2 flex-wrap">
+                {(() => {
+                  const planLabel =
+                    subStatus === "trial"
+                      ? "Free Trial"
+                      : subPlan
+                      ? subPlan.charAt(0).toUpperCase() + subPlan.slice(1) + " Plan"
+                      : "Free Plan";
+                  const tone =
+                    subStatus === "trial"
+                      ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                      : subPlan === "premium"
+                      ? "bg-violet-500/15 text-violet-300 border-violet-500/30"
+                      : subPlan === "basic"
+                      ? "bg-primary/15 text-primary border-primary/30"
+                      : "bg-white/5 text-white/60 border-white/10";
+                  return (
+                    <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${tone}`}>
+                      <Crown className="h-3 w-3" />
+                      {planLabel}
+                      {subStatus === "trial" && daysLeft !== null && ` · ${daysLeft}d left`}
+                    </span>
+                  );
+                })()}
+              </div>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-2xl font-bold text-white tnum leading-none">{timeStr}</p>
+              <p className="text-[11px] text-white/50 mt-1.5">{dateStr}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -368,36 +406,46 @@ const Dashboard = () => {
         return null;
       })()}
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
-        {quickStats.map((stat, i) => (
-          <div
-            key={stat.label}
-            className="rounded-xl overflow-hidden animate-pop-in glass-card hover-lift"
-            style={{
-              animationDelay: `${i * 40}ms`,
-            }}
-          >
-            <div className={`h-[2.5px] ${metricGradients[i]?.bar || "gradient-bar-violet"}`} />
-            <div className="px-3 py-2.5">
-              <div className="flex items-center justify-between mb-1.5">
-                <div className={`h-6 w-6 rounded-md flex items-center justify-center ${metricGradients[i]?.iconBg || "gradient-bar-violet"}`}>
-                  <stat.icon size={12} className="text-white" />
+      {/* Metric Cards — gradient top border, accent icon circle, big numeric, hover lift */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {quickStats.map((stat, i) => {
+          const a = accentByLabel[stat.label] ?? defaultAccent;
+          return (
+            <div
+              key={stat.label}
+              className={`group relative rounded-xl overflow-hidden animate-pop-in glass-card transition-all duration-200 hover:-translate-y-[3px] hover:${a.shadow}`}
+              style={{ animationDelay: `${i * 40}ms` }}
+            >
+              {/* Top gradient border (accent → transparent) */}
+              <div className={`h-[3px] w-full bg-gradient-to-r ${a.ring} to-transparent`} />
+              <div className="px-4 py-3.5">
+                <div className="flex items-start justify-between mb-3">
+                  <div
+                    className={`h-10 w-10 rounded-full flex items-center justify-center ${a.bg} ${a.text} ring-1 ring-inset ring-current/20 transition-shadow duration-200 group-hover:${a.shadow}`}
+                  >
+                    <stat.icon size={18} strokeWidth={2.25} />
+                  </div>
+                  {stat.trend && (
+                    <span
+                      className={`inline-flex items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        stat.up
+                          ? "bg-emerald-500/15 text-emerald-400"
+                          : "bg-destructive/15 text-destructive"
+                      }`}
+                    >
+                      {stat.up ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                      {stat.trend}
+                    </span>
+                  )}
                 </div>
-                {stat.trend && (
-                  <span className={`inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-                    stat.up ? "bg-emerald/[0.12] text-emerald" : "bg-destructive/[0.12] text-destructive"
-                  }`}>
-                    {stat.up ? <TrendingUp size={9} /> : <TrendingDown size={9} />}
-                    {stat.trend}
-                  </span>
-                )}
+                <p className="text-[26px] md:text-[30px] font-extrabold text-foreground tnum leading-none tracking-tight">
+                  {stat.value}
+                </p>
+                <p className="label-caps text-[10px] mt-2 tracking-wider">{stat.label}</p>
               </div>
-              <p className="text-lg md:text-xl font-bold text-foreground tnum leading-tight">{stat.value}</p>
-              <p className="label-caps text-[9px] mt-0.5 tracking-wider">{stat.label}</p>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
 
