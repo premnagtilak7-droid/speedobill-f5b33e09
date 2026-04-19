@@ -24,6 +24,26 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const action: string = body.action;
 
+    // ── 0. RESOLVE TABLE BY HOTEL + NUMBER (for /menu/:hotelId/:tableNumber URLs) ──
+    if (action === "resolve_table") {
+      const { hotel_id, table_number } = body;
+      if (!hotel_id || typeof hotel_id !== "string" || hotel_id.length < 30) {
+        return json({ error: "Invalid hotel_id" }, 400);
+      }
+      const tn = Number(table_number);
+      if (!Number.isFinite(tn) || tn <= 0) {
+        return json({ error: "Invalid table_number" }, 400);
+      }
+      const { data: t } = await admin
+        .from("restaurant_tables")
+        .select("id")
+        .eq("hotel_id", hotel_id)
+        .eq("table_number", tn)
+        .maybeSingle();
+      if (!t) return json({ error: "Table not found" }, 404);
+      return json({ table_id: t.id });
+    }
+
     // ── 1. GET TABLE + MENU ──
     if (action === "get_table_menu") {
       const tableId: string = body.table_id;
@@ -33,7 +53,7 @@ Deno.serve(async (req) => {
 
       const { data: table, error: tableErr } = await admin
         .from("restaurant_tables")
-        .select("id, table_number, hotel_id, status")
+        .select("id, table_number, hotel_id, status, section_name")
         .eq("id", tableId)
         .maybeSingle();
 
