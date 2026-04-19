@@ -35,6 +35,7 @@ import StaffPage from "./pages/StaffPage";
 import BillingHistory from "./pages/BillingHistory";
 import IntegrationsPage from "./pages/IntegrationsPage";
 import CustomersPage from "./pages/CustomersPage";
+const CustomerProfile = lazy(() => import("./pages/CustomerProfile"));
 import InventoryHub from "./pages/InventoryHub";
 
 // Lazy load remaining app pages — prefetch after initial render
@@ -208,6 +209,7 @@ const AppRoutes = () => {
           <Route path="/table-qr" element={<RoleGuard allowed={["owner", "manager"]}><TableQR /></RoleGuard>} />
           <Route path="/inventory-hub" element={<RoleGuard allowed={["owner", "manager"]}><PlanGuard featureName="Inventory Hub"><InventoryHub /></PlanGuard></RoleGuard>} />
           <Route path="/customers" element={<RoleGuard allowed={["owner", "manager"]}><CustomersPage /></RoleGuard>} />
+          <Route path="/customers/:id" element={<RoleGuard allowed={["owner", "manager"]}><CustomerProfile /></RoleGuard>} />
           <Route path="/daily-closing" element={<RoleGuard allowed={["owner", "manager"]}><DailyClosing /></RoleGuard>} />
           <Route path="/online-orders" element={<RoleGuard allowed={["owner", "manager"]}><OnlineOrders /></RoleGuard>} />
 
