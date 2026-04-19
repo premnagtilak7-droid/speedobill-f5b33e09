@@ -8,17 +8,34 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { writeAudit } from "@/lib/audit";
-import { Settings, Copy, Key, Shield, FileText, ExternalLink, Volume2, Upload, Image as ImageIcon, QrCode, Trash2 } from "lucide-react";
+import { Settings, Copy, Key, Shield, FileText, ExternalLink, Volume2, Upload, Image as ImageIcon, QrCode, Trash2, Clock, Bell, Receipt } from "lucide-react";
 import InstallAppPrompt from "@/components/InstallAppPrompt";
 import { useNavigate } from "react-router-dom";
 import { setNotificationVolume, getNotificationVolume, playLoudBell } from "@/lib/notification-sounds";
 import { convertToWebP } from "@/lib/image-utils";
+import OperatingHoursEditor, { DEFAULT_HOURS, type OperatingHours } from "@/components/settings/OperatingHoursEditor";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+
+const BUSINESS_TYPES = ["Restaurant", "Hotel", "Cafe", "Canteen", "Retail"] as const;
+const HEADER_STYLES = [
+  { value: "plain", label: "Plain" },
+  { value: "bold", label: "Bold" },
+  { value: "centered", label: "Centered & Bold" },
+] as const;
+
+interface NotificationPrefs {
+  daily_summary: boolean;
+  low_stock: boolean;
+  new_order: boolean;
+}
+
+const DEFAULT_NOTIF_PREFS: NotificationPrefs = { daily_summary: false, low_stock: true, new_order: false };
 
 const SettingsPage = () => {
   const { user, hotelId } = useAuth();
@@ -29,41 +46,71 @@ const SettingsPage = () => {
   const [licenseKey, setLicenseKey] = useState("");
   const [activating, setActivating] = useState(false);
 
+  // Hotel info
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
+  const [gstNumber, setGstNumber] = useState("");
+  const [businessType, setBusinessType] = useState<string>("Restaurant");
+
+  // Billing & tax
   const [taxPercent, setTaxPercent] = useState("5");
   const [gstEnabled, setGstEnabled] = useState(false);
   const [easyVoid, setEasyVoid] = useState(false);
   const [counterBilling, setCounterBilling] = useState(false);
   const [autoCleanup, setAutoCleanup] = useState(true);
-  const [volume, setVolume] = useState(getNotificationVolume());
+
+  // Branding & receipt
   const [logoUrl, setLogoUrl] = useState("");
   const [upiId, setUpiId] = useState("");
   const [receiptFooter, setReceiptFooter] = useState("Thank you! Visit again.");
+  const [showGstOnReceipt, setShowGstOnReceipt] = useState(true);
+  const [receiptHeaderStyle, setReceiptHeaderStyle] = useState<string>("bold");
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
+  // Operating hours
+  const [hours, setHours] = useState<OperatingHours>(DEFAULT_HOURS);
+
+  // Notification prefs
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(DEFAULT_NOTIF_PREFS);
+
+  // Sound volume
+  const [volume, setVolume] = useState(getNotificationVolume());
+
   useEffect(() => {
-    if (!hotelId) return;
+    if (!hotelId || !user) return;
     (async () => {
-      const { data } = await supabase.from("hotels").select("*").eq("id", hotelId).single();
+      const [hotelRes, profileRes] = await Promise.all([
+        supabase.from("hotels").select("*").eq("id", hotelId).single(),
+        supabase.from("profiles").select("notification_preferences").eq("user_id", user.id).maybeSingle(),
+      ]);
+      const data: any = hotelRes.data;
       if (data) {
         setHotel(data);
         setName(data.name);
         setAddress(data.address || "");
         setPhone(data.phone || "");
+        setGstNumber(data.gst_number || "");
+        setBusinessType(data.business_type || "Restaurant");
         setTaxPercent(String(data.tax_percent));
         setGstEnabled(data.gst_enabled);
         setEasyVoid(data.easy_void_enabled);
         setCounterBilling(data.counter_billing_enabled);
         setAutoCleanup(data.auto_cleanup_after_bill);
-        setLogoUrl((data as any).logo_url || "");
-        setUpiId((data as any).upi_id || "");
-        setReceiptFooter((data as any).receipt_footer || "Thank you! Visit again.");
+        setLogoUrl(data.logo_url || "");
+        setUpiId(data.upi_id || "");
+        setReceiptFooter(data.receipt_footer || "Thank you! Visit again.");
+        setShowGstOnReceipt(data.show_gst_on_receipt ?? true);
+        setReceiptHeaderStyle(data.receipt_header_style || "bold");
+        if (data.operating_hours && typeof data.operating_hours === "object") {
+          setHours({ ...DEFAULT_HOURS, ...(data.operating_hours as OperatingHours) });
+        }
       }
+      const prefs = (profileRes.data as any)?.notification_preferences;
+      if (prefs && typeof prefs === "object") setNotifPrefs({ ...DEFAULT_NOTIF_PREFS, ...prefs });
       setLoading(false);
     })();
-  }, [hotelId]);
+  }, [hotelId, user]);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -86,33 +133,71 @@ const SettingsPage = () => {
     setUploadingLogo(false);
   };
 
+  const validatePhone = (val: string): string | null => {
+    if (!val) return null;
+    const digits = val.replace(/\D/g, "");
+    if (digits.length < 7 || digits.length > 15) return "Phone must be 7–15 digits";
+    if (!/^[\d\s+\-()]{0,20}$/.test(val)) return "Phone contains invalid characters";
+    return null;
+  };
+
+  const validateGst = (val: string): string | null => {
+    if (!val) return null;
+    // Indian GSTIN format: 15 chars: 2 digits + 10 alphanumeric (PAN) + 1 digit + 1 letter + 1 alphanumeric
+    if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9A-Z]{2}$/.test(val.toUpperCase())) {
+      return "Invalid GSTIN (e.g. 27AABCS1234M1Z5)";
+    }
+    return null;
+  };
+
   const saveSettings = async () => {
-    if (!hotelId) return;
+    if (!hotelId || !user) return;
     const trimmedName = name.trim();
     const trimmedPhone = phone.trim();
+    const trimmedGst = gstNumber.trim().toUpperCase();
     const parsedTax = parseFloat(taxPercent);
+
     if (!trimmedName) { toast.error("Hotel name is required"); return; }
     if (trimmedName.length > 100) { toast.error("Hotel name too long (max 100 chars)"); return; }
-    if (trimmedPhone && !/^[\d\s+\-()]{0,20}$/.test(trimmedPhone)) { toast.error("Invalid phone number"); return; }
+    const phoneErr = validatePhone(trimmedPhone);
+    if (phoneErr) { toast.error(phoneErr); return; }
+    const gstErr = validateGst(trimmedGst);
+    if (gstErr) { toast.error(gstErr); return; }
     if (isNaN(parsedTax) || parsedTax < 0 || parsedTax > 100) { toast.error("Tax must be 0-100%"); return; }
     if (upiId.length > 100) { toast.error("UPI ID too long"); return; }
     if (receiptFooter.length > 200) { toast.error("Receipt footer too long (max 200 chars)"); return; }
+
     setSaving(true);
-    const { error } = await supabase.from("hotels").update({
-      name: trimmedName, address: address.trim(), phone: trimmedPhone,
-      tax_percent: parsedTax || 5,
-      gst_enabled: gstEnabled,
-      easy_void_enabled: easyVoid,
-      counter_billing_enabled: counterBilling,
-      auto_cleanup_after_bill: autoCleanup,
-      upi_id: upiId.trim(),
-      receipt_footer: receiptFooter.trim(),
-    } as any).eq("id", hotelId);
-    if (error) toast.error("Save failed: " + error.message);
-    else {
+
+    const [hotelUpd, profileUpd] = await Promise.all([
+      supabase.from("hotels").update({
+        name: trimmedName,
+        address: address.trim(),
+        phone: trimmedPhone,
+        gst_number: trimmedGst,
+        business_type: businessType,
+        tax_percent: parsedTax || 5,
+        gst_enabled: gstEnabled,
+        easy_void_enabled: easyVoid,
+        counter_billing_enabled: counterBilling,
+        auto_cleanup_after_bill: autoCleanup,
+        upi_id: upiId.trim(),
+        receipt_footer: receiptFooter.trim(),
+        show_gst_on_receipt: showGstOnReceipt,
+        receipt_header_style: receiptHeaderStyle,
+        operating_hours: hours,
+      } as any).eq("id", hotelId),
+      supabase.from("profiles").update({
+        notification_preferences: notifPrefs as any,
+      }).eq("user_id", user.id),
+    ]);
+
+    const err = hotelUpd.error || profileUpd.error;
+    if (err) {
+      toast.error("Save failed: " + err.message);
+    } else {
       toast.success("Settings saved!");
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user && hotelId) void writeAudit({
+      void writeAudit({
         hotelId, action: "settings_changed", performedBy: user.id,
         performerName: user.email || null,
         details: `Hotel settings updated (GST ${gstEnabled ? "on" : "off"}, tax ${parsedTax || 5}%)`,
@@ -125,16 +210,13 @@ const SettingsPage = () => {
     if (!licenseKey.trim() || !hotelId) return;
     setActivating(true);
     const { data: lic, error } = await supabase
-      .from("licenses")
-      .select("*")
+      .from("licenses").select("*")
       .eq("key_code", licenseKey.trim().toUpperCase())
-      .eq("is_used", false)
-      .maybeSingle();
+      .eq("is_used", false).maybeSingle();
 
     if (error || !lic) {
       toast.error("Invalid or already used license key");
-      setActivating(false);
-      return;
+      setActivating(false); return;
     }
 
     const now = new Date();
@@ -209,15 +291,44 @@ const SettingsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Hotel Name</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Sunrise Restaurant" />
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Phone</label>
-              <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <Input
+                type="tel"
+                inputMode="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="e.g. +91 98765 43210"
+              />
             </div>
             <div className="space-y-1 md:col-span-2">
               <label className="text-xs text-muted-foreground">Address</label>
-              <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+              <Input
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="e.g. 123 Main Street, Pune, Maharashtra"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">GST Number (GSTIN)</label>
+              <Input
+                value={gstNumber}
+                onChange={(e) => setGstNumber(e.target.value.toUpperCase())}
+                placeholder="e.g. 27AABCS1234M1Z5"
+                maxLength={15}
+                className="uppercase font-mono"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Business Type</label>
+              <Select value={businessType} onValueChange={setBusinessType}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {BUSINESS_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
@@ -231,7 +342,7 @@ const SettingsPage = () => {
           <div className="space-y-2">
             <label className="text-xs text-muted-foreground">Hotel Logo (shown on receipts)</label>
             <div className="flex items-center gap-4">
-              {logoUrl && <img src={logoUrl} alt="Logo" className="h-12 w-auto rounded border border-border object-contain" />}
+              {logoUrl && <img src={logoUrl} alt="Hotel logo" className="h-12 w-auto rounded border border-border object-contain" />}
               <label className="cursor-pointer">
                 <Button variant="outline" size="sm" asChild disabled={uploadingLogo}>
                   <span><Upload className="h-3.5 w-3.5 mr-1" />{uploadingLogo ? "Uploading..." : "Upload Logo"}</span>
@@ -248,8 +359,31 @@ const SettingsPage = () => {
           </div>
           {/* Footer Message */}
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">Custom Receipt Footer</label>
-            <Input placeholder="Thank you! Visit again." value={receiptFooter} onChange={(e) => setReceiptFooter(e.target.value)} />
+            <label className="text-xs text-muted-foreground flex items-center gap-1"><Receipt className="h-3 w-3" /> Receipt Footer Message</label>
+            <Input
+              placeholder="Thank you for dining with us!"
+              value={receiptFooter}
+              onChange={(e) => setReceiptFooter(e.target.value)}
+              maxLength={200}
+            />
+          </div>
+          {/* Header style */}
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Receipt Header Style</label>
+            <Select value={receiptHeaderStyle} onValueChange={setReceiptHeaderStyle}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {HEADER_STYLES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Show GST */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm">Show GST on receipt</p>
+              <p className="text-[10px] text-muted-foreground">Display GSTIN and tax breakdown on printed bills</p>
+            </div>
+            <Switch checked={showGstOnReceipt} onCheckedChange={setShowGstOnReceipt} />
           </div>
         </CardContent>
       </Card>
@@ -277,6 +411,46 @@ const SettingsPage = () => {
           <div className="flex items-center justify-between">
             <span className="text-sm">Auto-cleanup after bill</span>
             <Switch checked={autoCleanup} onCheckedChange={setAutoCleanup} />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Operating Hours */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2"><Clock className="h-4 w-4" /> Operating Hours</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <OperatingHoursEditor value={hours} onChange={setHours} />
+        </CardContent>
+      </Card>
+
+      {/* Notification Preferences */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2"><Bell className="h-4 w-4" /> Notification Preferences</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm">Email me daily summary</p>
+              <p className="text-[10px] text-muted-foreground">Sales & orders recap delivered each evening</p>
+            </div>
+            <Switch checked={notifPrefs.daily_summary} onCheckedChange={(v) => setNotifPrefs({ ...notifPrefs, daily_summary: v })} />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm">Email me when low stock</p>
+              <p className="text-[10px] text-muted-foreground">Alert when ingredients hit minimum threshold</p>
+            </div>
+            <Switch checked={notifPrefs.low_stock} onCheckedChange={(v) => setNotifPrefs({ ...notifPrefs, low_stock: v })} />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm">Email me when new order</p>
+              <p className="text-[10px] text-muted-foreground">Receive an email for each incoming order</p>
+            </div>
+            <Switch checked={notifPrefs.new_order} onCheckedChange={(v) => setNotifPrefs({ ...notifPrefs, new_order: v })} />
           </div>
         </CardContent>
       </Card>
@@ -374,7 +548,7 @@ const SettingsPage = () => {
                   try {
                     const { data: { session } } = await supabase.auth.getSession();
                     if (!session?.access_token) { toast.error("Not authenticated"); return; }
-                    const { data, error } = await supabase.functions.invoke("delete-account", {
+                    const { error } = await supabase.functions.invoke("delete-account", {
                       headers: { Authorization: `Bearer ${session.access_token}` },
                     });
                     if (error) throw error;
@@ -400,11 +574,7 @@ const SettingsPage = () => {
             <p className="text-sm font-semibold">Enjoying SpeedoBill?</p>
             <p className="text-xs text-muted-foreground">Leave us a review on the Play Store ⭐</p>
           </div>
-          <a
-            href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a href="#" target="_blank" rel="noopener noreferrer">
             <Button variant="outline" size="sm">Rate us</Button>
           </a>
         </CardContent>
