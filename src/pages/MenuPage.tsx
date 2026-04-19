@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Sparkles, Crown, Zap, UtensilsCrossed, X, Search as SearchIcon, LayoutGrid, Grid3X3 } from "lucide-react";
 import { toast } from "sonner";
 import { writeAudit } from "@/lib/audit";
-import { supabase as _sb } from "@/integrations/supabase/client"; // alias to avoid duplicate import
 import BulkMenuUpload from "@/components/menu/BulkMenuUpload";
 import MenuPageSkeleton from "@/components/skeletons/MenuPageSkeleton";
 import AiMenuScanner from "@/components/menu/AiMenuScanner";
