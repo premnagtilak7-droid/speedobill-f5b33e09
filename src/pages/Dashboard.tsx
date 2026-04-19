@@ -450,6 +450,7 @@ const Dashboard = () => {
               </div>
             </div>
           );
+        })}
       </div>
 
       {/* Today at a Glance */}
