@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Cake } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -27,7 +27,7 @@ const daysUntilBirthday = (birthdayIso: string): number => {
   return Math.round((next.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 };
 
-const BirthdayAlerts = ({ hotelId }: Props) => {
+const BirthdayAlerts = forwardRef<HTMLDivElement, Props>(({ hotelId }, _ref) => {
   const [bdays, setBdays] = useState<BdayCustomer[]>([]);
   const navigate = useNavigate();
 
@@ -91,6 +91,8 @@ const BirthdayAlerts = ({ hotelId }: Props) => {
       </div>
     </div>
   );
-};
+});
+
+BirthdayAlerts.displayName = "BirthdayAlerts";
 
 export default BirthdayAlerts;
