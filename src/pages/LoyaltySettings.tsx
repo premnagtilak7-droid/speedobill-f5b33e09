@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { writeAudit } from "@/lib/audit";
 import { Crown, Gift, Target, Banknote, Sparkles, Save } from "lucide-react";
 import { motion } from "framer-motion";
 import TopLoyaltyCustomers from "@/components/loyalty/TopLoyaltyCustomers";
