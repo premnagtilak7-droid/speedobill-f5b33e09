@@ -393,11 +393,9 @@ const ChefKDS = () => {
                   const urgent = isUrgent(ticket.created_at);
                   const elapsed = getElapsedMin(ticket.created_at);
 
-                  const borderColor = ticket.status === "ready"
-                    ? "border-l-4 border-l-emerald-500"
-                    : ticket.status === "preparing"
-                    ? "border-l-4 border-l-amber-500"
-                    : urgent ? "border-l-4 border-l-destructive animate-pulse" : "border-l-4 border-l-red-400";
+                  const borderColor = tierBorder(ticket.created_at, ticket.status);
+                  const sourceKey = orderSourceMap[ticket.order_id] || "dine-in";
+                  const sourceMeta = SOURCE_BADGE[sourceKey] || SOURCE_BADGE["dine-in"];
 
                   return (
                     <motion.div
@@ -418,6 +416,9 @@ const ChefKDS = () => {
                             {waiterName && (
                               <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">by {waiterName}</span>
                             )}
+                            <Badge variant="outline" className={`text-[10px] ${sourceMeta.cls}`}>
+                              {sourceMeta.label}
+                            </Badge>
                             <Badge variant="outline" className={`text-xs ${
                               ticket.status === "pending" ? "border-red-500/30 text-red-500"
                               : ticket.status === "preparing" ? "border-amber-500/30 text-amber-600"
@@ -425,9 +426,9 @@ const ChefKDS = () => {
                             }`}>
                               {ticket.status.toUpperCase()}
                             </Badge>
-                            {urgent && ticket.status === "pending" && (
+                            {urgent && ticket.status !== "ready" && (
                               <Badge className="bg-destructive text-destructive-foreground text-xs animate-pulse gap-1">
-                                <AlertTriangle className="h-3 w-3" /> URGENT
+                                <AlertTriangle className="h-3 w-3" /> ⚠️ DELAYED
                               </Badge>
                             )}
                           </div>
