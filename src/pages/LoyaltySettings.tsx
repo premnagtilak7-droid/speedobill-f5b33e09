@@ -26,10 +26,13 @@ const LoyaltySettings = () => {
     min_bill_value: 0,
   });
   const [existingId, setExistingId] = useState<string | null>(null);
+  const [enrolledCount, setEnrolledCount] = useState(0);
+  const [redeemedThisMonth, setRedeemedThisMonth] = useState(0);
 
   useEffect(() => {
     if (!hotelId) return;
     (async () => {
+      // Config
       const { data } = await supabase
         .from("hotel_loyalty_configs" as any)
         .select("*")
@@ -46,6 +49,30 @@ const LoyaltySettings = () => {
           min_bill_value: (data as any).min_bill_value,
         });
       }
+
+      // Enrolled customers (any customer with loyalty_points > 0 or visit_count > 0)
+      const { count: enrolled } = await supabase
+        .from("customers")
+        .select("id", { count: "exact", head: true })
+        .eq("hotel_id", hotelId)
+        .or("loyalty_points.gt.0,visit_count.gt.0");
+      setEnrolledCount(enrolled ?? 0);
+
+      // Rewards claimed this month
+      const monthStart = new Date();
+      monthStart.setDate(1);
+      monthStart.setHours(0, 0, 0, 0);
+      const { data: claimedRows } = await supabase
+        .from("customers")
+        .select("rewards_claimed, updated_at")
+        .eq("hotel_id", hotelId)
+        .gte("updated_at", monthStart.toISOString());
+      const totalClaimed = (claimedRows || []).reduce(
+        (sum, r: any) => sum + (Number(r.rewards_claimed) || 0),
+        0
+      );
+      setRedeemedThisMonth(totalClaimed);
+
       setLoading(false);
     })();
   }, [hotelId]);
@@ -66,7 +93,15 @@ const LoyaltySettings = () => {
     }
 
     if (error) toast.error("Save failed: " + error.message);
-    else toast.success("Loyalty settings saved!");
+    else {
+      toast.success("Loyalty settings saved!");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) void writeAudit({
+        hotelId, action: "loyalty_updated", performedBy: user.id,
+        performerName: user.email || null,
+        details: `Loyalty ${config.enabled ? "enabled" : "disabled"} • ${config.visit_goal} visits • ${config.reward_description}`,
+      });
+    }
     setSaving(false);
   };
 
