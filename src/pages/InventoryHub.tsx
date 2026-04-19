@@ -31,13 +31,18 @@ const InventoryHub = () => {
   const addIngredient = async () => {
     if (!name.trim() || !hotelId) return;
     setAdding(true);
-    const { error } = await supabase.from("ingredients").insert({
+    const { data, error } = await supabase.from("ingredients").insert({
       hotel_id: hotelId, name: name.trim(), unit,
       current_stock: parseFloat(stock) || 0,
       min_threshold: parseFloat(threshold) || 0,
-    });
+    }).select().single();
     if (error) toast.error("Failed: " + error.message);
-    else { toast.success("Ingredient added"); setName(""); setStock(""); fetch(); }
+    else {
+      toast.success("Ingredient added");
+      setName(""); setStock("");
+      if (data) setIngredients(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
+      else fetch();
+    }
     setAdding(false);
   };
 
@@ -47,17 +52,28 @@ const InventoryHub = () => {
     else { toast.success("Deleted"); setIngredients(prev => prev.filter(i => i.id !== id)); }
   };
 
+  const getStatus = (current: number, min: number) => {
+    if (current === 0) return { label: "Critical", className: "bg-destructive/20 text-destructive border-destructive/40" };
+    if (current <= min) return { label: "Low", className: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/40" };
+    return { label: "OK", className: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/40" };
+  };
+
   const lowStock = ingredients.filter(i => Number(i.current_stock) <= Number(i.min_threshold));
+  const criticalCount = ingredients.filter(i => Number(i.current_stock) === 0).length;
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold flex items-center gap-2"><Package className="h-6 w-6" /> Inventory Hub</h1>
 
-      {lowStock.length > 0 && (
+      {(lowStock.length > 0 || criticalCount > 0) && (
         <Card className="border-destructive/50">
           <CardContent className="p-4 flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            <span className="text-sm font-medium">{lowStock.length} item(s) below minimum stock</span>
+            <span className="text-sm font-medium">
+              {criticalCount > 0 && <span className="text-destructive">{criticalCount} critical (out of stock)</span>}
+              {criticalCount > 0 && lowStock.length > criticalCount && " · "}
+              {lowStock.length > criticalCount && `${lowStock.length - criticalCount} low stock`}
+            </span>
           </CardContent>
         </Card>
       )}
@@ -105,8 +121,11 @@ const InventoryHub = () => {
                 </tr>
               </thead>
               <tbody>
-                {ingredients.map(i => {
-                  const isLow = Number(i.current_stock) <= Number(i.min_threshold);
+                {loading && (
+                  <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">Loading…</td></tr>
+                )}
+                {!loading && ingredients.map(i => {
+                  const status = getStatus(Number(i.current_stock), Number(i.min_threshold));
                   return (
                     <tr key={i.id} className="border-b last:border-0 hover:bg-muted/30">
                       <td className="p-3 font-medium">{i.name}</td>
@@ -114,7 +133,7 @@ const InventoryHub = () => {
                       <td className="p-3 text-right">{i.current_stock}</td>
                       <td className="p-3 text-right text-muted-foreground">{i.min_threshold}</td>
                       <td className="p-3 text-right">
-                        <Badge variant={isLow ? "destructive" : "default"}>{isLow ? "Low" : "OK"}</Badge>
+                        <Badge variant="outline" className={status.className}>{status.label}</Badge>
                       </td>
                       <td className="p-3 text-right">
                         <Button size="icon" variant="ghost" className="text-destructive" onClick={() => deleteIngredient(i.id)}>
@@ -124,8 +143,10 @@ const InventoryHub = () => {
                     </tr>
                   );
                 })}
-                {ingredients.length === 0 && (
-                  <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No ingredients yet</td></tr>
+                {!loading && ingredients.length === 0 && (
+                  <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">
+                    No ingredients yet. Add your first one above to start tracking stock.
+                  </td></tr>
                 )}
               </tbody>
             </table>
