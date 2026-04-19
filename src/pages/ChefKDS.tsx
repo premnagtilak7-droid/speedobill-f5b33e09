@@ -3,13 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChefHat, Clock, CheckCircle2, Flame, AlertTriangle, RefreshCw, Package, XCircle, Filter, UtensilsCrossed } from "lucide-react";
+import { ChefHat, Clock, CheckCircle2, Flame, AlertTriangle, RefreshCw, Package, XCircle, Filter, UtensilsCrossed, Volume2, VolumeX, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { playLoudBell } from "@/lib/notification-sounds";
 import { useRoleNotifications } from "@/hooks/useRoleNotifications";
+import { safeStorage } from "@/lib/safe-storage";
 
 interface KotTicket {
   id: string;
@@ -47,12 +48,23 @@ interface MenuItem {
 }
 
 const URGENT_MS = 15 * 60 * 1000;
+const RUSH_THRESHOLD = 5;
+
+const SOURCE_BADGE: Record<string, { label: string; cls: string }> = {
+  "dine-in":   { label: "Dine-In",   cls: "bg-blue-500/15 text-blue-500 border-blue-500/30" },
+  "online-qr": { label: "QR",        cls: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30" },
+  takeaway:    { label: "Takeaway",  cls: "bg-purple-500/15 text-purple-500 border-purple-500/30" },
+  delivery:    { label: "Delivery",  cls: "bg-fuchsia-500/15 text-fuchsia-500 border-fuchsia-500/30" },
+  swiggy:      { label: "Swiggy",    cls: "bg-orange-500/15 text-orange-500 border-orange-500/30" },
+  zomato:      { label: "Zomato",    cls: "bg-red-500/15 text-red-500 border-red-500/30" },
+};
 
 const ChefKDS = () => {
   const { hotelId, user } = useAuth();
   const [tickets, setTickets] = useState<KotTicket[]>([]);
   const [items, setItems] = useState<Record<string, KotItem[]>>({});
   const [tableMap, setTableMap] = useState<Record<string, number>>({});
+  const [orderSourceMap, setOrderSourceMap] = useState<Record<string, string>>({});
   const [waiterMap, setWaiterMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(Date.now());
@@ -62,9 +74,14 @@ const ChefKDS = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [ingredientsLoading, setIngredientsLoading] = useState(false);
   const [togglingItem, setTogglingItem] = useState<string | null>(null);
+  const [soundOn, setSoundOn] = useState<boolean>(() => safeStorage.getItem("kds_sound_on") !== "0");
+  const [flashKey, setFlashKey] = useState(0);
+  const [bulkBusy, setBulkBusy] = useState(false);
   const prevIdsRef = useRef<Set<string>>(new Set());
 
   useRoleNotifications();
+
+  useEffect(() => { safeStorage.setItem("kds_sound_on", soundOn ? "1" : "0"); }, [soundOn]);
 
   // Live clock
   useEffect(() => {
@@ -96,11 +113,12 @@ const ChefKDS = () => {
     // Show tickets assigned to this chef OR unassigned
     const myTickets = kotList.filter(k => !k.assigned_chef_id || k.assigned_chef_id === user?.id);
 
-    // Sound for new pending tickets
+    // Sound + flash for new pending tickets
     const newIds = new Set(myTickets.map(t => t.id));
     const brandNew = myTickets.filter(t => !prevIdsRef.current.has(t.id) && t.status === "pending");
     if (brandNew.length > 0 && prevIdsRef.current.size > 0) {
-      playLoudBell();
+      if (soundOn) playLoudBell();
+      setFlashKey(k => k + 1);
       toast.info(`🔔 ${brandNew.length} new order${brandNew.length > 1 ? "s" : ""}!`, { duration: 4000 });
     }
     prevIdsRef.current = newIds;
@@ -120,17 +138,22 @@ const ChefKDS = () => {
       setItems({});
     }
 
-    // Fetch table numbers
+    // Fetch table numbers + order sources
     const tableIds = [...new Set(kotList.map(k => k.table_id))];
-    if (tableIds.length > 0) {
-      const { data: tbls } = await supabase.from("restaurant_tables").select("id, table_number").in("id", tableIds);
-      const map: Record<string, number> = {};
-      (tbls || []).forEach(t => { map[t.id] = t.table_number; });
-      setTableMap(map);
-    }
+    const orderIds = [...new Set(kotList.map(k => k.order_id))];
+    const [tblRes, ordRes] = await Promise.all([
+      tableIds.length ? supabase.from("restaurant_tables").select("id, table_number").in("id", tableIds) : Promise.resolve({ data: [] as any[] }),
+      orderIds.length ? supabase.from("orders").select("id, order_source").in("id", orderIds) : Promise.resolve({ data: [] as any[] }),
+    ]);
+    const tMap: Record<string, number> = {};
+    (tblRes.data || []).forEach((t: any) => { tMap[t.id] = t.table_number; });
+    setTableMap(tMap);
+    const sMap: Record<string, string> = {};
+    (ordRes.data || []).forEach((o: any) => { sMap[o.id] = o.order_source || "dine-in"; });
+    setOrderSourceMap(sMap);
 
     setLoading(false);
-  }, [hotelId, user?.id]);
+  }, [hotelId, user?.id, soundOn]);
 
   const fetchIngredients = useCallback(async () => {
     if (!hotelId) return;
@@ -185,6 +208,22 @@ const ChefKDS = () => {
     await fetchData();
   };
 
+  const markAllReady = async () => {
+    if (preparing.length === 0) return;
+    if (!confirm(`Mark all ${preparing.length} cooking orders as READY?`)) return;
+    setBulkBusy(true);
+    const nowIso = new Date().toISOString();
+    const ids = preparing.map(t => t.id);
+    const { error } = await supabase
+      .from("kot_tickets")
+      .update({ status: "ready", ready_at: nowIso })
+      .in("id", ids);
+    setBulkBusy(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`✅ ${ids.length} orders marked ready`);
+    await fetchData();
+  };
+
   const toggleMenuAvailability = async (itemId: string, currentlyAvailable: boolean) => {
     setTogglingItem(itemId);
     const { error } = await supabase.from("menu_items").update({ is_available: !currentlyAvailable }).eq("id", itemId);
@@ -209,12 +248,35 @@ const ChefKDS = () => {
     const diff = Math.max(0, Math.floor((now - new Date(s).getTime()) / 1000));
     return `${Math.floor(diff / 60)}:${(diff % 60).toString().padStart(2, '0')}`;
   };
+  // Time-tier border color: green ≤5m, yellow 5–10m, red >10m
+  const tierBorder = (createdAt: string, status: string) => {
+    if (status === "ready") return "border-l-4 border-l-emerald-500";
+    const m = getElapsedMin(createdAt);
+    if (m >= 10) return "border-l-4 border-l-red-500 animate-pulse";
+    if (m >= 5) return "border-l-4 border-l-yellow-500";
+    return "border-l-4 border-l-emerald-500";
+  };
 
   const lowStock = ingredients.filter(i => i.current_stock <= i.min_threshold);
   const oosItems = menuItems.filter(m => !m.is_available);
+  const isRush = pending.length + preparing.length >= RUSH_THRESHOLD;
 
   return (
-    <div className="p-4 md:p-6 space-y-4 max-w-6xl mx-auto">
+    <div className="relative p-4 md:p-6 space-y-4 max-w-6xl mx-auto">
+      {/* Orange flash border on new orders */}
+      <AnimatePresence>
+        {flashKey > 0 && (
+          <motion.div
+            key={flashKey}
+            initial={{ opacity: 0.85 }}
+            animate={{ opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            className="pointer-events-none fixed inset-0 z-[55] ring-[6px] ring-inset ring-orange-500"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
@@ -228,10 +290,48 @@ const ChefKDS = () => {
             </p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => activeTab === "orders" ? fetchData() : fetchIngredients()}>
-          <RefreshCw className="h-4 w-4 mr-1" /> Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSoundOn(s => !s)}
+            className={`h-9 px-3 rounded-lg border transition-colors flex items-center gap-1.5 text-xs font-medium ${
+              soundOn
+                ? "border-primary/40 text-primary bg-primary/10"
+                : "border-border text-muted-foreground bg-card hover:bg-secondary/60"
+            }`}
+            aria-label={soundOn ? "Mute alerts" : "Unmute alerts"}
+            title={soundOn ? "Sound ON — click to mute" : "Sound OFF — click to enable"}
+          >
+            {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            <span className="hidden sm:inline">{soundOn ? "Sound On" : "Muted"}</span>
+          </button>
+          {preparing.length > 0 && activeTab === "orders" && (
+            <Button
+              size="sm"
+              disabled={bulkBusy}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white gap-1"
+              onClick={markAllReady}
+            >
+              <CheckCheck className="h-4 w-4" />
+              Mark All Ready ({preparing.length})
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={() => activeTab === "orders" ? fetchData() : fetchIngredients()}>
+            <RefreshCw className="h-4 w-4 mr-1" /> Refresh
+          </Button>
+        </div>
       </div>
+
+      {/* Rush hour banner */}
+      {isRush && activeTab === "orders" && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl px-4 py-3 bg-orange-500/15 border border-orange-500/40 text-orange-600 dark:text-orange-400 flex items-center gap-3 font-semibold text-sm"
+        >
+          <Flame className="h-5 w-5" />
+          🔥 Rush Hour — {pending.length + preparing.length} orders pending. Stay focused, team!
+        </motion.div>
+      )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -293,11 +393,9 @@ const ChefKDS = () => {
                   const urgent = isUrgent(ticket.created_at);
                   const elapsed = getElapsedMin(ticket.created_at);
 
-                  const borderColor = ticket.status === "ready"
-                    ? "border-l-4 border-l-emerald-500"
-                    : ticket.status === "preparing"
-                    ? "border-l-4 border-l-amber-500"
-                    : urgent ? "border-l-4 border-l-destructive animate-pulse" : "border-l-4 border-l-red-400";
+                  const borderColor = tierBorder(ticket.created_at, ticket.status);
+                  const sourceKey = orderSourceMap[ticket.order_id] || "dine-in";
+                  const sourceMeta = SOURCE_BADGE[sourceKey] || SOURCE_BADGE["dine-in"];
 
                   return (
                     <motion.div
@@ -318,6 +416,9 @@ const ChefKDS = () => {
                             {waiterName && (
                               <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">by {waiterName}</span>
                             )}
+                            <Badge variant="outline" className={`text-[10px] ${sourceMeta.cls}`}>
+                              {sourceMeta.label}
+                            </Badge>
                             <Badge variant="outline" className={`text-xs ${
                               ticket.status === "pending" ? "border-red-500/30 text-red-500"
                               : ticket.status === "preparing" ? "border-amber-500/30 text-amber-600"
@@ -325,9 +426,9 @@ const ChefKDS = () => {
                             }`}>
                               {ticket.status.toUpperCase()}
                             </Badge>
-                            {urgent && ticket.status === "pending" && (
+                            {urgent && ticket.status !== "ready" && (
                               <Badge className="bg-destructive text-destructive-foreground text-xs animate-pulse gap-1">
-                                <AlertTriangle className="h-3 w-3" /> URGENT
+                                <AlertTriangle className="h-3 w-3" /> ⚠️ DELAYED
                               </Badge>
                             )}
                           </div>

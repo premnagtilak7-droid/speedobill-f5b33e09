@@ -23,6 +23,24 @@ interface DemoLeadLite {
   created_at: string;
 }
 
+interface PendingKotsRow {
+  hotel_id: string;
+  hotel_name: string;
+  count: number;
+}
+interface InactiveWaiterRow {
+  user_id: string;
+  full_name: string;
+  hotel_name: string;
+}
+interface StuckBillRow {
+  order_id: string;
+  hotel_id: string;
+  hotel_name: string;
+  table_number: number | null;
+  minutes_pending: number;
+}
+
 interface Props {
   hotels: HotelLite[];
   profiles: ProfileLite[];
@@ -31,6 +49,9 @@ interface Props {
   totalRevenue: number;
   onNavigate: (tab: string) => void;
   onContactLead?: (lead: DemoLeadLite) => void;
+  pendingKotsByHotel?: PendingKotsRow[];
+  inactiveWaiters?: InactiveWaiterRow[];
+  stuckBills?: StuckBillRow[];
 }
 
 type AlertItem = {
@@ -49,7 +70,10 @@ const SEV_STYLE = {
   info:     { color: "#3B82F6", bg: "rgba(59,130,246,0.08)", border: "rgba(59,130,246,0.35)", label: "Info",     icon: Info },
 };
 
-export function AdminAlertsPanel({ hotels, profiles, demoLeads, contactedLeadIds, totalRevenue, onNavigate, onContactLead }: Props) {
+export function AdminAlertsPanel({
+  hotels, profiles, demoLeads, contactedLeadIds, totalRevenue, onNavigate, onContactLead,
+  pendingKotsByHotel = [], inactiveWaiters = [], stuckBills = [],
+}: Props) {
   const [dismissed, setDismissed] = useState<string[]>([]);
 
   const alerts = useMemo<AlertItem[]>(() => {
@@ -70,6 +94,45 @@ export function AdminAlertsPanel({ hotels, profiles, demoLeads, contactedLeadIds
         title: `${h.name} subscription expired`,
         description: `Expired on ${new Date(h.subscription_expiry!).toLocaleDateString("en-IN")}. Reach out to renew.`,
         timestamp: h.subscription_expiry!,
+        actionLabel: "View",
+        onAction: () => onNavigate("directory"),
+      });
+    });
+
+    // CRITICAL — KOT pile-up (8+ pending) per hotel
+    pendingKotsByHotel.filter(p => p.count >= 8).forEach(p => {
+      list.push({
+        id: `kot-pileup-${p.hotel_id}`,
+        severity: "critical",
+        title: `${p.hotel_name} has ${p.count} pending KOT orders`,
+        description: `Kitchen is overloaded — orders may be delayed. Notify the team.`,
+        timestamp: new Date().toISOString(),
+        actionLabel: "View",
+        onAction: () => onNavigate("directory"),
+      });
+    });
+
+    // CRITICAL — bills pending 45+ minutes
+    stuckBills.forEach(b => {
+      list.push({
+        id: `stuck-bill-${b.order_id}`,
+        severity: "critical",
+        title: `${b.hotel_name} — Table ${b.table_number ?? "?"} bill pending ${b.minutes_pending}m`,
+        description: `Active order open for ${b.minutes_pending} minutes without billing. Check on the table.`,
+        timestamp: new Date().toISOString(),
+        actionLabel: "View",
+        onAction: () => onNavigate("directory"),
+      });
+    });
+
+    // WARNING — waiter not logged in today
+    inactiveWaiters.forEach(w => {
+      list.push({
+        id: `waiter-inactive-${w.user_id}`,
+        severity: "warning",
+        title: `${w.full_name} (${w.hotel_name}) not logged in today`,
+        description: `No clock-in recorded. Confirm shift coverage.`,
+        timestamp: new Date().toISOString(),
         actionLabel: "View",
         onAction: () => onNavigate("directory"),
       });
@@ -155,7 +218,7 @@ export function AdminAlertsPanel({ hotels, profiles, demoLeads, contactedLeadIds
     }
 
     return list.filter(a => !dismissed.includes(a.id));
-  }, [hotels, profiles, demoLeads, contactedLeadIds, totalRevenue, dismissed, onNavigate, onContactLead]);
+  }, [hotels, profiles, demoLeads, contactedLeadIds, totalRevenue, dismissed, onNavigate, onContactLead, pendingKotsByHotel, inactiveWaiters, stuckBills]);
 
   const grouped = {
     critical: alerts.filter(a => a.severity === "critical"),

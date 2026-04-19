@@ -21,6 +21,7 @@ import SectionErrorBoundary from "@/components/SectionErrorBoundary";
 import { useIncomingOrders } from "@/hooks/useIncomingOrders";
 import { supabase } from "@/integrations/supabase/client";
 import { primeNotificationEngine } from "@/lib/notification-sounds";
+import { WaiterReadyBanner } from "@/components/WaiterReadyBanner";
 
 interface NavItem {
   label: string;
@@ -503,6 +504,7 @@ const AppLayout = () => {
           </div>
         </div>
         <BroadcastBanner />
+        <WaiterReadyBanner />
         <SectionErrorBoundary section="Page Content">
           <Suspense
             fallback={

@@ -189,6 +189,7 @@ const CreatorAdmin = () => {
   const [licenses, setLicenses] = useState<License[]>([]);
   const [hotels, setHotels] = useState<HotelInfo[]>([]);
   const [profiles, setProfiles] = useState<ProfileInfo[]>([]);
+  const [adminExtras, setAdminExtras] = useState<{ pendingKotsByHotel: any[]; inactiveWaiters: any[]; stuckBills: any[] }>({ pendingKotsByHotel: [], inactiveWaiters: [], stuckBills: [] });
   const [demoLeads, setDemoLeads] = useState<any[]>([]);
   const [contactedLeads, setContactedLeads] = useState<Set<string>>(() => {
     try { return new Set(JSON.parse(localStorage.getItem("speedo_contacted_leads") || "[]")); } catch { return new Set(); }
@@ -251,6 +252,54 @@ const CreatorAdmin = () => {
       if (wsRes.data) setWsProducts(wsRes.data as any);
       if (wsInqRes.data) setWsInquiries(wsInqRes.data as any);
       if (leadsRes.data) setDemoLeads(leadsRes.data);
+
+      // Compute admin extras from already-loaded hotels via separate queries
+      try {
+        const hotelsList = (adminRes.data?.hotels ?? []) as any[];
+        const profilesList = (adminRes.data?.profiles ?? []) as any[];
+        const hotelNameMap: Record<string, string> = {};
+        hotelsList.forEach(h => { hotelNameMap[h.id] = h.name; });
+
+        const todayIst = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })).toISOString().split("T")[0];
+        const cutoff45 = new Date(Date.now() - 45 * 60 * 1000).toISOString();
+
+        const [kotPendingRes, attendanceRes, stuckRes] = await Promise.all([
+          supabase.from("kot_tickets").select("hotel_id").eq("status", "pending"),
+          supabase.from("attendance_logs").select("user_id").eq("action", "clock_in").gte("created_at", `${todayIst}T00:00:00`),
+          supabase.from("orders").select("id, hotel_id, table_id, created_at").eq("status", "active").lt("created_at", cutoff45).limit(200),
+        ]);
+
+        const kotCounts: Record<string, number> = {};
+        (kotPendingRes.data || []).forEach((k: any) => { kotCounts[k.hotel_id] = (kotCounts[k.hotel_id] || 0) + 1; });
+        const pendingKotsByHotel = Object.entries(kotCounts).map(([hotel_id, count]) => ({
+          hotel_id, count, hotel_name: hotelNameMap[hotel_id] || "Unknown",
+        }));
+
+        const clockedIn = new Set((attendanceRes.data || []).map((a: any) => a.user_id));
+        const waiters = profilesList.filter(p => p.role === "waiter" && p.is_active !== false);
+        const inactiveWaiters = waiters
+          .filter(w => !clockedIn.has(w.user_id))
+          .map(w => ({ user_id: w.user_id, full_name: w.full_name || "Waiter", hotel_name: hotelNameMap[w.hotel_id] || "—" }));
+
+        // Resolve table numbers for stuck bills
+        const stuckRows = (stuckRes.data || []) as any[];
+        let stuckBills: any[] = [];
+        if (stuckRows.length) {
+          const tIds = [...new Set(stuckRows.map(s => s.table_id))];
+          const { data: tbls } = await supabase.from("restaurant_tables").select("id, table_number").in("id", tIds);
+          const tMap: Record<string, number> = {};
+          (tbls || []).forEach((t: any) => { tMap[t.id] = t.table_number; });
+          stuckBills = stuckRows.map(s => ({
+            order_id: s.id, hotel_id: s.hotel_id, hotel_name: hotelNameMap[s.hotel_id] || "Unknown",
+            table_number: tMap[s.table_id] ?? null,
+            minutes_pending: Math.floor((Date.now() - new Date(s.created_at).getTime()) / 60000),
+          }));
+        }
+
+        setAdminExtras({ pendingKotsByHotel, inactiveWaiters, stuckBills });
+      } catch (e) {
+        console.warn("admin extras failed", e);
+      }
     } finally {
       setLoading(false);
     }
@@ -1716,6 +1765,9 @@ const CreatorAdmin = () => {
                   contactedLeadIds={Array.from(contactedLeads)}
                   totalRevenue={lifetimeRevenue}
                   onNavigate={(t) => setActiveTab(t as TabId)}
+                  pendingKotsByHotel={(adminExtras as any)?.pendingKotsByHotel || []}
+                  inactiveWaiters={(adminExtras as any)?.inactiveWaiters || []}
+                  stuckBills={(adminExtras as any)?.stuckBills || []}
                 />
               </TabPanel>
             )}

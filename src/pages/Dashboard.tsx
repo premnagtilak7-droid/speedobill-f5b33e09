@@ -56,6 +56,7 @@ const Dashboard = () => {
   const [activeTables, setActiveTables] = useState(0);
   const [totalTables, setTotalTables] = useState(0);
   const [pendingKOT, setPendingKOT] = useState(0);
+  const [stuckBillsCount, setStuckBillsCount] = useState(0);
   const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([]);
   const [tableTurnover, setTableTurnover] = useState<string>("—");
   const [noShows, setNoShows] = useState(0);
@@ -101,6 +102,11 @@ const Dashboard = () => {
         setLowStockItems(low);
       }
       if (kotRes.data) setPendingKOT(kotRes.data.length);
+      // Stuck bills: active orders open >45m
+      const cutoff45 = new Date(Date.now() - 45 * 60 * 1000).toISOString();
+      const { data: stuckRows } = await supabase
+        .from("orders").select("id").eq("hotel_id", hotelId).eq("status", "active").lt("created_at", cutoff45);
+      setStuckBillsCount((stuckRows || []).length);
       if (totalRevenueRes.data) setTotalRevenue(totalRevenueRes.data.reduce((sum, o) => sum + Number(o.total), 0));
       if (ingredientsRes.data) {
         const allIngs = ingredientsRes.data as LowStockIngredient[];
@@ -192,6 +198,7 @@ const Dashboard = () => {
     { label: "Pending KOT", value: String(pendingKOT), icon: Clock, trend: null, up: false },
     { label: "Orders Today", value: String(totalOrders), icon: ShoppingBag, trend: null, up: true },
     ...(incomingCount > 0 ? [{ label: "Incoming Orders", value: String(incomingCount), icon: Bell, trend: "NEW" as string | null, up: true }] : []),
+    ...(stuckBillsCount > 0 ? [{ label: "Bills Pending 45m+", value: String(stuckBillsCount), icon: AlertTriangle, trend: "URGENT" as string | null, up: false }] : []),
     ...(role === "owner" ? [
       { label: "Avg Turnover", value: tableTurnover, icon: Clock, trend: null, up: true },
       { label: "No-Shows (7d)", value: String(noShows), icon: AlertTriangle, trend: null, up: false },
