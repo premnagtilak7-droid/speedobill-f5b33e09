@@ -31,43 +31,49 @@ const formatCurrency = (v: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(v);
 
 /* Status colors per spec: Empty=green, Occupied=orange, Reserved=blue, Cleaning=yellow.
-   Hard-coded dark navy theme — Tables page must stay dark even when app is in light mode. */
-const tableStyles: Record<string, {
-  tint: string; stripe: string; dot: string; pill: string; pillText: string; label: string; glow: string;
-}> = {
+   Theme-aware tints — different background tint values for dark vs light mode. */
+type StatusStyle = {
+  tintDark: string; tintLight: string;
+  stripe: string; dot: string; pill: string; pillText: string; label: string; glow: string;
+};
+const tableStyles: Record<string, StatusStyle> = {
   empty: {
-    tint: "#0f2a1a",
+    tintDark: "#0f2a1a",
+    tintLight: "#FFFFFF",
     stripe: "#10B981",
     dot: "bg-emerald-400",
     pill: "bg-emerald-500/20 border-emerald-500/40",
-    pillText: "text-emerald-300",
+    pillText: "text-emerald-600 dark:text-emerald-300",
     label: "Empty",
     glow: "hover:shadow-[0_10px_28px_-8px_rgba(16,185,129,0.45)]",
   },
   occupied: {
-    tint: "#2a1a0f",
+    tintDark: "#2a1a0f",
+    tintLight: "#FFFFFF",
     stripe: "#F97316",
     dot: "bg-orange-400",
     pill: "bg-orange-500/20 border-orange-500/40",
-    pillText: "text-orange-300",
+    pillText: "text-orange-600 dark:text-orange-300",
     label: "Occupied",
     glow: "hover:shadow-[0_10px_28px_-8px_rgba(249,115,22,0.55)]",
   },
   reserved: {
-    tint: "#0f1a2a",
+    tintDark: "#0f1a2a",
+    tintLight: "#FFFFFF",
     stripe: "#3B82F6",
     dot: "bg-blue-400",
     pill: "bg-blue-500/20 border-blue-500/40",
-    pillText: "text-blue-300",
+    pillText: "text-blue-600 dark:text-blue-300",
     label: "Reserved",
     glow: "hover:shadow-[0_10px_28px_-8px_rgba(59,130,246,0.45)]",
   },
   cleaning: {
-    tint: "#2a240f",
+    tintDark: "#2a240f",
+    tintLight: "#FFFFFF",
     stripe: "#F59E0B",
     dot: "bg-amber-400",
     pill: "bg-amber-500/20 border-amber-500/40",
-    pillText: "text-amber-300",
+    pillText: "text-amber-600 dark:text-amber-300",
     label: "Cleaning",
     glow: "hover:shadow-[0_10px_28px_-8px_rgba(245,158,11,0.45)]",
   },
