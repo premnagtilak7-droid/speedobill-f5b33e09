@@ -138,7 +138,8 @@ const AppRoutes = () => {
       location.pathname !== "/creator-admin" &&
       location.pathname !== "/auth" &&
       location.pathname !== "/reset-password" &&
-      !location.pathname.startsWith("/order/")
+      !location.pathname.startsWith("/order/") &&
+      !location.pathname.startsWith("/menu/")
     ) {
       navigate("/creator-admin", { replace: true });
     }
