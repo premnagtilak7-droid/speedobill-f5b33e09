@@ -572,19 +572,36 @@ const Tables = () => {
 
     setSavingMode("bill");
     try {
-      const pointsEarned = isComplimentary ? 0 : Math.floor(grandTotal * 0.01);
+      // Loyalty rule: ₹10 spent = 1 point. Redemption: 1 point = ₹1 off.
+      const pointsEarned = isComplimentary ? 0 : Math.floor(grandTotal / 10);
       let finalTotal = isComplimentary ? 0 : grandTotal;
+      let pointsAfter = lookedUpCustomer?.loyalty_points ?? 0;
 
       if (!isComplimentary && lookedUpCustomer && redeemPoints && lookedUpCustomer.loyalty_points > 0) {
         const redeemable = Math.min(lookedUpCustomer.loyalty_points, grandTotal);
         finalTotal = grandTotal - redeemable;
-        await supabase.from("customers").update({
-          loyalty_points: lookedUpCustomer.loyalty_points - redeemable + pointsEarned,
-        }).eq("id", lookedUpCustomer.id);
+        pointsAfter = lookedUpCustomer.loyalty_points - redeemable + pointsEarned;
         toast.success(`Redeemed ₹${redeemable} in points!`);
       } else if (!isComplimentary && lookedUpCustomer) {
+        pointsAfter = lookedUpCustomer.loyalty_points + pointsEarned;
+      }
+
+      // Update customer: points + visit count + total spend + last visit timestamp
+      if (lookedUpCustomer) {
+        const { data: existingCust } = await supabase
+          .from("customers")
+          .select("total_visits, total_spend, visit_count")
+          .eq("id", lookedUpCustomer.id)
+          .maybeSingle();
+        const prevVisits = Number(existingCust?.total_visits || 0);
+        const prevSpend = Number(existingCust?.total_spend || 0);
+        const prevVisitCount = Number(existingCust?.visit_count || 0);
         await supabase.from("customers").update({
-          loyalty_points: lookedUpCustomer.loyalty_points + pointsEarned,
+          loyalty_points: pointsAfter,
+          total_visits: isComplimentary ? prevVisits : prevVisits + 1,
+          visit_count: isComplimentary ? prevVisitCount : prevVisitCount + 1,
+          total_spend: isComplimentary ? prevSpend : prevSpend + finalTotal,
+          last_visit_at: new Date().toISOString(),
         }).eq("id", lookedUpCustomer.id);
       }
 

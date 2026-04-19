@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Crown, Gift, Target, Banknote, Sparkles, Save } from "lucide-react";
 import { motion } from "framer-motion";
+import TopLoyaltyCustomers from "@/components/loyalty/TopLoyaltyCustomers";
 
 const LoyaltySettings = () => {
   const { hotelId } = useAuth();
@@ -209,6 +210,22 @@ const LoyaltySettings = () => {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Points rule explainer */}
+      <Card className="glass-card border-primary/20">
+        <CardContent className="p-4 text-sm">
+          <p className="font-semibold mb-1 flex items-center gap-1.5">
+            <Sparkles className="h-4 w-4 text-primary" /> Points-based rewards
+          </p>
+          <p className="text-muted-foreground">
+            <strong>Earning:</strong> ₹10 spent = 1 point. <strong>Redeeming:</strong> 1 point = ₹1 off
+            (applied automatically when a known customer is selected at billing).
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Top Loyalty Customers */}
+      {hotelId && <TopLoyaltyCustomers hotelId={hotelId} />}
 
       <Button onClick={saveConfig} disabled={saving} className="w-full h-12 text-base font-semibold">
         <Save className="h-5 w-5 mr-2" />

@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Users, Search, Plus, Star, Crown, Award, Gift, TrendingUp, Download, Phone, Mail, Heart, Tag, ChevronRight } from "lucide-react";
 import { format, parseISO, differenceInDays, isThisMonth } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 const TIER_CONFIG: Record<string, { label: string; color: string; icon: typeof Award; minSpend: number }> = {
   bronze: { label: "Bronze", color: "bg-orange-500/20 text-orange-600", icon: Award, minSpend: 0 },
@@ -28,6 +29,7 @@ const getTier = (spend: number) => {
 
 const CustomersPage = () => {
   const { hotelId } = useAuth();
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState<any[]>([]);
   const [feedback, setFeedback] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -220,6 +222,10 @@ const CustomersPage = () => {
           const tier = c.loyalty_tier || getTier(Number(c.total_spend || 0));
           const tierConfig = TIER_CONFIG[tier] || TIER_CONFIG.bronze;
           const TierIcon = tierConfig.icon;
+          const visits = Number(c.total_visits || 0);
+          const spend = Number(c.total_spend || 0);
+          const autoVIP = visits >= 10 || spend >= 5000;
+          const showVIP = autoVIP || (c.tags || []).includes("VIP");
           return (
             <Card key={c.id} className="glass-card hover:border-primary/30 transition-colors cursor-pointer" onClick={() => selectCustomer(c)}>
               <CardContent className="p-4">
@@ -231,7 +237,7 @@ const CustomersPage = () => {
                     <div>
                       <p className="font-semibold flex items-center gap-2">
                         {c.name}
-                        {(c.tags || []).includes("VIP") && <Badge className="text-[10px] bg-yellow-500/20 text-yellow-600 border-yellow-500/30">⭐ VIP</Badge>}
+                        {showVIP && <Badge className="text-[10px] bg-yellow-500/20 text-yellow-600 border-yellow-500/30">⭐ VIP</Badge>}
                         {(c.tags || []).includes("Blacklist") && <Badge variant="destructive" className="text-[10px]">Blocked</Badge>}
                       </p>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
@@ -244,13 +250,19 @@ const CustomersPage = () => {
                   <div className="flex items-center gap-4 text-right">
                     <div>
                       <p className="font-semibold">{c.loyalty_points || 0} pts</p>
-                      <p className="text-[10px] text-muted-foreground">{c.total_visits || 0} visits</p>
+                      <p className="text-[10px] text-muted-foreground">{visits} visits · ₹{spend.toLocaleString()}</p>
                       {loyaltyConfig?.enabled && loyaltyConfig.visit_goal > 0 && (
                         <p className="text-[10px] text-primary font-medium">
                           {(c.visit_count || 0) % loyaltyConfig.visit_goal}/{loyaltyConfig.visit_goal} progress
                         </p>
                       )}
                     </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); navigate(`/customers/${c.id}`); }}
+                      className="text-[10px] font-semibold text-primary hover:underline"
+                    >
+                      Profile →
+                    </button>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </div>
