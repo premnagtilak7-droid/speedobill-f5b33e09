@@ -189,6 +189,7 @@ const CreatorAdmin = () => {
   const [licenses, setLicenses] = useState<License[]>([]);
   const [hotels, setHotels] = useState<HotelInfo[]>([]);
   const [profiles, setProfiles] = useState<ProfileInfo[]>([]);
+  const [adminExtras, setAdminExtras] = useState<{ pendingKotsByHotel: any[]; inactiveWaiters: any[]; stuckBills: any[] }>({ pendingKotsByHotel: [], inactiveWaiters: [], stuckBills: [] });
   const [demoLeads, setDemoLeads] = useState<any[]>([]);
   const [contactedLeads, setContactedLeads] = useState<Set<string>>(() => {
     try { return new Set(JSON.parse(localStorage.getItem("speedo_contacted_leads") || "[]")); } catch { return new Set(); }
@@ -1716,6 +1717,9 @@ const CreatorAdmin = () => {
                   contactedLeadIds={Array.from(contactedLeads)}
                   totalRevenue={lifetimeRevenue}
                   onNavigate={(t) => setActiveTab(t as TabId)}
+                  pendingKotsByHotel={(adminExtras as any)?.pendingKotsByHotel || []}
+                  inactiveWaiters={(adminExtras as any)?.inactiveWaiters || []}
+                  stuckBills={(adminExtras as any)?.stuckBills || []}
                 />
               </TabPanel>
             )}
