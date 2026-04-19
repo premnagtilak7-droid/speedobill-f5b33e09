@@ -5,18 +5,15 @@
 @tailwind utilities;
 
 @layer base {
-  /* Smooth theme transition on toggle */
+  /* Smooth theme transition on toggle — limited to root only to avoid color blending tints */
   html {
-    transition: color 0.2s ease, background-color 0.2s ease;
-  }
-  * {
-    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   :root {
-    /* SpeedoBill — Light theme with Orange accent */
-    --background: 30 20% 98%;
-    --foreground: 222 47% 11%;
+    /* SpeedoBill — Light theme: clean slate (no warm/blue tint) */
+    --background: 210 40% 98%;          /* #F8FAFC */
+    --foreground: 222 47% 11%;          /* #0F172A */
 
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -27,11 +24,11 @@
     --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 30 15% 95%;
+    --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 20%;
 
-    --muted: 30 10% 94%;
-    --muted-foreground: 222 15% 46%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
     --accent: 25 95% 53%;
     --accent-foreground: 0 0% 100%;
@@ -54,8 +51,8 @@
     --teal: 168 76% 42%;
     --orange: 25 95% 53%;
 
-    --border: 30 10% 90%;
-    --input: 30 10% 90%;
+    --border: 214 32% 91%;              /* #E2E8F0 */
+    --input: 214 32% 91%;               /* #E2E8F0 */
     --ring: 25 95% 53%;
 
     --radius: 0.75rem;
@@ -64,9 +61,9 @@
     --sidebar-foreground: 222 47% 20%;
     --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 30 15% 96%;
+    --sidebar-accent: 210 40% 96%;
     --sidebar-accent-foreground: 222 47% 20%;
-    --sidebar-border: 30 10% 92%;
+    --sidebar-border: 214 32% 91%;
     --sidebar-ring: 25 95% 53%;
 
     --table-empty: 142 71% 45%;
@@ -75,7 +72,7 @@
     --table-cleaning: 45 93% 47%;
 
     --glass: 0 0% 100%;
-    --glass-border: 30 10% 90%;
+    --glass-border: 214 32% 91%;
 
     --grad-orange: linear-gradient(135deg, #F97316, #EA580C);
     --grad-violet: linear-gradient(135deg, #F97316, #EA580C);
@@ -90,7 +87,7 @@
   .dark {
     /* SpeedoBill Owner Dashboard — Deep Navy + Orange (spec: #0A0F1E / #131C35 / #1E2D4A / #F97316) */
     --background: 225 51% 8%;          /* #0A0F1E */
-    --foreground: 0 0% 98%;
+    --foreground: 0 0% 100%;           /* #FFFFFF */
 
     --card: 222 47% 14%;               /* #131C35 */
     --card-foreground: 0 0% 98%;
