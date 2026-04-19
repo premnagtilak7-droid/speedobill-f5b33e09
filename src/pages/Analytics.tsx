@@ -10,17 +10,22 @@ import {
   BarChart3, TrendingUp, TrendingDown, IndianRupee, ShoppingCart,
   Users, UtensilsCrossed, Clock, ArrowUpRight, ArrowDownRight,
   CreditCard, Banknote, Smartphone, Receipt, ChefHat, Star,
-  CalendarDays, Filter, Hash
+  CalendarDays, Filter, Hash, Download, FileSpreadsheet, Search,
+  ArrowUpDown, Trophy, Medal, Award
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
+import { generatePdfReport, downloadPdf, downloadCSV, estimateMenuItemCosts, fmtINR } from "@/lib/report-utils";
 
 const COLORS = {
   primary: "hsl(25, 95%, 53%)",
@@ -252,11 +257,76 @@ const Analytics = () => {
     enabled: !!hotelId,
   });
 
+  // ─── Menu items + recipes + purchases (for COGS / profit margin) ───
+  const { data: menuItems } = useQuery({
+    queryKey: ["analytics-menu", hotelId],
+    queryFn: async () => {
+      if (!hotelId) return [];
+      const { data, error } = await supabase
+        .from("menu_items")
+        .select("id, name, price, category")
+        .eq("hotel_id", hotelId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!hotelId,
+  });
+
+  const { data: recipes } = useQuery({
+    queryKey: ["analytics-recipes", hotelId],
+    queryFn: async () => {
+      if (!hotelId) return [];
+      const { data, error } = await supabase
+        .from("recipes")
+        .select("menu_item_id, ingredient_id, quantity_required")
+        .eq("hotel_id", hotelId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!hotelId,
+  });
+
+  const { data: purchases } = useQuery({
+    queryKey: ["analytics-purchases", hotelId],
+    queryFn: async () => {
+      if (!hotelId) return [];
+      const { data, error } = await supabase
+        .from("purchase_logs")
+        .select("ingredient_id, unit_price, quantity")
+        .eq("hotel_id", hotelId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!hotelId,
+  });
+
+  const { data: hotelInfo } = useQuery({
+    queryKey: ["analytics-hotel", hotelId],
+    queryFn: async () => {
+      if (!hotelId) return null;
+      const { data } = await supabase.from("hotels").select("name, address").eq("id", hotelId).maybeSingle();
+      return data;
+    },
+    enabled: !!hotelId,
+  });
+
   const staffMap = useMemo(() => {
     const m = new Map<string, string>();
     (profiles ?? []).forEach((p) => m.set(p.user_id, p.full_name || "Unknown"));
     return m;
   }, [profiles]);
+
+  // Per-item cost & margin from recipes + purchase history
+  const costMap = useMemo(() => {
+    if (!menuItems?.length) return {};
+    return estimateMenuItemCosts(menuItems as any, recipes ?? [], purchases ?? []);
+  }, [menuItems, recipes, purchases]);
+
+  const itemCategoryMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    (menuItems ?? []).forEach((mi) => { m[mi.name] = mi.category; });
+    return m;
+  }, [menuItems]);
 
   // ═══════════════ COMPUTED DATA ═══════════════
 
@@ -336,7 +406,7 @@ const Analytics = () => {
       .sort((a, b) => b.value - a.value);
   }, [billedOrders]);
 
-  // ─── Top Selling Items ───
+  // ─── Top Selling Items (with category + profit margin from COGS estimate) ───
   const topItems = useMemo(() => {
     const map: Record<string, { qty: number; revenue: number }> = {};
     (orderItems ?? []).forEach((i) => {
@@ -345,10 +415,20 @@ const Analytics = () => {
       map[i.name].revenue += i.price * i.quantity;
     });
     return Object.entries(map)
-      .map(([name, { qty, revenue }]) => ({ name, qty, revenue }))
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 10);
-  }, [orderItems]);
+      .map(([name, { qty, revenue }]) => ({
+        name,
+        qty,
+        revenue,
+        category: itemCategoryMap[name] || "—",
+        margin: costMap[name]?.margin ?? null,
+      }));
+  }, [orderItems, itemCategoryMap, costMap]);
+
+  const topItemKPI = useMemo(() => {
+    return [...topItems].sort((a, b) => b.qty - a.qty)[0] ?? null;
+  }, [topItems]);
+
+  const topItemsByRevenue = useMemo(() => [...topItems].sort((a, b) => b.revenue - a.revenue).slice(0, 10), [topItems]);
 
   // ─── Staff Performance ───
   const staffPerf = useMemo(() => {
@@ -387,11 +467,109 @@ const Analytics = () => {
     return hourMap.filter((h) => h.orders > 0 || (h.hour >= 8 && h.hour <= 23));
   }, [billedOrders]);
 
+  // ─── Peak hour info ───
+  const peakHourValue = useMemo(() => {
+    if (!peakHours.length) return null;
+    return peakHours.reduce((max, h) => (h.orders > max.orders ? h : max), peakHours[0]);
+  }, [peakHours]);
+
+  // ─── Daily Payment Summary (per-day cash/upi/card totals) ───
+  const dailyPaymentSummary = useMemo(() => {
+    const days = eachDayOfInterval({ start: from, end: to });
+    return days.map((d) => {
+      const dayBills = billedOrders.filter((o) => isSameDay(new Date(o.created_at), d));
+      const cash = dayBills.filter((o) => o.payment_method === "cash").reduce((s, o) => s + Number(o.total), 0);
+      const upi = dayBills.filter((o) => o.payment_method === "upi").reduce((s, o) => s + Number(o.total), 0);
+      const card = dayBills.filter((o) => o.payment_method === "card").reduce((s, o) => s + Number(o.total), 0);
+      const other = dayBills.filter((o) => !["cash", "upi", "card"].includes(o.payment_method)).reduce((s, o) => s + Number(o.total), 0);
+      return {
+        date: format(d, "dd MMM"),
+        cash, upi, card, other,
+        total: cash + upi + card + other,
+        orders: dayBills.length,
+      };
+    }).filter((r) => r.orders > 0).reverse();
+  }, [billedOrders, from, to]);
+
   // ─── Discount Stats ───
   const discountedOrders = useMemo(() => billedOrders.filter((o) => Number(o.discount_percent) > 0), [billedOrders]);
   const avgDiscount = discountedOrders.length > 0
     ? discountedOrders.reduce((s, o) => s + Number(o.discount_percent), 0) / discountedOrders.length
     : 0;
+
+  // ─── Items table sort + search state ───
+  const [itemSearch, setItemSearch] = useState("");
+  const [itemSort, setItemSort] = useState<{ key: "qty" | "revenue" | "margin" | "name" | "category"; dir: "asc" | "desc" }>({ key: "revenue", dir: "desc" });
+  const sortedItems = useMemo(() => {
+    const filtered = topItems.filter((i) => i.name.toLowerCase().includes(itemSearch.toLowerCase()));
+    const dir = itemSort.dir === "asc" ? 1 : -1;
+    return [...filtered].sort((a, b) => {
+      const av = a[itemSort.key] as any;
+      const bv = b[itemSort.key] as any;
+      if (av === null || av === undefined) return 1;
+      if (bv === null || bv === undefined) return -1;
+      if (typeof av === "string") return av.localeCompare(bv) * dir;
+      return (av - bv) * dir;
+    });
+  }, [topItems, itemSearch, itemSort]);
+
+  function toggleSort(key: typeof itemSort.key) {
+    setItemSort((s) => s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "desc" });
+  }
+
+  // ─── Export handlers ───
+  const rangeLabel = DATE_RANGES.find((d) => d.value === range)?.label ?? range;
+  function exportPdf() {
+    const doc = generatePdfReport({
+      title: "Business Analytics",
+      hotelName: hotelInfo?.name,
+      subtitle: hotelInfo?.address || "",
+      periodLabel: rangeLabel,
+      summary: [
+        { label: "Revenue", value: fmtINR(totalRevenue + counterTotal) },
+        { label: "Orders", value: String(billedOrders.length + (counterOrders ?? []).length) },
+        { label: "Avg Bill", value: fmtINR(avgOrderValue) },
+        { label: "Top Item", value: topItemKPI?.name?.slice(0, 18) ?? "—" },
+      ],
+      tables: [
+        { title: "Top Selling Items", head: ["#", "Item", "Category", "Qty", "Revenue", "Margin %"],
+          body: topItemsByRevenue.map((it, i) => [
+            String(i + 1), it.name, it.category, String(it.qty), fmtINR(it.revenue),
+            it.margin !== null ? `${it.margin.toFixed(0)}%` : "—",
+          ]),
+        },
+        { title: "Daily Payment Summary", head: ["Date", "Cash", "UPI", "Card", "Total", "Orders"],
+          body: dailyPaymentSummary.map((d) => [d.date, fmtINR(d.cash), fmtINR(d.upi), fmtINR(d.card), fmtINR(d.total), String(d.orders)]),
+        },
+        { title: "Staff Performance", head: ["Staff", "Orders", "Revenue"],
+          body: staffPerf.map((s) => [s.name, String(s.orders), fmtINR(s.revenue)]),
+        },
+      ],
+    });
+    downloadPdf(doc, `analytics-${format(new Date(), "yyyyMMdd-HHmm")}.pdf`);
+  }
+
+  function exportCsv() {
+    const rows: (string | number)[][] = [];
+    rows.push(["Business Analytics"]);
+    rows.push([`Period: ${rangeLabel}`, `Hotel: ${hotelInfo?.name ?? ""}`]);
+    rows.push([]);
+    rows.push(["Revenue", fmtINR(totalRevenue + counterTotal)]);
+    rows.push(["Orders", billedOrders.length + (counterOrders ?? []).length]);
+    rows.push(["Avg Bill", fmtINR(avgOrderValue)]);
+    rows.push(["Top Item", topItemKPI?.name ?? "—"]);
+    rows.push([]);
+    rows.push(["Top Selling Items"]);
+    rows.push(["#", "Item", "Category", "Qty", "Revenue", "Margin %"]);
+    topItemsByRevenue.forEach((it, i) => rows.push([
+      i + 1, it.name, it.category, it.qty, it.revenue, it.margin !== null ? Number(it.margin.toFixed(1)) : "—",
+    ]));
+    rows.push([]);
+    rows.push(["Daily Payment Summary"]);
+    rows.push(["Date", "Cash", "UPI", "Card", "Other", "Total", "Orders"]);
+    dailyPaymentSummary.forEach((d) => rows.push([d.date, d.cash, d.upi, d.card, d.other, d.total, d.orders]));
+    downloadCSV(`analytics-${format(new Date(), "yyyyMMdd-HHmm")}.csv`, rows);
+  }
 
   const isLoading = ordersLoading;
 
@@ -408,25 +586,44 @@ const Analytics = () => {
             <p className="text-sm text-muted-foreground">Business insights & performance metrics</p>
           </div>
         </div>
-        <Select value={range} onValueChange={(v) => setRange(v as DateRange)}>
-          <SelectTrigger className="w-[180px] gap-2">
-            <CalendarDays className="h-4 w-4 text-muted-foreground" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {DATE_RANGES.map((d) => (
-              <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select value={range} onValueChange={(v) => setRange(v as DateRange)}>
+            <SelectTrigger className="w-[160px] gap-2">
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DATE_RANGES.map((d) => (
+                <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button size="sm" variant="outline" onClick={exportCsv}><FileSpreadsheet className="h-4 w-4" /> CSV</Button>
+          <Button size="sm" onClick={exportPdf}><Download className="h-4 w-4" /> PDF</Button>
+        </div>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard title="Total Revenue" value={fmtCurrency(totalRevenue + counterTotal)} icon={IndianRupee} change={pctChange(totalRevenue, prevRevenue)} loading={isLoading} />
         <StatCard title="Total Orders" value={billedOrders.length + (counterOrders ?? []).length} icon={ShoppingCart} change={pctChange(billedOrders.length, prevBilled.length)} loading={isLoading} />
-        <StatCard title="Avg Order Value" value={fmtCurrency(avgOrderValue)} icon={Receipt} change={pctChange(avgOrderValue, prevAvg)} loading={isLoading} />
-        <StatCard title="Net Profit" value={fmtCurrency(netProfit)} icon={TrendingUp} loading={isLoading} />
+        <StatCard title="Avg Bill Value" value={fmtCurrency(avgOrderValue)} icon={Receipt} change={pctChange(avgOrderValue, prevAvg)} loading={isLoading} />
+        <Card className="border-border/50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Top Selling Item</p>
+              <div className="p-1.5 rounded-lg bg-primary/10"><Trophy className="h-4 w-4 text-primary" /></div>
+            </div>
+            {topItemKPI ? (
+              <>
+                <p className="text-lg font-bold truncate">{topItemKPI.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{topItemKPI.qty} sold · {fmtCurrency(topItemKPI.revenue)}</p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">No sales yet</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Secondary Stats */}
@@ -527,11 +724,12 @@ const Analytics = () => {
           </CardContent>
         </Card>
 
-        {/* Peak Hours */}
+        {/* Orders by Hour with peak highlight */}
         <Card className="border-border/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" /> Peak Hours
+              <Clock className="h-4 w-4 text-primary" /> Orders by Hour
+              {peakHourValue && <Badge variant="secondary" className="ml-auto">Peak: {peakHourValue.label}</Badge>}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -541,7 +739,11 @@ const Analytics = () => {
                 <XAxis dataKey="label" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip content={<CustomTooltip prefix="" />} />
-                <Bar dataKey="orders" name="Orders" fill={COLORS.warning} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="orders" name="Orders" radius={[4, 4, 0, 0]}>
+                  {peakHours.map((h, i) => (
+                    <Cell key={i} fill={peakHourValue && h.hour === peakHourValue.hour ? COLORS.primary : COLORS.warning} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -723,6 +925,97 @@ const Analytics = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Ranked Top Items Table */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-primary" /> Top Selling Items
+          </CardTitle>
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input value={itemSearch} onChange={(e) => setItemSearch(e.target.value)} placeholder="Search items…" className="pl-8 h-9" />
+          </div>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          {sortedItems.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">No items sold in this period</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">#</TableHead>
+                  <TableHead><button onClick={() => toggleSort("name")} className="flex items-center gap-1 hover:text-foreground">Item <ArrowUpDown className="h-3 w-3" /></button></TableHead>
+                  <TableHead><button onClick={() => toggleSort("category")} className="flex items-center gap-1 hover:text-foreground">Category <ArrowUpDown className="h-3 w-3" /></button></TableHead>
+                  <TableHead className="text-right"><button onClick={() => toggleSort("qty")} className="flex items-center gap-1 hover:text-foreground ml-auto">Qty <ArrowUpDown className="h-3 w-3" /></button></TableHead>
+                  <TableHead className="text-right"><button onClick={() => toggleSort("revenue")} className="flex items-center gap-1 hover:text-foreground ml-auto">Revenue <ArrowUpDown className="h-3 w-3" /></button></TableHead>
+                  <TableHead className="text-right"><button onClick={() => toggleSort("margin")} className="flex items-center gap-1 hover:text-foreground ml-auto">Margin <ArrowUpDown className="h-3 w-3" /></button></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedItems.slice(0, 25).map((it, i) => {
+                  const rankIcon = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
+                  return (
+                    <TableRow key={it.name} className={i < 3 && itemSort.key === "revenue" && itemSort.dir === "desc" ? "bg-primary/5" : ""}>
+                      <TableCell className="font-mono text-xs">{rankIcon ?? `#${i + 1}`}</TableCell>
+                      <TableCell className="font-medium">{it.name}</TableCell>
+                      <TableCell><Badge variant="secondary" className="text-[10px]">{it.category}</Badge></TableCell>
+                      <TableCell className="text-right tabular-nums">{it.qty}</TableCell>
+                      <TableCell className="text-right tabular-nums font-semibold">{fmtCurrency(it.revenue)}</TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {it.margin !== null ? (
+                          <span className={it.margin >= 50 ? "text-green-500" : it.margin >= 25 ? "text-amber-500" : "text-red-500"}>
+                            {it.margin.toFixed(0)}%
+                          </span>
+                        ) : <span className="text-muted-foreground">—</span>}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Daily Payment Summary */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <CreditCard className="h-4 w-4 text-primary" /> Daily Payment Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          {dailyPaymentSummary.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">No billed orders in this period</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Cash</TableHead>
+                  <TableHead className="text-right">UPI</TableHead>
+                  <TableHead className="text-right">Card</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">Orders</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {dailyPaymentSummary.map((d) => (
+                  <TableRow key={d.date}>
+                    <TableCell className="font-medium">{d.date}</TableCell>
+                    <TableCell className="text-right tabular-nums">{fmtCurrency(d.cash)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{fmtCurrency(d.upi)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{fmtCurrency(d.card)}</TableCell>
+                    <TableCell className="text-right tabular-nums font-semibold">{fmtCurrency(d.total)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{d.orders}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
