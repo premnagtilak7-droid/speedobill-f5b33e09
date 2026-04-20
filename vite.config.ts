@@ -53,30 +53,15 @@ function resolveBuildSupabaseEnv(env: Record<string, string>) {
     normalizeEnvValue(env.VITE_SUPABASE_PUBLISHABLE_KEY) ||
     normalizeEnvValue(env.VITE_SUPABASE_ANON_KEY) ||
     "";
-  const envProjectId = normalizeEnvValue(env.VITE_SUPABASE_PROJECT_ID);
-  const urlProjectId = envUrl ? deriveProjectIdFromUrl(envUrl) : "";
-  const keyProjectId = envKey ? deriveProjectIdFromKey(envKey) : "";
-
-  if (envKey && keyProjectId === DEFAULT_CLOUD_PROJECT_ID) {
-    return {
-      projectId: keyProjectId,
-      url: `https://${keyProjectId}.supabase.co`,
-      key: envKey,
-    };
-  }
-
-  if (envProjectId === DEFAULT_CLOUD_PROJECT_ID || urlProjectId === DEFAULT_CLOUD_PROJECT_ID) {
-    return {
-      projectId: DEFAULT_CLOUD_PROJECT_ID,
-      url: envUrl || DEFAULT_CLOUD_SUPABASE_URL,
-      key: envKey || DEFAULT_CLOUD_PUBLISHABLE_KEY,
-    };
-  }
+  const envProjectId =
+    normalizeEnvValue(env.VITE_SUPABASE_PROJECT_ID) ||
+    (envUrl ? deriveProjectIdFromUrl(envUrl) : "") ||
+    (envKey ? deriveProjectIdFromKey(envKey) : "");
 
   return {
-    projectId: DEFAULT_CLOUD_PROJECT_ID,
-    url: DEFAULT_CLOUD_SUPABASE_URL,
-    key: DEFAULT_CLOUD_PUBLISHABLE_KEY,
+    projectId: envProjectId,
+    url: envUrl || (envProjectId ? `https://${envProjectId}.supabase.co` : ""),
+    key: envKey,
   };
 }
 
