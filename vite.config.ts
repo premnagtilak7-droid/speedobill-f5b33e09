@@ -4,9 +4,8 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
-const DEFAULT_CLOUD_PROJECT_ID = "pkpefscbpyqpafogdbor";
-const DEFAULT_CLOUD_SUPABASE_URL = `https://${DEFAULT_CLOUD_PROJECT_ID}.supabase.co`;
-const DEFAULT_CLOUD_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrcGVmc2NicHlxcGFmb2dkYm9yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTg5NDMsImV4cCI6MjA4OTU5NDk0M30.wXNGPD0KHv7A-gQmLt0Cn6585-3hCpdWoyjK3YW3GKU";
+// All Supabase configuration is read from environment variables (.env).
+// No keys are hardcoded in this file.
 
 function normalizeEnvValue(value?: string) {
   return value?.trim().replace(/^['"]+|['"]+$/g, "") ?? "";
