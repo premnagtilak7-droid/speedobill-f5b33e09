@@ -386,7 +386,7 @@ const Dashboard = () => {
                 <Button size="sm" className="text-white font-bold text-xs" style={{ background: "#06B6D4" }}
                   onClick={() => navigate("/settings")}>Basic ₹199/mo</Button>
                 <Button size="sm" className="text-white font-bold text-xs" style={{ background: "linear-gradient(135deg, #7C3AED, #6366F1)" }}
-                  onClick={() => navigate("/settings")}>Premium ₹399/mo</Button>
+                  onClick={() => navigate("/settings")}>Premium ₹499/mo</Button>
               </div>
             </div>
           );
