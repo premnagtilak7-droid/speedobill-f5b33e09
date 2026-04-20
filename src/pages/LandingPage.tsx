@@ -36,9 +36,9 @@ const features = [
 ];
 
 const plans = [
-  { name: "Free", price: "₹0", period: "/forever", features: ["Up to 10 tables", "Basic POS", "QR ordering", "1 staff account"], cta: "Start Free" },
-  { name: "Basic", price: "₹199", period: "/month", features: ["Up to 20 tables", "KDS & KOT", "Staff management", "Order history"], cta: "Upgrade", popular: true },
-  { name: "Premium", price: "₹499", period: "/month", features: ["Unlimited tables", "Full analytics", "Inventory hub", "Priority support"], cta: "Go Premium" },
+  { name: "Free", price: "₹0", period: "/forever", features: ["Up to 10 tables", "Menu management", "Order & billing", "Basic sales reports", "KOT system", "Staff management (2 users)", "Email support"], cta: "Start Free" },
+  { name: "Basic", price: "₹199", period: "/month", features: ["Up to 20 tables", "Menu management", "Order & billing", "Daily sales reports", "KOT system", "Staff management (3 users)", "Email support"], cta: "Upgrade", popular: true },
+  { name: "Premium", price: "₹499", period: "/month", features: ["Unlimited tables", "Everything in Basic", "Advanced analytics", "Inventory management", "Customer management", "WhatsApp billing", "AI menu scanner", "Unlimited staff", "Priority support", "Data export"], cta: "Go Premium" },
 ];
 
 const ROTATING_WORDS = ["Canteens", "Restaurants", "Hotels", "Retail Shops", "Cafes"];
