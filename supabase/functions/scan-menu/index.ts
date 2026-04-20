@@ -86,20 +86,27 @@ Deno.serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "AI service not configured" }), {
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) {
+      return new Response(JSON.stringify({ error: "Gemini API key not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Ensure data URL prefix for Lovable AI Gateway (OpenAI-compatible image_url format)
-    const dataUrl = image_base64.startsWith("data:")
-      ? image_base64
-      : `data:image/jpeg;base64,${image_base64}`;
+    const base64Data = image_base64.replace(/^data:image\/[a-z]+;base64,/, "");
 
-    const promptText = `Extract ALL menu items from this image. For each item, detect if there are multiple price variants (like Half, Full, Quarter, Piece, Plate, Small, Medium, Large, Regular).
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: `Extract ALL menu items from this image. For each item, detect if there are multiple price variants (like Half, Full, Quarter, Piece, Plate, Small, Medium, Large, Regular).
 
 Return ONLY a valid JSON array. Each object must have:
 - "name": string (item name)
@@ -109,45 +116,40 @@ Return ONLY a valid JSON array. Each object must have:
 
 Example: [{"name":"Paneer Tikka","category":"Starters","price":180,"price_variants":[{"label":"Half","price":180},{"label":"Full","price":320}]}]
 
-No markdown, no explanation, ONLY the JSON array.`;
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: promptText },
-              { type: "image_url", image_url: { url: dataUrl } },
-            ],
+No markdown, no explanation, ONLY the JSON array.`,
+                },
+                {
+                  inline_data: {
+                    mime_type: "image/jpeg",
+                    data: base64Data,
+                  },
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 8192,
           },
-        ],
-      }),
-    });
+        }),
+      }
+    );
 
     if (!response.ok) {
       const details = await response.text().catch(() => "");
-      console.error("AI gateway error:", response.status, details);
-
+      console.error("Gemini API error:", response.status, details);
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Too many requests. Please wait a moment and try again." }), {
+        return new Response(JSON.stringify({ error: "Gemini rate limit hit. Please wait a moment." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds in workspace settings." }), {
-          status: 402,
+      if (response.status === 400 || response.status === 401 || response.status === 403) {
+        return new Response(JSON.stringify({ error: "Invalid Gemini API key. Update GEMINI_API_KEY secret." }), {
+          status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-
       return new Response(JSON.stringify({ error: "AI service error" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -155,7 +157,7 @@ No markdown, no explanation, ONLY the JSON array.`;
     }
 
     const data = await response.json();
-    const text = data.choices?.[0]?.message?.content || "";
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
     let parsed: any;
     try {

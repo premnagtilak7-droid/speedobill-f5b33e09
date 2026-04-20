@@ -79,39 +79,39 @@ Deno.serve(async (req) => {
       return json({ error: "Invalid messages" }, 400);
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      return json({ error: "AI service not configured" }, 500);
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) {
+      return json({ error: "Gemini API key not configured" }, 500);
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          ...sanitizedMessages,
-        ],
-        stream: true,
-      }),
-    });
+    // Convert OpenAI-style messages to Gemini contents format
+    const contents = sanitizedMessages.map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    }));
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents,
+          generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+        }),
+      }
+    );
 
     if (!response.ok) {
       const details = await response.text().catch(() => "");
-      console.error("AI gateway error:", response.status, details);
-
+      console.error("Gemini API error:", response.status, details);
       if (response.status === 429) {
         return json({ error: "Too many requests. Please wait a moment." }, 429);
       }
-
-      if (response.status === 402) {
-        return json({ error: "AI credits exhausted." }, 402);
+      if (response.status === 400 || response.status === 401 || response.status === 403) {
+        return json({ error: "Invalid Gemini API key. Update GEMINI_API_KEY secret." }, 401);
       }
-
       return json({ error: "AI service unavailable" }, 500);
     }
 
@@ -119,7 +119,49 @@ Deno.serve(async (req) => {
       return json({ error: "No AI response stream returned" }, 500);
     }
 
-    return new Response(response.body, {
+    // Transform Gemini SSE stream into OpenAI-compatible chat.completions SSE chunks
+    // so the existing frontend (which parses choices[0].delta.content) keeps working.
+    const transformed = new ReadableStream({
+      async start(controller) {
+        const reader = response.body!.getReader();
+        const decoder = new TextDecoder();
+        const encoder = new TextEncoder();
+        let buf = "";
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, { stream: true });
+            let nl: number;
+            while ((nl = buf.indexOf("\n")) !== -1) {
+              let line = buf.slice(0, nl);
+              buf = buf.slice(nl + 1);
+              if (line.endsWith("\r")) line = line.slice(0, -1);
+              if (!line.startsWith("data: ")) continue;
+              const payload = line.slice(6).trim();
+              if (!payload || payload === "[DONE]") continue;
+              try {
+                const obj = JSON.parse(payload);
+                const text = obj?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) {
+                  const chunk = { choices: [{ delta: { content: text } }] };
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
+                }
+              } catch {
+                // ignore parse errors on partial frames
+              }
+            }
+          }
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        } catch (err) {
+          console.error("stream transform error:", err);
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(transformed, {
       headers: {
         ...corsHeaders,
         "Content-Type": "text/event-stream",
