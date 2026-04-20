@@ -208,7 +208,10 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     setState((prev) => ({ ...prev, refresh: fetchStatus }));
   }, [fetchStatus]);
 
-  const value = useMemo(() => state, [state.status, state.daysLeft, state.plan, state.expiresAt, state.loading, state.refresh]);
+  const value = useMemo(
+    () => state,
+    [state.status, state.daysLeft, state.plan, state.expiresAt, state.loading],
+  );
 
   return <SubscriptionContext.Provider value={value}>{children}</SubscriptionContext.Provider>;
 };
