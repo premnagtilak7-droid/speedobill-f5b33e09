@@ -5,8 +5,9 @@
  * a recovery UI.
  */
 
-const SUPABASE_URL = "https://pkpefscbpyqpafogdbor.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrcGVmc2NicHlxcGFmb2dkYm9yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTg5NDMsImV4cCI6MjA4OTU5NDk0M30.wXNGPD0KHv7A-gQmLt0Cn6585-3hCpdWoyjK3YW3GKU";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_KEY = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY) as string;
 
 function getDeviceInfo(): string {
   try {
@@ -18,6 +19,7 @@ function getDeviceInfo(): string {
 
 function logToSupabase(message: string) {
   try {
+    if (!SUPABASE_URL || !SUPABASE_KEY) return;
     const body = JSON.stringify({
       user_id: "00000000-0000-0000-0000-000000000000",
       message: `[STARTUP CRASH] ${message}`.slice(0, 2000),

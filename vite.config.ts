@@ -4,9 +4,8 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
-const DEFAULT_CLOUD_PROJECT_ID = "pkpefscbpyqpafogdbor";
-const DEFAULT_CLOUD_SUPABASE_URL = `https://${DEFAULT_CLOUD_PROJECT_ID}.supabase.co`;
-const DEFAULT_CLOUD_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrcGVmc2NicHlxcGFmb2dkYm9yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTg5NDMsImV4cCI6MjA4OTU5NDk0M30.wXNGPD0KHv7A-gQmLt0Cn6585-3hCpdWoyjK3YW3GKU";
+// All Supabase configuration is read from environment variables (.env).
+// No keys are hardcoded in this file.
 
 function normalizeEnvValue(value?: string) {
   return value?.trim().replace(/^['"]+|['"]+$/g, "") ?? "";
@@ -54,30 +53,15 @@ function resolveBuildSupabaseEnv(env: Record<string, string>) {
     normalizeEnvValue(env.VITE_SUPABASE_PUBLISHABLE_KEY) ||
     normalizeEnvValue(env.VITE_SUPABASE_ANON_KEY) ||
     "";
-  const envProjectId = normalizeEnvValue(env.VITE_SUPABASE_PROJECT_ID);
-  const urlProjectId = envUrl ? deriveProjectIdFromUrl(envUrl) : "";
-  const keyProjectId = envKey ? deriveProjectIdFromKey(envKey) : "";
-
-  if (envKey && keyProjectId === DEFAULT_CLOUD_PROJECT_ID) {
-    return {
-      projectId: keyProjectId,
-      url: `https://${keyProjectId}.supabase.co`,
-      key: envKey,
-    };
-  }
-
-  if (envProjectId === DEFAULT_CLOUD_PROJECT_ID || urlProjectId === DEFAULT_CLOUD_PROJECT_ID) {
-    return {
-      projectId: DEFAULT_CLOUD_PROJECT_ID,
-      url: envUrl || DEFAULT_CLOUD_SUPABASE_URL,
-      key: envKey || DEFAULT_CLOUD_PUBLISHABLE_KEY,
-    };
-  }
+  const envProjectId =
+    normalizeEnvValue(env.VITE_SUPABASE_PROJECT_ID) ||
+    (envUrl ? deriveProjectIdFromUrl(envUrl) : "") ||
+    (envKey ? deriveProjectIdFromKey(envKey) : "");
 
   return {
-    projectId: DEFAULT_CLOUD_PROJECT_ID,
-    url: DEFAULT_CLOUD_SUPABASE_URL,
-    key: DEFAULT_CLOUD_PUBLISHABLE_KEY,
+    projectId: envProjectId,
+    url: envUrl || (envProjectId ? `https://${envProjectId}.supabase.co` : ""),
+    key: envKey,
   };
 }
 
