@@ -96,17 +96,7 @@ Deno.serve(async (req) => {
 
     const base64Data = image_base64.replace(/^data:image\/[a-z]+;base64,/, "");
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: `Extract ALL menu items from this image. For each item, detect if there are multiple price variants (like Half, Full, Quarter, Piece, Plate, Small, Medium, Large, Regular).
+    const promptText = `Extract ALL menu items from this image. For each item, detect if there are multiple price variants (like Half, Full, Quarter, Piece, Plate, Small, Medium, Large, Regular).
 
 Return ONLY a valid JSON array. Each object must have:
 - "name": string (item name)
@@ -116,44 +106,61 @@ Return ONLY a valid JSON array. Each object must have:
 
 Example: [{"name":"Paneer Tikka","category":"Starters","price":180,"price_variants":[{"label":"Half","price":180},{"label":"Full","price":320}]}]
 
-No markdown, no explanation, ONLY the JSON array.`,
-                },
-                {
-                  inline_data: {
-                    mime_type: "image/jpeg",
-                    data: base64Data,
-                  },
-                },
-              ],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.1,
-            maxOutputTokens: 8192,
-          },
-        }),
-      }
-    );
+No markdown, no explanation, ONLY the JSON array.`;
 
-    if (!response.ok) {
-      const details = await response.text().catch(() => "");
-      console.error("Gemini API error:", response.status, details);
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Gemini rate limit hit. Please wait a moment." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+    const callGemini = (model: string) =>
+      fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  { text: promptText },
+                  { inline_data: { mime_type: "image/jpeg", data: base64Data } },
+                ],
+              },
+            ],
+            generationConfig: { temperature: 0.1, maxOutputTokens: 8192 },
+          }),
+        }
+      );
+
+    // Try fast model, then fall back to lite if Google is overloaded (503/429).
+    const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"];
+    let response: Response | null = null;
+    let lastStatus = 0;
+    let lastDetails = "";
+
+    for (const model of models) {
+      response = await callGemini(model);
+      if (response.ok) break;
+      lastStatus = response.status;
+      lastDetails = await response.text().catch(() => "");
+      console.error(`Gemini ${model} error:`, lastStatus, lastDetails);
+      if (lastStatus !== 503 && lastStatus !== 429) break; // only fall back on overload
+      response = null;
+    }
+
+    if (!response || !response.ok) {
+      if (lastStatus === 503 || lastStatus === 429) {
+        return new Response(
+          JSON.stringify({ error: "Gemini is overloaded right now. Please try again in a minute." }),
+          { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
-      if (response.status === 400 || response.status === 401 || response.status === 403) {
-        return new Response(JSON.stringify({ error: "Invalid Gemini API key. Update GEMINI_API_KEY secret." }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      if (lastStatus === 400 || lastStatus === 401 || lastStatus === 403) {
+        return new Response(
+          JSON.stringify({ error: "Invalid Gemini API key. Update GEMINI_API_KEY secret." }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
-      return new Response(JSON.stringify({ error: "AI service error" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: `Gemini error (${lastStatus}). Please try again.` }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const data = await response.json();
