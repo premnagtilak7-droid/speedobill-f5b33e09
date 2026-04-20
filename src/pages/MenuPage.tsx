@@ -561,7 +561,7 @@ const MenuPage = () => {
                 <CardContent className="p-4 text-left">
                   <div className="flex items-center gap-2 mb-1">
                     <Crown className="h-4 w-4 text-primary" />
-                    <h4 className="font-display font-bold">Premium — ₹399/mo</h4>
+                    <h4 className="font-display font-bold">Premium — ₹499/mo</h4>
                   </div>
                   <p className="text-sm text-muted-foreground">Unlimited tables & menu items + advanced analytics</p>
                 </CardContent>

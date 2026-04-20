@@ -46,8 +46,8 @@ const plans = [
   },
   {
     name: "Premium",
-    monthlyPrice: 399,
-    yearlyPrice: 3990,
+    monthlyPrice: 499,
+    yearlyPrice: 4990,
     icon: Crown,
     color: "#F97316",
     popular: true,
