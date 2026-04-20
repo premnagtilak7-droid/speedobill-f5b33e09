@@ -1,13 +1,1 @@
 project_id = "pkpefscbpyqpafogdbor"
-
-[functions.speedo-bot]
-verify_jwt = false
-
-[functions.delete-account]
-verify_jwt = false
-
-[functions.notify-demo-request]
-verify_jwt = false
-
-[functions.notify-demo-lead]
-verify_jwt = false
