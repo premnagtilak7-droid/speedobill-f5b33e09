@@ -128,20 +128,24 @@ No markdown, no explanation, ONLY the JSON array.`;
         }
       );
 
-    // Try fast model, then fall back to lite if Google is overloaded (503/429).
-    const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"];
+    // Try most stable model first, fall back across models AND retry on overload.
+    const models = ["gemini-2.0-flash", "gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-1.5-flash"];
     let response: Response | null = null;
     let lastStatus = 0;
     let lastDetails = "";
 
-    for (const model of models) {
-      response = await callGemini(model);
-      if (response.ok) break;
-      lastStatus = response.status;
-      lastDetails = await response.text().catch(() => "");
-      console.error(`Gemini ${model} error:`, lastStatus, lastDetails);
-      if (lastStatus !== 503 && lastStatus !== 429) break; // only fall back on overload
-      response = null;
+    outer: for (let attempt = 0; attempt < 2; attempt++) {
+      for (const model of models) {
+        response = await callGemini(model);
+        if (response.ok) break outer;
+        lastStatus = response.status;
+        lastDetails = await response.text().catch(() => "");
+        console.error(`Gemini ${model} error (attempt ${attempt + 1}):`, lastStatus, lastDetails);
+        if (lastStatus !== 503 && lastStatus !== 429) break outer; // only fall back on overload
+        response = null;
+      }
+      // brief backoff before second pass
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 800));
     }
 
     if (!response || !response.ok) {
