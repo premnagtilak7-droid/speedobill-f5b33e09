@@ -1006,6 +1006,7 @@ export type Database = {
       }
       licenses: {
         Row: {
+          assigned_to_hotel_id: string | null
           created_at: string
           created_by: string | null
           duration_days: number
@@ -1017,6 +1018,7 @@ export type Database = {
           used_by_hotel_id: string | null
         }
         Insert: {
+          assigned_to_hotel_id?: string | null
           created_at?: string
           created_by?: string | null
           duration_days?: number
@@ -1028,6 +1030,7 @@ export type Database = {
           used_by_hotel_id?: string | null
         }
         Update: {
+          assigned_to_hotel_id?: string | null
           created_at?: string
           created_by?: string | null
           duration_days?: number
@@ -1039,6 +1042,13 @@ export type Database = {
           used_by_hotel_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "licenses_assigned_to_hotel_id_fkey"
+            columns: ["assigned_to_hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "licenses_used_by_hotel_id_fkey"
             columns: ["used_by_hotel_id"]

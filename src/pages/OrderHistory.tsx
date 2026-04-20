@@ -181,9 +181,10 @@ const OrderHistory = () => {
 
   const handlePrint = (order: OrderWithItems) => {
     const text = buildReceiptText(order);
+    const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     const printWindow = window.open("", "_blank", "width=300,height=600");
     if (printWindow) {
-      printWindow.document.write(`<html><head><title>Receipt</title><style>body{font-family:monospace;font-size:12px;white-space:pre-wrap;padding:10px;}</style></head><body>${text}</body></html>`);
+      printWindow.document.write(`<html><head><title>Receipt</title><style>body{font-family:monospace;font-size:12px;white-space:pre-wrap;padding:10px;}</style></head><body>${esc(text)}</body></html>`);
       printWindow.document.close();
       printWindow.print();
     }

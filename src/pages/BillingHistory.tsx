@@ -155,9 +155,10 @@ const BillingHistory = () => {
 
   const handlePrint = (order: BilledOrder) => {
     const text = buildReceipt(order);
+    const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     const w = window.open("", "_blank", "width=350,height=600");
     if (w) {
-      w.document.write(`<html><head><title>Receipt</title><style>body{font-family:'Courier New',monospace;font-size:11px;white-space:pre-wrap;padding:8px;line-height:1.5;}</style></head><body>${text}</body></html>`);
+      w.document.write(`<html><head><title>Receipt</title><style>body{font-family:'Courier New',monospace;font-size:11px;white-space:pre-wrap;padding:8px;line-height:1.5;}</style></head><body>${esc(text)}</body></html>`);
       w.document.close();
       w.print();
     }
