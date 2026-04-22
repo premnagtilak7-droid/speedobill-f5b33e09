@@ -25,6 +25,17 @@ export const isMobileViewport = (): boolean => {
   return window.innerWidth <= 768;
 };
 
+export const getAuthRedirectOrigin = (): string => {
+  if (typeof window === "undefined") return "https://speedobill.lovable.app";
+
+  const { origin, hostname } = window.location;
+  const isPreviewHost = hostname.includes("id-preview--") || hostname.includes("lovableproject.com") || hostname === "localhost" || hostname === "127.0.0.1";
+
+  return isPreviewHost ? "https://speedobill.lovable.app" : origin;
+};
+
+export const getResetPasswordRedirectUrl = (): string => `${getAuthRedirectOrigin()}/reset-password`;
+
 /**
  * Where to send the user after they log out.
  * - PWA → /auth (no landing page in installed app)
