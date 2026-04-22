@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { writeAudit } from "@/lib/audit";
 import { Eye, EyeOff, Zap, ChefHat, BarChart3, Grid3X3, UtensilsCrossed, ScrollText, ShieldCheck, ShieldAlert } from "lucide-react";
 import { getScopedStorageKey } from "@/lib/backend-cache";
+import { getAuthRedirectOrigin, getResetPasswordRedirectUrl } from "@/lib/platform";
 import { Progress } from "@/components/ui/progress";
 
 type AuthMode = "login" | "signup";
@@ -108,7 +109,7 @@ const Auth = () => {
     setGoogleLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: getAuthRedirectOrigin() },
     });
     if (error) {
       toast.error(error.message);
@@ -182,7 +183,7 @@ const Auth = () => {
       password,
       options: {
         data: { full_name: fullName.trim(), role, hotel_code: role === "owner" ? null : normalizedHotelCode },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: getAuthRedirectOrigin(),
       },
     });
 
@@ -213,7 +214,7 @@ const Auth = () => {
     if (!email) { toast.error("Enter your email"); return; }
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: getResetPasswordRedirectUrl(),
     });
     if (error) toast.error(error.message);
     else toast.success("Password reset email sent!");
