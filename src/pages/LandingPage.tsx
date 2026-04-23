@@ -6,8 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import LandingNavbar from "@/components/landing/LandingNavbar";
 import MobileNavbar from "@/components/landing/MobileNavbar";
 import MobileAppBanner from "@/components/MobileAppBanner";
-import DemoRequestForm from "@/components/landing/DemoRequestForm";
-import DemoBookingForm from "@/components/landing/DemoBookingForm";
+import RequestAccessForm from "@/components/landing/RequestAccessForm";
 import LandingFooter from "@/components/landing/LandingFooter";
 import MultiTerminalSection from "@/components/landing/MultiTerminalSection";
 import AddOnsSection from "@/components/landing/AddOnsSection";
@@ -94,12 +93,12 @@ const LandingPage = () => {
             Reduce counter rush, send WhatsApp receipts, and manage your inventory with India's easiest POS software.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row lg:justify-start">
-            <a href="#demo">
+            <a href="#request-access">
               <Button
                 size="lg"
                 className="relative gap-2 rounded-xl px-10 py-6 text-base font-bold shadow-[0_0_30px_hsl(25_95%_53%/0.35)] transition-shadow hover:shadow-[0_0_50px_hsl(25_95%_53%/0.5)]"
               >
-                Book a Free Demo <ArrowRight className="h-5 w-5" />
+                Request Access <ArrowRight className="h-5 w-5" />
               </Button>
             </a>
             <Button
@@ -111,7 +110,7 @@ const LandingPage = () => {
               See Features
             </Button>
           </div>
-          <p className="mt-4 text-sm text-slate-500">No credit card required · 7-day free trial</p>
+          <p className="mt-4 text-sm text-slate-500">Invite-only · Personal onboarding by our team</p>
         </div>
 
         {/* Right — Owner with tablet */}
@@ -298,11 +297,11 @@ const LandingPage = () => {
                     </li>
                   ))}
                 </ul>
-                <Link to="/auth" className="mt-8">
+                <a href="#request-access" className="mt-8">
                   <Button className="w-full" variant={p.popular ? "default" : "outline"}>
-                    {p.cta}
+                    Request Access
                   </Button>
-                </Link>
+                </a>
               </CardContent>
             </Card>
           ))}
@@ -313,19 +312,24 @@ const LandingPage = () => {
     {/* Testimonials */}
     <TestimonialsSection />
 
-    {/* Schedule a Free Demo */}
-    <section id="demo" className="border-t px-4 py-24 sm:px-6 lg:px-8">
+    {/* Request Access */}
+    <section id="request-access" className="border-t px-4 py-24 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-5xl items-center gap-12 lg:grid-cols-2">
         <ScrollReveal yOffset={50}>
           <Smartphone className="mb-4 h-10 w-10 text-primary" />
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Schedule a Free Demo
+            Request Access to SpeedoBill
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Fill in your details and a SpeedoBill expert will reach out on WhatsApp to set you up in minutes.
+            SpeedoBill is invite-only. Tell us about your business and our team will personally onboard you within 24 hours.
           </p>
           <ul className="mt-6 space-y-3">
-            {["Free setup assistance", "No credit card required", "7-day free trial included", "Personalized onboarding call"].map((item) => (
+            {[
+              "1-on-1 setup with a specialist",
+              "Custom configuration for your menu",
+              "Free training for your staff",
+              "WhatsApp & phone support included",
+            ].map((item) => (
               <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
                 <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
                 {item}
@@ -334,7 +338,7 @@ const LandingPage = () => {
           </ul>
         </ScrollReveal>
         <ScrollReveal yOffset={50} delay={0.15} stiffness={70} damping={16}>
-          <DemoBookingForm />
+          <RequestAccessForm />
         </ScrollReveal>
       </div>
     </section>

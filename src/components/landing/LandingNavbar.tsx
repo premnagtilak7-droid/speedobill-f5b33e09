@@ -117,12 +117,9 @@ const LandingNavbar = () => {
 
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
-          <Link to="/auth">
-            <Button variant="ghost" size="sm">{t("nav.login")}</Button>
-          </Link>
-          <a href="/#demo">
+          <a href="/#request-access">
             <Button size="sm" className="font-semibold">
-              Book a Demo
+              Request Access
             </Button>
           </a>
         </div>

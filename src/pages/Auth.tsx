@@ -297,19 +297,14 @@ const Auth = () => {
             </div>
           ) : (
             <>
-              <div className="flex rounded-lg border border-border overflow-hidden">
-                <button
-                  className={`flex-1 py-2.5 text-sm font-semibold transition-all ${
-                    mode === "login" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                  onClick={() => setMode("login")}
-                >Login</button>
-                <button
-                  className={`flex-1 py-2.5 text-sm font-semibold transition-all ${
-                    mode === "signup" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                  onClick={() => setMode("signup")}
-                >Sign Up</button>
+              <div className="rounded-lg border border-border bg-secondary/30 p-3 text-center">
+                <p className="text-xs font-semibold text-foreground">Sign in to your account</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  New to SpeedoBill?{" "}
+                  <a href="/#request-access" className="font-semibold text-primary hover:underline">
+                    Request Access
+                  </a>
+                </p>
               </div>
 
               <div className="space-y-4">
