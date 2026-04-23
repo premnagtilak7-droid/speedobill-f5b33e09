@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { writeAudit } from "@/lib/audit";
-import { Eye, EyeOff, Zap, ChefHat, BarChart3, Grid3X3, UtensilsCrossed, ScrollText, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Eye, EyeOff, Zap, ChefHat, BarChart3, Grid3X3, UtensilsCrossed, ScrollText, ShieldCheck, ShieldAlert, KeyRound, ArrowLeft, Delete, User } from "lucide-react";
 import { getScopedStorageKey } from "@/lib/backend-cache";
 import { getAuthRedirectOrigin, getResetPasswordRedirectUrl } from "@/lib/platform";
 import { Progress } from "@/components/ui/progress";
 
 type AuthMode = "login" | "signup";
 type RoleChoice = "owner" | "waiter" | "chef";
+type StaffStep = "code" | "select" | "pin";
+interface StaffOption { user_id: string; full_name: string; role: string; }
 
 const slides = [
   {
@@ -105,6 +107,17 @@ const Auth = () => {
   const [forgotMode, setForgotMode] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
 
+  // Staff PIN login state
+  const [staffMode, setStaffMode] = useState(false);
+  const [staffStep, setStaffStep] = useState<StaffStep>("code");
+  const [staffHotelCode, setStaffHotelCode] = useState("");
+  const [staffHotelId, setStaffHotelId] = useState<string | null>(null);
+  const [staffHotelName, setStaffHotelName] = useState("");
+  const [staffOptions, setStaffOptions] = useState<StaffOption[]>([]);
+  const [selectedStaff, setSelectedStaff] = useState<StaffOption | null>(null);
+  const [pinDigits, setPinDigits] = useState("");
+  const [staffLoading, setStaffLoading] = useState(false);
+
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
@@ -116,6 +129,98 @@ const Auth = () => {
       setGoogleLoading(false);
     }
   };
+
+  const resetStaffFlow = () => {
+    setStaffMode(false);
+    setStaffStep("code");
+    setStaffHotelCode("");
+    setStaffHotelId(null);
+    setStaffHotelName("");
+    setStaffOptions([]);
+    setSelectedStaff(null);
+    setPinDigits("");
+  };
+
+  const handleStaffFetch = async () => {
+    const code = staffHotelCode.trim().toUpperCase();
+    if (!/^\d{6}$/.test(code) && !/^QB-\d{4}$/.test(code)) {
+      toast.error("Enter a valid hotel code (6 digits)");
+      return;
+    }
+    setStaffLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("staff-list-by-code", {
+        body: { hotel_code: code },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const staff: StaffOption[] = (data as any)?.staff ?? [];
+      if (!staff.length) {
+        toast.error("No active staff with PINs found for this hotel");
+        return;
+      }
+      setStaffHotelId((data as any).hotel_id);
+      setStaffHotelName((data as any).hotel_name || "");
+      setStaffOptions(staff);
+      setStaffStep("select");
+    } catch (err: any) {
+      toast.error(err?.message || "Could not load staff");
+    } finally {
+      setStaffLoading(false);
+    }
+  };
+
+  const handlePinDigit = (d: string) => {
+    setPinDigits((prev) => (prev.length >= 4 ? prev : prev + d));
+  };
+  const handlePinBackspace = () => setPinDigits((prev) => prev.slice(0, -1));
+  const handlePinClear = () => setPinDigits("");
+
+  const handleStaffPinSubmit = async (pinValue: string) => {
+    if (!selectedStaff || !staffHotelCode || pinValue.length !== 4) return;
+    setStaffLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-staff-pin", {
+        body: {
+          hotel_code: staffHotelCode.trim().toUpperCase(),
+          user_id: selectedStaff.user_id,
+          pin: pinValue,
+        },
+      });
+      if (error) throw error;
+      const payload = data as any;
+      if (payload?.error) throw new Error(payload.error);
+      if (!payload?.token_hash) throw new Error("Login failed. Please try again.");
+
+      // Exchange the magic link token for a session
+      const { error: verifyErr } = await supabase.auth.verifyOtp({
+        type: "magiclink",
+        token_hash: payload.token_hash,
+      });
+      if (verifyErr) throw verifyErr;
+
+      cacheStaffHotelCode(payload.email || `${selectedStaff.user_id}@staff`, staffHotelCode.trim().toUpperCase());
+      toast.success(`Welcome, ${selectedStaff.full_name}!`);
+
+      // Redirect by role — page will route based on auth state, but force navigation for clarity
+      const target = selectedStaff.role === "chef" ? "/kds" : "/tables";
+      window.location.replace(target);
+    } catch (err: any) {
+      toast.error(err?.message || "Could not verify PIN");
+      setPinDigits("");
+    } finally {
+      setStaffLoading(false);
+    }
+  };
+
+  // Auto-submit when 4 digits entered
+  useEffect(() => {
+    if (staffStep === "pin" && pinDigits.length === 4 && !staffLoading) {
+      void handleStaffPinSubmit(pinDigits);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pinDigits, staffStep]);
+
 
   const pwStrength = useMemo(() => evaluatePassword(password), [password]);
   useEffect(() => {
@@ -282,7 +387,168 @@ const Auth = () => {
             <p className="text-sm text-muted-foreground">Smart Restaurant Management</p>
           </div>
 
-          {forgotMode ? (
+          {staffMode ? (
+            <div className="space-y-5">
+              <button
+                onClick={resetStaffFlow}
+                className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
+              >
+                <ArrowLeft className="h-4 w-4" /> Back to Owner Login
+              </button>
+
+              {staffStep === "code" && (
+                <div className="space-y-4">
+                  <div className="text-center space-y-1">
+                    <div className="mx-auto w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                      <KeyRound className="h-7 w-7 text-primary" />
+                    </div>
+                    <h2 className="text-xl font-bold text-foreground">Staff Login</h2>
+                    <p className="text-xs text-muted-foreground">Enter your hotel's 6-digit code to continue</p>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-bold text-foreground">Hotel Code</label>
+                    <Input
+                      placeholder="e.g. 384172"
+                      value={staffHotelCode}
+                      onChange={(e) => setStaffHotelCode(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => e.key === "Enter" && handleStaffFetch()}
+                      inputMode="numeric"
+                      maxLength={9}
+                      className="h-12 bg-secondary/50 border-border text-center text-lg tracking-[0.4em] font-mono"
+                    />
+                    <p className="text-xs text-muted-foreground">Ask your owner for the hotel code shown on their dashboard.</p>
+                  </div>
+                  <Button
+                    className="w-full h-12 gradient-btn-primary text-base font-semibold rounded-xl"
+                    onClick={handleStaffFetch}
+                    disabled={staffLoading || !staffHotelCode.trim()}
+                  >
+                    {staffLoading ? (
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : "Continue"}
+                  </Button>
+                </div>
+              )}
+
+              {staffStep === "select" && (
+                <div className="space-y-4">
+                  <div className="text-center space-y-1">
+                    <h2 className="text-xl font-bold text-foreground">Select your name</h2>
+                    {staffHotelName && (
+                      <p className="text-xs text-muted-foreground">{staffHotelName} • {staffHotelCode}</p>
+                    )}
+                  </div>
+                  <div className="grid gap-2 max-h-[360px] overflow-y-auto pr-1">
+                    {staffOptions.map((s) => (
+                      <button
+                        key={s.user_id}
+                        onClick={() => {
+                          setSelectedStaff(s);
+                          setPinDigits("");
+                          setStaffStep("pin");
+                        }}
+                        className="flex items-center gap-3 p-3 rounded-xl border border-border bg-secondary/30 hover:bg-secondary hover:border-primary transition-all text-left"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <User className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">{s.full_name}</p>
+                          <p className="text-xs text-muted-foreground capitalize">{s.role}</p>
+                        </div>
+                        <span className="text-xs text-muted-foreground">›</span>
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => { setStaffStep("code"); setStaffOptions([]); }}
+                    className="text-sm text-primary w-full text-center hover:underline"
+                  >
+                    ← Use a different hotel code
+                  </button>
+                </div>
+              )}
+
+              {staffStep === "pin" && selectedStaff && (
+                <div className="space-y-5">
+                  <div className="text-center space-y-1">
+                    <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-7 w-7 text-primary" />
+                    </div>
+                    <h2 className="text-xl font-bold text-foreground">{selectedStaff.full_name}</h2>
+                    <p className="text-xs text-muted-foreground capitalize">{selectedStaff.role} • Enter your 4-digit PIN</p>
+                  </div>
+
+                  <div className="flex justify-center gap-3">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className={`w-12 h-14 rounded-xl border-2 flex items-center justify-center text-2xl font-bold transition-all ${
+                          pinDigits.length > i
+                            ? "bg-primary/10 border-primary text-foreground"
+                            : "bg-secondary/40 border-border text-muted-foreground"
+                        }`}
+                      >
+                        {pinDigits.length > i ? "•" : ""}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 max-w-[280px] mx-auto">
+                    {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        disabled={staffLoading || pinDigits.length >= 4}
+                        onClick={() => handlePinDigit(d)}
+                        className="h-14 rounded-xl bg-secondary/50 border border-border text-xl font-bold text-foreground hover:bg-secondary active:scale-95 transition-all disabled:opacity-40"
+                      >
+                        {d}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      disabled={staffLoading}
+                      onClick={handlePinClear}
+                      className="h-14 rounded-xl bg-secondary/30 border border-border text-xs font-semibold text-muted-foreground hover:bg-secondary active:scale-95 transition-all disabled:opacity-40"
+                    >
+                      Clear
+                    </button>
+                    <button
+                      type="button"
+                      disabled={staffLoading || pinDigits.length >= 4}
+                      onClick={() => handlePinDigit("0")}
+                      className="h-14 rounded-xl bg-secondary/50 border border-border text-xl font-bold text-foreground hover:bg-secondary active:scale-95 transition-all disabled:opacity-40"
+                    >
+                      0
+                    </button>
+                    <button
+                      type="button"
+                      disabled={staffLoading || pinDigits.length === 0}
+                      onClick={handlePinBackspace}
+                      className="h-14 rounded-xl bg-secondary/30 border border-border flex items-center justify-center text-foreground hover:bg-secondary active:scale-95 transition-all disabled:opacity-40"
+                      aria-label="Backspace"
+                    >
+                      <Delete className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  {staffLoading && (
+                    <div className="flex justify-center">
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => { setStaffStep("select"); setPinDigits(""); setSelectedStaff(null); }}
+                    className="text-sm text-primary w-full text-center hover:underline"
+                  >
+                    ← Choose a different name
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : forgotMode ? (
             <div className="space-y-4">
               <div className="space-y-1">
                 <label className="text-sm font-medium text-foreground">Email Address</label>
@@ -446,6 +712,29 @@ const Auth = () => {
                   <button className="text-sm text-primary w-full text-center hover:underline font-medium" onClick={() => setForgotMode(true)}>
                     Forgot Password?
                   </button>
+                )}
+
+                {mode === "login" && (
+                  <div className="pt-2">
+                    <div className="relative flex items-center gap-3 py-1">
+                      <div className="flex-1 h-px bg-border" />
+                      <span className="text-xs text-muted-foreground">Staff member?</span>
+                      <div className="flex-1 h-px bg-border" />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full h-12 rounded-xl mt-2 gap-2 font-semibold"
+                      onClick={() => {
+                        setStaffMode(true);
+                        setStaffStep("code");
+                        setPinDigits("");
+                      }}
+                    >
+                      <KeyRound className="h-4 w-4" />
+                      Staff Login (Hotel Code + PIN)
+                    </Button>
+                  </div>
                 )}
               </div>
 
