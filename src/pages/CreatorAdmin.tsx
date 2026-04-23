@@ -1954,6 +1954,29 @@ const CreatorAdmin = () => {
           </button>
         </div>
       </nav>
+
+      {/* Convert-lead → Create Hotel dialog (controlled) */}
+      <CreateHotelDialog
+        open={!!convertLead}
+        onOpenChange={(v) => { if (!v) setConvertLead(null); }}
+        prefill={convertLead ? {
+          hotel_name: convertLead.restaurant_name || "",
+          owner_name: convertLead.owner_name || "",
+          phone: convertLead.whatsapp_number || "",
+          city: convertLead.city || "",
+          business_type: convertLead.business_type || "Restaurant",
+        } : undefined}
+        onCreated={() => {
+          if (!convertLead) return;
+          setConvertedLeads(prev => {
+            const next = new Set(prev);
+            next.add(convertLead.id);
+            try { localStorage.setItem("speedo_converted_leads", JSON.stringify(Array.from(next))); } catch {}
+            return next;
+          });
+          fetchData();
+        }}
+      />
     </div>
   );
 };
