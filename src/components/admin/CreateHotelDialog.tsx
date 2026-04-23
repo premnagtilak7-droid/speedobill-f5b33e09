@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,12 +50,19 @@ export const CreateHotelDialog = ({ onCreated, trigger, prefill, open: controlle
   const [trialDays, setTrialDays] = useState("30");
   const [password, setPassword] = useState("");
 
-  // Apply prefill whenever dialog opens with new prefill data
-  useState(() => {});
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  useEffectPrefill(open, prefill, {
-    setHotelName, setOwnerName, setEmail, setPhone, setCity, setBusinessType,
-  });
+  // Apply prefill whenever dialog opens
+  useEffect(() => {
+    if (!open || !prefill) return;
+    if (prefill.hotel_name !== undefined) setHotelName(prefill.hotel_name);
+    if (prefill.owner_name !== undefined) setOwnerName(prefill.owner_name);
+    if (prefill.email !== undefined) setEmail(prefill.email);
+    if (prefill.phone !== undefined) setPhone(prefill.phone);
+    if (prefill.city !== undefined) setCity(prefill.city);
+    if (prefill.business_type !== undefined && BUSINESS_TYPES.includes(prefill.business_type)) {
+      setBusinessType(prefill.business_type);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, prefill]);
 
   const [result, setResult] = useState<{ hotel_code: string | null; email: string } | null>(null);
 
