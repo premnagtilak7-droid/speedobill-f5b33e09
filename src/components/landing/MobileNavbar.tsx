@@ -128,8 +128,8 @@ const MobileNavbar = () => {
             </nav>
 
             <div className="border-t p-4" style={{ borderColor: "#1e2a45" }}>
-              <a href="/#demo" onClick={close}>
-                <Button className="w-full font-semibold">Book a Demo</Button>
+              <a href="/#request-access" onClick={close}>
+                <Button className="w-full font-semibold">Request Access</Button>
               </a>
             </div>
           </div>
@@ -147,11 +147,11 @@ const MobileNavbar = () => {
 
       <div className="flex items-center gap-1">
         <LanguageSwitcher />
-        <Link to="/auth">
-          <Button variant="ghost" size="sm" className="text-xs font-semibold px-2">
-            {t("nav.login")}
+        <a href="/#request-access">
+          <Button size="sm" className="text-xs font-semibold px-2">
+            Request Access
           </Button>
-        </Link>
+        </a>
       </div>
     </header>
   );
