@@ -118,6 +118,7 @@ const Auth = () => {
   const [pinDigits, setPinDigits] = useState("");
   const [staffLoading, setStaffLoading] = useState(false);
 
+  const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -128,6 +129,98 @@ const Auth = () => {
       setGoogleLoading(false);
     }
   };
+
+  const resetStaffFlow = () => {
+    setStaffMode(false);
+    setStaffStep("code");
+    setStaffHotelCode("");
+    setStaffHotelId(null);
+    setStaffHotelName("");
+    setStaffOptions([]);
+    setSelectedStaff(null);
+    setPinDigits("");
+  };
+
+  const handleStaffFetch = async () => {
+    const code = staffHotelCode.trim().toUpperCase();
+    if (!/^\d{6}$/.test(code) && !/^QB-\d{4}$/.test(code)) {
+      toast.error("Enter a valid hotel code (6 digits)");
+      return;
+    }
+    setStaffLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("staff-list-by-code", {
+        body: { hotel_code: code },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const staff: StaffOption[] = (data as any)?.staff ?? [];
+      if (!staff.length) {
+        toast.error("No active staff with PINs found for this hotel");
+        return;
+      }
+      setStaffHotelId((data as any).hotel_id);
+      setStaffHotelName((data as any).hotel_name || "");
+      setStaffOptions(staff);
+      setStaffStep("select");
+    } catch (err: any) {
+      toast.error(err?.message || "Could not load staff");
+    } finally {
+      setStaffLoading(false);
+    }
+  };
+
+  const handlePinDigit = (d: string) => {
+    setPinDigits((prev) => (prev.length >= 4 ? prev : prev + d));
+  };
+  const handlePinBackspace = () => setPinDigits((prev) => prev.slice(0, -1));
+  const handlePinClear = () => setPinDigits("");
+
+  const handleStaffPinSubmit = async (pinValue: string) => {
+    if (!selectedStaff || !staffHotelCode || pinValue.length !== 4) return;
+    setStaffLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-staff-pin", {
+        body: {
+          hotel_code: staffHotelCode.trim().toUpperCase(),
+          user_id: selectedStaff.user_id,
+          pin: pinValue,
+        },
+      });
+      if (error) throw error;
+      const payload = data as any;
+      if (payload?.error) throw new Error(payload.error);
+      if (!payload?.token_hash) throw new Error("Login failed. Please try again.");
+
+      // Exchange the magic link token for a session
+      const { error: verifyErr } = await supabase.auth.verifyOtp({
+        type: "magiclink",
+        token_hash: payload.token_hash,
+      });
+      if (verifyErr) throw verifyErr;
+
+      cacheStaffHotelCode(payload.email || `${selectedStaff.user_id}@staff`, staffHotelCode.trim().toUpperCase());
+      toast.success(`Welcome, ${selectedStaff.full_name}!`);
+
+      // Redirect by role — page will route based on auth state, but force navigation for clarity
+      const target = selectedStaff.role === "chef" ? "/kds" : "/tables";
+      window.location.replace(target);
+    } catch (err: any) {
+      toast.error(err?.message || "Could not verify PIN");
+      setPinDigits("");
+    } finally {
+      setStaffLoading(false);
+    }
+  };
+
+  // Auto-submit when 4 digits entered
+  useEffect(() => {
+    if (staffStep === "pin" && pinDigits.length === 4 && !staffLoading) {
+      void handleStaffPinSubmit(pinDigits);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pinDigits, staffStep]);
+
 
   const pwStrength = useMemo(() => evaluatePassword(password), [password]);
   useEffect(() => {
