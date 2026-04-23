@@ -130,6 +130,10 @@ const Dashboard = () => {
         setLowStockItems(low);
       }
       if (kotRes.data) setPendingKOT(kotRes.data.length);
+      if (hotelRes.data) {
+        setHotelCode((hotelRes.data as any).hotel_code || "");
+        setHotelName((hotelRes.data as any).name || "");
+      }
       // Stuck bills: active orders open >45m
       const cutoff45 = new Date(Date.now() - 45 * 60 * 1000).toISOString();
       const { data: stuckRows } = await supabase
