@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   IndianRupee, ShoppingBag, Grid3X3, AlertTriangle,
   Plus, UtensilsCrossed, BarChart3, Wallet, ChefHat, Clock, Crown,
-  TrendingUp, TrendingDown, Bell, Check as CheckIcon, Package, Flame, Receipt, Users
+  TrendingUp, TrendingDown, Bell, Check as CheckIcon, Package, Flame, Receipt, Users,
+  KeyRound, Copy, Share2, Check
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -314,6 +315,65 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Hotel Code card — owner-only, prominently displayed for sharing with staff */}
+      {role === "owner" && hotelCode && (
+        <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 md:p-6 animate-pop-in shadow-[0_8px_30px_-12px_hsl(var(--primary)/0.35)]">
+          <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-primary/10 blur-2xl pointer-events-none" />
+          <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-start gap-4 min-w-0">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <KeyRound className="h-6 w-6" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-primary/80">
+                  Your Hotel Code
+                </p>
+                <div className="mt-1 flex items-baseline gap-3 flex-wrap">
+                  <span className="font-mono text-4xl md:text-5xl font-extrabold text-foreground tracking-[0.15em] tnum">
+                    {hotelCode}
+                  </span>
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Share this 6-digit code with your staff (waiters, chefs, managers) so they can sign in to {hotelName || "your hotel"}.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-primary/30 hover:bg-primary/10"
+                onClick={() => {
+                  navigator.clipboard.writeText(hotelCode);
+                  setCodeCopied(true);
+                  setTimeout(() => setCodeCopied(false), 2000);
+                }}
+              >
+                {codeCopied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                {codeCopied ? "Copied!" : "Copy"}
+              </Button>
+              <Button
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  const text = `Hi! Sign in to ${hotelName || "our restaurant"} on SpeedoBill.\n\nHotel Code: ${hotelCode}\n\nLogin: https://speedobill.lovable.app/auth`;
+                  if (navigator.share) {
+                    navigator.share({ title: "SpeedoBill Hotel Code", text }).catch(() => {});
+                  } else {
+                    navigator.clipboard.writeText(text);
+                    setCodeCopied(true);
+                    setTimeout(() => setCodeCopied(false), 2000);
+                  }
+                }}
+              >
+                <Share2 className="h-4 w-4" />
+                Share
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick Bill Search */}
       {hotelId && <QuickBillSearch hotelId={hotelId} />}
