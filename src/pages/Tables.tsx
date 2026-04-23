@@ -18,6 +18,7 @@ import { ChefHat } from "lucide-react";
 import { toast } from "sonner";
 import { writeAudit } from "@/lib/audit";
 import TableMapSkeleton from "@/components/skeletons/TableMapSkeleton";
+import { printReceipt } from "@/lib/print-receipt";
 
 /* ────────── types ────────── */
 interface Table { id: string; table_number: number; capacity: number; status: string; section_name: string; }
