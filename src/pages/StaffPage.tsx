@@ -100,7 +100,50 @@ const StaffPage = () => {
       stats[o.waiter_id].total += Number(o.total) || 0;
     });
     setOrderStats(stats);
+
+    // Load which staff have a PIN configured (don't fetch the hash itself)
+    if (rawStaff.length > 0) {
+      const { data: pinRows } = await supabase
+        .from("staff_pins")
+        .select("user_id")
+        .in("user_id", rawStaff.map((m: any) => m.user_id));
+      const pinMap: Record<string, boolean> = {};
+      (pinRows || []).forEach((p: any) => { pinMap[p.user_id] = true; });
+      setStaffPins(pinMap);
+    }
+
     setLoading(false);
+  };
+
+  const savePin = async () => {
+    if (!selectedStaff) return;
+    if (!/^\d{4}$/.test(pinValue)) {
+      toast.error("PIN must be exactly 4 digits");
+      return;
+    }
+    if (pinValue !== pinConfirm) {
+      toast.error("PINs do not match");
+      return;
+    }
+    setSavingPin(true);
+    try {
+      const res = await supabase.functions.invoke("set-staff-pin", {
+        body: { target_user_id: selectedStaff.user_id, pin: pinValue },
+      });
+      if (res.error || res.data?.error) {
+        toast.error(res.data?.error || res.error?.message || "Failed to save PIN");
+      } else {
+        toast.success(`PIN ${staffPins[selectedStaff.user_id] ? "reset" : "set"} for ${selectedStaff.full_name}`);
+        setStaffPins(prev => ({ ...prev, [selectedStaff.user_id]: true }));
+        setPinDialog(false);
+        setPinValue("");
+        setPinConfirm("");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save PIN");
+    } finally {
+      setSavingPin(false);
+    }
   };
 
   const toggleActive = async (userId: string, current: boolean) => {
