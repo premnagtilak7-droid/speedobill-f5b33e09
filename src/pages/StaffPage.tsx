@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Users, Copy, UserCheck, Wallet, Clock, BarChart3, Calendar, ChevronRight, Phone, Mail, MapPin, Plus, Star, TrendingUp, Award } from "lucide-react";
+import { Users, Copy, UserCheck, Wallet, Clock, BarChart3, Calendar, ChevronRight, Phone, Mail, MapPin, Plus, Star, TrendingUp, Award, KeyRound, ShieldCheck, ShieldAlert } from "lucide-react";
 import { format, differenceInMinutes, parseISO, startOfMonth, endOfMonth } from "date-fns";
 
 const StaffPage = () => {
