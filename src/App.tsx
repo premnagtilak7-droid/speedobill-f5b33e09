@@ -123,11 +123,6 @@ const AppRoutes = () => {
   const navigate = useNavigate();
 
   const isCreator = user?.email === "speedobill7@gmail.com";
-
-  // Kiosk Mode + owner logged in → show full-screen Staff selection grid
-  if (isKiosk && (role === "owner" || !user)) {
-    return <StaffKiosk />;
-  }
   const defaultAuthenticatedRoute = isCreator && role === "owner"
     ? "/creator-admin"
     : role === "chef"
@@ -144,6 +139,7 @@ const AppRoutes = () => {
       user &&
       isCreator &&
       role === "owner" &&
+      !isKiosk &&
       location.pathname !== "/creator-admin" &&
       location.pathname !== "/auth" &&
       location.pathname !== "/reset-password" &&
@@ -152,7 +148,12 @@ const AppRoutes = () => {
     ) {
       navigate("/creator-admin", { replace: true });
     }
-  }, [loading, user, isCreator, role, location.pathname, navigate]);
+  }, [loading, user, isCreator, role, isKiosk, location.pathname, navigate]);
+
+  // Kiosk Mode + owner logged in (or no user yet) → show full-screen Staff selection grid
+  if (isKiosk && (role === "owner" || !user)) {
+    return <StaffKiosk />;
+  }
 
   if (loading) {
     return (
