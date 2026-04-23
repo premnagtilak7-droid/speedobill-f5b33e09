@@ -552,6 +552,29 @@ const Auth = () => {
                     Forgot Password?
                   </button>
                 )}
+
+                {mode === "login" && (
+                  <div className="pt-2">
+                    <div className="relative flex items-center gap-3 py-1">
+                      <div className="flex-1 h-px bg-border" />
+                      <span className="text-xs text-muted-foreground">Staff member?</span>
+                      <div className="flex-1 h-px bg-border" />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full h-12 rounded-xl mt-2 gap-2 font-semibold"
+                      onClick={() => {
+                        setStaffMode(true);
+                        setStaffStep("code");
+                        setPinDigits("");
+                      }}
+                    >
+                      <KeyRound className="h-4 w-4" />
+                      Staff Login (Hotel Code + PIN)
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <div className="text-center space-y-3 pt-2">
