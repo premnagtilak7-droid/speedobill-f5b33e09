@@ -1348,10 +1348,12 @@ export type Database = {
           id: string
           is_active: boolean
           join_date: string | null
+          last_device_type: string | null
           notification_preferences: Json
           notification_volume: number | null
           phone: string | null
           photo_url: string | null
+          print_preference: string | null
           reminder_sent_day5: boolean | null
           reminder_sent_day7: boolean | null
           role: string | null
@@ -1371,10 +1373,12 @@ export type Database = {
           id?: string
           is_active?: boolean
           join_date?: string | null
+          last_device_type?: string | null
           notification_preferences?: Json
           notification_volume?: number | null
           phone?: string | null
           photo_url?: string | null
+          print_preference?: string | null
           reminder_sent_day5?: boolean | null
           reminder_sent_day7?: boolean | null
           role?: string | null
@@ -1394,10 +1398,12 @@ export type Database = {
           id?: string
           is_active?: boolean
           join_date?: string | null
+          last_device_type?: string | null
           notification_preferences?: Json
           notification_volume?: number | null
           phone?: string | null
           photo_url?: string | null
+          print_preference?: string | null
           reminder_sent_day5?: boolean | null
           reminder_sent_day7?: boolean | null
           role?: string | null
@@ -2328,6 +2334,14 @@ export type Database = {
       }
       next_token_number: { Args: { _hotel_id: string }; Returns: number }
       verify_owner_pin: { Args: { _pin: string }; Returns: boolean }
+      verify_staff_pin: {
+        Args: {
+          input_hotel_id: string
+          input_pin: string
+          input_profile_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "owner" | "waiter" | "chef" | "manager"

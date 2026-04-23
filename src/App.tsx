@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
+import { KioskProvider, useKioskMode } from "@/hooks/useKioskMode";
+import StaffKiosk from "@/components/kiosk/StaffKiosk";
+import KioskLockGuard from "@/components/kiosk/KioskLockGuard";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RoleGuard from "@/components/RoleGuard";
 import PlanGuard from "@/components/PlanGuard";
@@ -115,6 +118,7 @@ const queryClient = new QueryClient({
 
 const AppRoutes = () => {
   const { user, role, loading } = useAuth();
+  const { isKiosk } = useKioskMode();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -135,6 +139,7 @@ const AppRoutes = () => {
       user &&
       isCreator &&
       role === "owner" &&
+      !isKiosk &&
       location.pathname !== "/creator-admin" &&
       location.pathname !== "/auth" &&
       location.pathname !== "/reset-password" &&
@@ -143,7 +148,12 @@ const AppRoutes = () => {
     ) {
       navigate("/creator-admin", { replace: true });
     }
-  }, [loading, user, isCreator, role, location.pathname, navigate]);
+  }, [loading, user, isCreator, role, isKiosk, location.pathname, navigate]);
+
+  // Kiosk Mode + owner logged in (or no user yet) → show full-screen Staff selection grid
+  if (isKiosk && (role === "owner" || !user)) {
+    return <StaffKiosk />;
+  }
 
   if (loading) {
     return (
@@ -156,6 +166,7 @@ const AppRoutes = () => {
   return (
     <>
       <ScrollToTop />
+      <KioskLockGuard />
       <Suspense fallback={<PageFallback />}>
       <Routes>
         <Route
@@ -252,9 +263,11 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <SubscriptionProvider>
-            <PwaSplashOnboarding />
-            <AppRoutes />
-            <SpeedoBot />
+            <KioskProvider>
+              <PwaSplashOnboarding />
+              <AppRoutes />
+              <SpeedoBot />
+            </KioskProvider>
           </SubscriptionProvider>
         </AuthProvider>
       </BrowserRouter>

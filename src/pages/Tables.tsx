@@ -405,22 +405,16 @@ const Tables = () => {
   const handlePrint = () => {
     if (!orderItems.length) { toast.error("Add items first"); return; }
     const receipt = buildReceiptText();
-    const popup = window.open("", "_blank", "width=380,height=800");
-    if (!popup) { toast.error("Popup blocked"); return; }
-    const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    const logoHtml = hotelInfo?.logo_url ? `<div style="text-align:center;margin-bottom:8px"><img src="${esc(hotelInfo.logo_url)}" style="max-width:120px;max-height:60px" /></div>` : "";
     const upiQrUrl = hotelInfo?.upi_id
       ? `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=${hotelInfo.upi_id}&pn=${encodeURIComponent(hotelInfo?.name || "Hotel")}&am=${grandTotal.toFixed(2)}&cu=INR`)}`
-      : "";
-    const upiQrHtml = upiQrUrl
-      ? `<div style="text-align:center;margin-top:10px;border-top:1px dashed #000;padding-top:8px"><img src="${esc(upiQrUrl)}" style="width:130px;height:130px;margin:0 auto;display:block" /><p style="font-size:10px;margin:4px 0">Scan to Pay ₹${grandTotal.toFixed(2)}</p></div>`
-      : "";
-    popup.document.write(`<html><head><title>Receipt</title><style>
-      body{font-family:'Courier New',monospace;padding:0;margin:0;font-size:12px;}
-      .receipt{width:300px;margin:0 auto;padding:16px;}
-      pre{white-space:pre-wrap;word-break:break-word;margin:0;}
-    </style></head><body><div class="receipt">${logoHtml}<pre>${esc(receipt)}</pre>${upiQrHtml}</div></body></html>`);
-    popup.document.close(); popup.focus(); popup.print();
+      : undefined;
+    void printReceipt({
+      text: receipt,
+      title: `Receipt · Table ${selectedTable?.table_number ?? ""}`,
+      logoUrl: hotelInfo?.logo_url || undefined,
+      upiQrUrl,
+      upiAmount: grandTotal,
+    });
   };
 
   const handleWhatsApp = () => {
