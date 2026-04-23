@@ -547,26 +547,35 @@ export type Database = {
       }
       demo_leads: {
         Row: {
+          business_type: string | null
           city: string
           created_at: string
           id: string
+          number_of_tables: number | null
           owner_name: string
+          preferred_contact_time: string | null
           restaurant_name: string
           whatsapp_number: string
         }
         Insert: {
+          business_type?: string | null
           city: string
           created_at?: string
           id?: string
+          number_of_tables?: number | null
           owner_name: string
+          preferred_contact_time?: string | null
           restaurant_name: string
           whatsapp_number: string
         }
         Update: {
+          business_type?: string | null
           city?: string
           created_at?: string
           id?: string
+          number_of_tables?: number | null
           owner_name?: string
+          preferred_contact_time?: string | null
           restaurant_name?: string
           whatsapp_number?: string
         }
