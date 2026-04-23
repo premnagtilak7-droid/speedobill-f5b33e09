@@ -195,6 +195,10 @@ const CreatorAdmin = () => {
   const [contactedLeads, setContactedLeads] = useState<Set<string>>(() => {
     try { return new Set(JSON.parse(localStorage.getItem("speedo_contacted_leads") || "[]")); } catch { return new Set(); }
   });
+  const [convertedLeads, setConvertedLeads] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("speedo_converted_leads") || "[]")); } catch { return new Set(); }
+  });
+  const [convertLead, setConvertLead] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [tier, setTier] = useState("basic");
