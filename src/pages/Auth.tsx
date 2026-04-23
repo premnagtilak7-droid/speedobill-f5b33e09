@@ -107,7 +107,17 @@ const Auth = () => {
   const [forgotMode, setForgotMode] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
 
-  const handleGoogleSignIn = async () => {
+  // Staff PIN login state
+  const [staffMode, setStaffMode] = useState(false);
+  const [staffStep, setStaffStep] = useState<StaffStep>("code");
+  const [staffHotelCode, setStaffHotelCode] = useState("");
+  const [staffHotelId, setStaffHotelId] = useState<string | null>(null);
+  const [staffHotelName, setStaffHotelName] = useState("");
+  const [staffOptions, setStaffOptions] = useState<StaffOption[]>([]);
+  const [selectedStaff, setSelectedStaff] = useState<StaffOption | null>(null);
+  const [pinDigits, setPinDigits] = useState("");
+  const [staffLoading, setStaffLoading] = useState(false);
+
     setGoogleLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
