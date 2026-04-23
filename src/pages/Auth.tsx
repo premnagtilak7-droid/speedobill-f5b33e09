@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { writeAudit } from "@/lib/audit";
-import { Eye, EyeOff, Zap, ChefHat, BarChart3, Grid3X3, UtensilsCrossed, ScrollText, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Eye, EyeOff, Zap, ChefHat, BarChart3, Grid3X3, UtensilsCrossed, ScrollText, ShieldCheck, ShieldAlert, KeyRound, ArrowLeft, Delete, User } from "lucide-react";
 import { getScopedStorageKey } from "@/lib/backend-cache";
 import { getAuthRedirectOrigin, getResetPasswordRedirectUrl } from "@/lib/platform";
 import { Progress } from "@/components/ui/progress";
 
 type AuthMode = "login" | "signup";
 type RoleChoice = "owner" | "waiter" | "chef";
+type StaffStep = "code" | "select" | "pin";
+interface StaffOption { user_id: string; full_name: string; role: string; }
 
 const slides = [
   {
