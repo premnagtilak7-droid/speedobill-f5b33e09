@@ -350,8 +350,13 @@ const StaffPage = () => {
                             {s.full_name || "Unnamed"}
                             <Badge variant={perf.color} className="text-[10px]">{perf.label}</Badge>
                           </p>
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5 flex-wrap">
                             <Badge variant="outline" className="capitalize text-[10px]">{s.role}</Badge>
+                            {staffPins[s.user_id] ? (
+                              <Badge variant="default" className="text-[10px] gap-1"><ShieldCheck className="h-2.5 w-2.5" /> PIN set</Badge>
+                            ) : (
+                              <Badge variant="secondary" className="text-[10px] gap-1"><ShieldAlert className="h-2.5 w-2.5" /> No PIN</Badge>
+                            )}
                             {stats && <span>{stats.count} orders · ₹{stats.total.toLocaleString()}</span>}
                             <span>Joined {format(parseISO(s.created_at), "dd MMM yyyy")}</span>
                           </div>
