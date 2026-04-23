@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -95,6 +96,8 @@ function evaluatePassword(pw: string): PasswordStrength {
 }
 
 const Auth = () => {
+  const location = useLocation();
+  const isStaffRoute = location.pathname.startsWith("/auth/staff");
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -108,7 +111,7 @@ const Auth = () => {
   const [activeSlide, setActiveSlide] = useState(0);
 
   // Staff PIN login state
-  const [staffMode, setStaffMode] = useState(false);
+  const [staffMode, setStaffMode] = useState(isStaffRoute);
   const [staffStep, setStaffStep] = useState<StaffStep>("code");
   const [staffHotelCode, setStaffHotelCode] = useState("");
   const [staffHotelId, setStaffHotelId] = useState<string | null>(null);
