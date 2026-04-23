@@ -1329,12 +1329,13 @@ const CreatorAdmin = () => {
                   {/* Leads table */}
                   <GlassCard className="overflow-hidden">
                     <div className="overflow-x-auto">
-                      <table className="w-full min-w-[760px]">
+                      <table className="w-full min-w-[860px]">
                         <thead>
                           <tr className="text-[11px] text-muted-foreground border-b border-border/40 uppercase tracking-wider">
                             <th className="text-left px-5 py-3 font-medium">Owner</th>
                             <th className="text-left px-5 py-3 font-medium">Restaurant</th>
                             <th className="text-left px-5 py-3 font-medium">City</th>
+                            <th className="text-center px-5 py-3 font-medium">Tables</th>
                             <th className="text-left px-5 py-3 font-medium">WhatsApp</th>
                             <th className="text-left px-5 py-3 font-medium">Submitted</th>
                             <th className="text-left px-5 py-3 font-medium">Status</th>
@@ -1355,6 +1356,7 @@ const CreatorAdmin = () => {
                             })
                             .map(l => {
                               const contacted = contactedLeads.has(l.id);
+                              const converted = convertedLeads.has(l.id);
                               const phone = (l.whatsapp_number || "").replace(/\D/g, "");
                               return (
                                 <tr key={l.id} className="hover:bg-white/40 dark:hover:bg-white/[0.02] transition-colors">
@@ -1366,12 +1368,24 @@ const CreatorAdmin = () => {
                                       <span className="text-sm font-medium text-foreground truncate max-w-[140px]">{l.owner_name || "—"}</span>
                                     </div>
                                   </td>
-                                  <td className="px-5 py-3.5 text-sm text-foreground truncate max-w-[160px]">{l.restaurant_name || "—"}</td>
+                                  <td className="px-5 py-3.5 text-sm text-foreground truncate max-w-[160px]">
+                                    <div>{l.restaurant_name || "—"}</div>
+                                    {l.business_type && (
+                                      <div className="text-[10px] text-muted-foreground mt-0.5">{l.business_type}</div>
+                                    )}
+                                  </td>
                                   <td className="px-5 py-3.5 text-xs text-muted-foreground">{l.city || "—"}</td>
+                                  <td className="px-5 py-3.5 text-center">
+                                    <span className="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-semibold">
+                                      {l.number_of_tables ?? "—"}
+                                    </span>
+                                  </td>
                                   <td className="px-5 py-3.5 text-xs font-mono text-muted-foreground">{l.whatsapp_number || "—"}</td>
                                   <td className="px-5 py-3.5 text-xs text-muted-foreground">{new Date(l.created_at).toLocaleDateString()}</td>
                                   <td className="px-5 py-3.5">
-                                    {contacted ? (
+                                    {converted ? (
+                                      <Badge className="bg-primary/15 text-primary border-primary/20 rounded-lg text-[10px]">Converted</Badge>
+                                    ) : contacted ? (
                                       <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 rounded-lg text-[10px]">Contacted</Badge>
                                     ) : (
                                       <Badge className="bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/20 rounded-lg text-[10px]">New</Badge>
@@ -1383,19 +1397,30 @@ const CreatorAdmin = () => {
                                         onClick={() => window.open(`https://wa.me/91${phone}`, "_blank")}>
                                         <Phone className="h-3.5 w-3.5 text-emerald-500" />
                                       </Button>
-                                      {!contacted && (
+                                      {!contacted && !converted && (
                                         <Button size="sm" variant="ghost" className="h-8 px-2 rounded-lg text-xs" title="Mark contacted"
                                           onClick={() => markLeadContacted(l.id)}>
                                           <CheckCircle2 className="h-3.5 w-3.5 text-indigo-500 mr-1" /> Mark
                                         </Button>
                                       )}
+                                      <Button
+                                        size="sm"
+                                        variant={converted ? "outline" : "default"}
+                                        disabled={converted}
+                                        className="h-8 px-3 rounded-lg text-xs gap-1"
+                                        title={converted ? "Already converted" : "Create hotel from this lead"}
+                                        onClick={() => setConvertLead(l)}
+                                      >
+                                        <Building2 className="h-3.5 w-3.5" />
+                                        {converted ? "Created" : "Create Hotel"}
+                                      </Button>
                                     </div>
                                   </td>
                                 </tr>
                               );
                             })}
                           {demoLeads.length === 0 && (
-                            <tr><td colSpan={7} className="text-center py-10 text-muted-foreground text-sm">No demo leads yet</td></tr>
+                            <tr><td colSpan={8} className="text-center py-10 text-muted-foreground text-sm">No demo leads yet</td></tr>
                           )}
                         </tbody>
                       </table>
