@@ -387,7 +387,168 @@ const Auth = () => {
             <p className="text-sm text-muted-foreground">Smart Restaurant Management</p>
           </div>
 
-          {forgotMode ? (
+          {staffMode ? (
+            <div className="space-y-5">
+              <button
+                onClick={resetStaffFlow}
+                className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
+              >
+                <ArrowLeft className="h-4 w-4" /> Back to Owner Login
+              </button>
+
+              {staffStep === "code" && (
+                <div className="space-y-4">
+                  <div className="text-center space-y-1">
+                    <div className="mx-auto w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                      <KeyRound className="h-7 w-7 text-primary" />
+                    </div>
+                    <h2 className="text-xl font-bold text-foreground">Staff Login</h2>
+                    <p className="text-xs text-muted-foreground">Enter your hotel's 6-digit code to continue</p>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-bold text-foreground">Hotel Code</label>
+                    <Input
+                      placeholder="e.g. 384172"
+                      value={staffHotelCode}
+                      onChange={(e) => setStaffHotelCode(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => e.key === "Enter" && handleStaffFetch()}
+                      inputMode="numeric"
+                      maxLength={9}
+                      className="h-12 bg-secondary/50 border-border text-center text-lg tracking-[0.4em] font-mono"
+                    />
+                    <p className="text-xs text-muted-foreground">Ask your owner for the hotel code shown on their dashboard.</p>
+                  </div>
+                  <Button
+                    className="w-full h-12 gradient-btn-primary text-base font-semibold rounded-xl"
+                    onClick={handleStaffFetch}
+                    disabled={staffLoading || !staffHotelCode.trim()}
+                  >
+                    {staffLoading ? (
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : "Continue"}
+                  </Button>
+                </div>
+              )}
+
+              {staffStep === "select" && (
+                <div className="space-y-4">
+                  <div className="text-center space-y-1">
+                    <h2 className="text-xl font-bold text-foreground">Select your name</h2>
+                    {staffHotelName && (
+                      <p className="text-xs text-muted-foreground">{staffHotelName} • {staffHotelCode}</p>
+                    )}
+                  </div>
+                  <div className="grid gap-2 max-h-[360px] overflow-y-auto pr-1">
+                    {staffOptions.map((s) => (
+                      <button
+                        key={s.user_id}
+                        onClick={() => {
+                          setSelectedStaff(s);
+                          setPinDigits("");
+                          setStaffStep("pin");
+                        }}
+                        className="flex items-center gap-3 p-3 rounded-xl border border-border bg-secondary/30 hover:bg-secondary hover:border-primary transition-all text-left"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <User className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">{s.full_name}</p>
+                          <p className="text-xs text-muted-foreground capitalize">{s.role}</p>
+                        </div>
+                        <span className="text-xs text-muted-foreground">›</span>
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => { setStaffStep("code"); setStaffOptions([]); }}
+                    className="text-sm text-primary w-full text-center hover:underline"
+                  >
+                    ← Use a different hotel code
+                  </button>
+                </div>
+              )}
+
+              {staffStep === "pin" && selectedStaff && (
+                <div className="space-y-5">
+                  <div className="text-center space-y-1">
+                    <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-7 w-7 text-primary" />
+                    </div>
+                    <h2 className="text-xl font-bold text-foreground">{selectedStaff.full_name}</h2>
+                    <p className="text-xs text-muted-foreground capitalize">{selectedStaff.role} • Enter your 4-digit PIN</p>
+                  </div>
+
+                  <div className="flex justify-center gap-3">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className={`w-12 h-14 rounded-xl border-2 flex items-center justify-center text-2xl font-bold transition-all ${
+                          pinDigits.length > i
+                            ? "bg-primary/10 border-primary text-foreground"
+                            : "bg-secondary/40 border-border text-muted-foreground"
+                        }`}
+                      >
+                        {pinDigits.length > i ? "•" : ""}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 max-w-[280px] mx-auto">
+                    {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        disabled={staffLoading || pinDigits.length >= 4}
+                        onClick={() => handlePinDigit(d)}
+                        className="h-14 rounded-xl bg-secondary/50 border border-border text-xl font-bold text-foreground hover:bg-secondary active:scale-95 transition-all disabled:opacity-40"
+                      >
+                        {d}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      disabled={staffLoading}
+                      onClick={handlePinClear}
+                      className="h-14 rounded-xl bg-secondary/30 border border-border text-xs font-semibold text-muted-foreground hover:bg-secondary active:scale-95 transition-all disabled:opacity-40"
+                    >
+                      Clear
+                    </button>
+                    <button
+                      type="button"
+                      disabled={staffLoading || pinDigits.length >= 4}
+                      onClick={() => handlePinDigit("0")}
+                      className="h-14 rounded-xl bg-secondary/50 border border-border text-xl font-bold text-foreground hover:bg-secondary active:scale-95 transition-all disabled:opacity-40"
+                    >
+                      0
+                    </button>
+                    <button
+                      type="button"
+                      disabled={staffLoading || pinDigits.length === 0}
+                      onClick={handlePinBackspace}
+                      className="h-14 rounded-xl bg-secondary/30 border border-border flex items-center justify-center text-foreground hover:bg-secondary active:scale-95 transition-all disabled:opacity-40"
+                      aria-label="Backspace"
+                    >
+                      <Delete className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  {staffLoading && (
+                    <div className="flex justify-center">
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => { setStaffStep("select"); setPinDigits(""); setSelectedStaff(null); }}
+                    className="text-sm text-primary w-full text-center hover:underline"
+                  >
+                    ← Choose a different name
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : forgotMode ? (
             <div className="space-y-4">
               <div className="space-y-1">
                 <label className="text-sm font-medium text-foreground">Email Address</label>
