@@ -32,6 +32,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
 import { AdminAlertsPanel } from "@/components/admin/AdminAlertsPanel";
 import { ClientDirectory } from "@/components/admin/ClientDirectory";
+import { CreateHotelDialog } from "@/components/admin/CreateHotelDialog";
 
 /* ─── Types ─── */
 interface License {
@@ -1279,6 +1280,13 @@ const CreatorAdmin = () => {
             {/* ═══════ B. CLIENT DIRECTORY (GOD-VIEW) ═══════ */}
             {activeTab === "directory" && (
               <TabPanel key="directory">
+                <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
+                  <div>
+                    <h2 className="text-lg font-bold">Client Directory</h2>
+                    <p className="text-sm text-muted-foreground">Onboard new restaurants and manage existing accounts.</p>
+                  </div>
+                  <CreateHotelDialog onCreated={fetchData} />
+                </div>
                 <ClientDirectory profiles={profiles} hotels={hotels} onChanged={fetchData} />
               </TabPanel>
             )}
