@@ -11,11 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Users, Copy, UserCheck, Wallet, Clock, BarChart3, Calendar, ChevronRight, Phone, Mail, MapPin, Plus, Star, TrendingUp, Award, KeyRound, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Users, Copy, UserCheck, Wallet, Clock, BarChart3, Calendar, ChevronRight, Phone, Mail, MapPin, Plus, Star, TrendingUp, Award, KeyRound, ShieldCheck, ShieldAlert, Monitor } from "lucide-react";
+import { useKioskMode } from "@/hooks/useKioskMode";
 import { format, differenceInMinutes, parseISO, startOfMonth, endOfMonth } from "date-fns";
 
 const StaffPage = () => {
   const { hotelId, user } = useAuth();
+  const { enterKiosk } = useKioskMode();
   const [staff, setStaff] = useState<any[]>([]);
   const [hotel, setHotel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -268,7 +270,24 @@ const StaffPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold flex items-center gap-2"><Users className="h-6 w-6 text-primary" /> Staff Management</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
+            onClick={() => {
+              if (!user?.email) { toast.error("Owner email not found"); return; }
+              const staffWithPin = staff.filter(s => s.role !== "owner" && staffPins[s.user_id]);
+              if (staffWithPin.length === 0) {
+                toast.error("Add staff and set their PIN first before enabling Staff Mode");
+                return;
+              }
+              enterKiosk(user.email);
+              toast.success("Staff Mode enabled — admin sidebar hidden");
+            }}
+          >
+            <Monitor className="h-4 w-4" /> Enter Staff Mode
+          </Button>
           <Button size="sm" onClick={() => setAddStaffDialog(true)}>
             <Plus className="h-4 w-4 mr-1" /> Add Staff
           </Button>
