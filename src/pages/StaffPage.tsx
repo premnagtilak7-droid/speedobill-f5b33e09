@@ -35,6 +35,11 @@ const StaffPage = () => {
   const [addStaffDialog, setAddStaffDialog] = useState(false);
   const [addStaffForm, setAddStaffForm] = useState({ email: "", password: "", full_name: "", role: "waiter" as string, phone: "" });
   const [addingStaff, setAddingStaff] = useState(false);
+  const [staffPins, setStaffPins] = useState<Record<string, boolean>>({});
+  const [pinDialog, setPinDialog] = useState(false);
+  const [pinValue, setPinValue] = useState("");
+  const [pinConfirm, setPinConfirm] = useState("");
+  const [savingPin, setSavingPin] = useState(false);
 
   useEffect(() => {
     if (!hotelId) return;
