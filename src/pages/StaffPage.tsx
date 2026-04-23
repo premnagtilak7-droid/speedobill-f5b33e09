@@ -560,6 +560,9 @@ const StaffPage = () => {
                   <Button size="sm" variant="outline" onClick={() => { setLeaveDialog(true); setLeaveForm({ leave_date: format(new Date(), "yyyy-MM-dd"), leave_type: "casual", reason: "" }); }}>
                     <Calendar className="h-3.5 w-3.5 mr-1" /> Add Leave
                   </Button>
+                  <Button size="sm" variant={staffPins[selectedStaff.user_id] ? "outline" : "default"} onClick={() => { setPinValue(""); setPinConfirm(""); setPinDialog(true); }}>
+                    <KeyRound className="h-3.5 w-3.5 mr-1" /> {staffPins[selectedStaff.user_id] ? "Reset PIN" : "Set PIN"}
+                  </Button>
                 </div>
 
                 {/* Salary History */}
