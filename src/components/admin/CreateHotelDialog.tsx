@@ -111,9 +111,10 @@ export const CreateHotelDialog = ({ onCreated, trigger, prefill, open: controlle
       return;
     }
 
-    setResult({ hotel_code: (data as any)?.hotel_code ?? null, email: (data as any)?.email ?? email });
+    const info = { hotel_code: (data as any)?.hotel_code ?? null, email: (data as any)?.email ?? email };
+    setResult(info);
     toast.success("Hotel created! Share the credentials with the owner.");
-    onCreated?.();
+    onCreated?.(info);
   };
 
   const copyCredentials = () => {
