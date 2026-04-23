@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,15 +12,32 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Building2, Copy, CheckCircle2, Loader2 } from "lucide-react";
 
+interface Prefill {
+  hotel_name?: string;
+  owner_name?: string;
+  email?: string;
+  phone?: string;
+  city?: string;
+  business_type?: string;
+}
+
 interface Props {
-  onCreated?: () => void;
+  onCreated?: (info: { hotel_code: string | null; email: string }) => void;
   trigger?: React.ReactNode;
+  prefill?: Prefill;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const BUSINESS_TYPES = ["Restaurant", "Cafe", "Cloud Kitchen", "Canteen", "Bar / Pub", "Bakery", "Sweet Shop", "QSR / Fast Food", "Other"];
 
-export const CreateHotelDialog = ({ onCreated, trigger }: Props) => {
-  const [open, setOpen] = useState(false);
+export const CreateHotelDialog = ({ onCreated, trigger, prefill, open: controlledOpen, onOpenChange }: Props) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (v: boolean) => {
+    if (onOpenChange) onOpenChange(v);
+    else setInternalOpen(v);
+  };
   const [loading, setLoading] = useState(false);
 
   const [hotelName, setHotelName] = useState("");
@@ -32,6 +49,20 @@ export const CreateHotelDialog = ({ onCreated, trigger }: Props) => {
   const [tier, setTier] = useState<"free" | "basic" | "premium">("premium");
   const [trialDays, setTrialDays] = useState("30");
   const [password, setPassword] = useState("");
+
+  // Apply prefill whenever dialog opens
+  useEffect(() => {
+    if (!open || !prefill) return;
+    if (prefill.hotel_name !== undefined) setHotelName(prefill.hotel_name);
+    if (prefill.owner_name !== undefined) setOwnerName(prefill.owner_name);
+    if (prefill.email !== undefined) setEmail(prefill.email);
+    if (prefill.phone !== undefined) setPhone(prefill.phone);
+    if (prefill.city !== undefined) setCity(prefill.city);
+    if (prefill.business_type !== undefined && BUSINESS_TYPES.includes(prefill.business_type)) {
+      setBusinessType(prefill.business_type);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, prefill]);
 
   const [result, setResult] = useState<{ hotel_code: string | null; email: string } | null>(null);
 
@@ -80,9 +111,10 @@ export const CreateHotelDialog = ({ onCreated, trigger }: Props) => {
       return;
     }
 
-    setResult({ hotel_code: (data as any)?.hotel_code ?? null, email: (data as any)?.email ?? email });
+    const info = { hotel_code: (data as any)?.hotel_code ?? null, email: (data as any)?.email ?? email };
+    setResult(info);
     toast.success("Hotel created! Share the credentials with the owner.");
-    onCreated?.();
+    onCreated?.(info);
   };
 
   const copyCredentials = () => {
