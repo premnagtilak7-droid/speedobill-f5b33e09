@@ -169,6 +169,8 @@ const AppRoutes = () => {
           }
         />
         <Route path="/auth" element={user ? <Navigate to={defaultAuthenticatedRoute} replace /> : <Auth />} />
+        <Route path="/auth/staff" element={user ? <Navigate to={defaultAuthenticatedRoute} replace /> : <Auth />} />
+        <Route path="/kitchen" element={<Navigate to="/kds" replace />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsConditions />} />
