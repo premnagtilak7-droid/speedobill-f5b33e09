@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Users, Copy, UserCheck, Wallet, Clock, BarChart3, Calendar, ChevronRight, Phone, Mail, MapPin, Plus, Star, TrendingUp, Award } from "lucide-react";
+import { Users, Copy, UserCheck, Wallet, Clock, BarChart3, Calendar, ChevronRight, Phone, Mail, MapPin, Plus, Star, TrendingUp, Award, KeyRound, ShieldCheck, ShieldAlert } from "lucide-react";
 import { format, differenceInMinutes, parseISO, startOfMonth, endOfMonth } from "date-fns";
 
 const StaffPage = () => {
@@ -35,6 +35,11 @@ const StaffPage = () => {
   const [addStaffDialog, setAddStaffDialog] = useState(false);
   const [addStaffForm, setAddStaffForm] = useState({ email: "", password: "", full_name: "", role: "waiter" as string, phone: "" });
   const [addingStaff, setAddingStaff] = useState(false);
+  const [staffPins, setStaffPins] = useState<Record<string, boolean>>({});
+  const [pinDialog, setPinDialog] = useState(false);
+  const [pinValue, setPinValue] = useState("");
+  const [pinConfirm, setPinConfirm] = useState("");
+  const [savingPin, setSavingPin] = useState(false);
 
   useEffect(() => {
     if (!hotelId) return;
@@ -95,7 +100,50 @@ const StaffPage = () => {
       stats[o.waiter_id].total += Number(o.total) || 0;
     });
     setOrderStats(stats);
+
+    // Load which staff have a PIN configured (don't fetch the hash itself)
+    if (rawStaff.length > 0) {
+      const { data: pinRows } = await supabase
+        .from("staff_pins")
+        .select("user_id")
+        .in("user_id", rawStaff.map((m: any) => m.user_id));
+      const pinMap: Record<string, boolean> = {};
+      (pinRows || []).forEach((p: any) => { pinMap[p.user_id] = true; });
+      setStaffPins(pinMap);
+    }
+
     setLoading(false);
+  };
+
+  const savePin = async () => {
+    if (!selectedStaff) return;
+    if (!/^\d{4}$/.test(pinValue)) {
+      toast.error("PIN must be exactly 4 digits");
+      return;
+    }
+    if (pinValue !== pinConfirm) {
+      toast.error("PINs do not match");
+      return;
+    }
+    setSavingPin(true);
+    try {
+      const res = await supabase.functions.invoke("set-staff-pin", {
+        body: { target_user_id: selectedStaff.user_id, pin: pinValue },
+      });
+      if (res.error || res.data?.error) {
+        toast.error(res.data?.error || res.error?.message || "Failed to save PIN");
+      } else {
+        toast.success(`PIN ${staffPins[selectedStaff.user_id] ? "reset" : "set"} for ${selectedStaff.full_name}`);
+        setStaffPins(prev => ({ ...prev, [selectedStaff.user_id]: true }));
+        setPinDialog(false);
+        setPinValue("");
+        setPinConfirm("");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save PIN");
+    } finally {
+      setSavingPin(false);
+    }
   };
 
   const toggleActive = async (userId: string, current: boolean) => {
@@ -302,8 +350,13 @@ const StaffPage = () => {
                             {s.full_name || "Unnamed"}
                             <Badge variant={perf.color} className="text-[10px]">{perf.label}</Badge>
                           </p>
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5 flex-wrap">
                             <Badge variant="outline" className="capitalize text-[10px]">{s.role}</Badge>
+                            {staffPins[s.user_id] ? (
+                              <Badge variant="default" className="text-[10px] gap-1"><ShieldCheck className="h-2.5 w-2.5" /> PIN set</Badge>
+                            ) : (
+                              <Badge variant="secondary" className="text-[10px] gap-1"><ShieldAlert className="h-2.5 w-2.5" /> No PIN</Badge>
+                            )}
                             {stats && <span>{stats.count} orders · ₹{stats.total.toLocaleString()}</span>}
                             <span>Joined {format(parseISO(s.created_at), "dd MMM yyyy")}</span>
                           </div>
@@ -507,6 +560,9 @@ const StaffPage = () => {
                   <Button size="sm" variant="outline" onClick={() => { setLeaveDialog(true); setLeaveForm({ leave_date: format(new Date(), "yyyy-MM-dd"), leave_type: "casual", reason: "" }); }}>
                     <Calendar className="h-3.5 w-3.5 mr-1" /> Add Leave
                   </Button>
+                  <Button size="sm" variant={staffPins[selectedStaff.user_id] ? "outline" : "default"} onClick={() => { setPinValue(""); setPinConfirm(""); setPinDialog(true); }}>
+                    <KeyRound className="h-3.5 w-3.5 mr-1" /> {staffPins[selectedStaff.user_id] ? "Reset PIN" : "Set PIN"}
+                  </Button>
                 </div>
 
                 {/* Salary History */}
@@ -629,7 +685,58 @@ const StaffPage = () => {
           </div>
         </DialogContent>
       </Dialog>
-      {/* Add Staff Dialog */}
+
+      {/* PIN Dialog */}
+      <Dialog open={pinDialog} onOpenChange={setPinDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-primary" />
+              {staffPins[selectedStaff?.user_id] ? "Reset" : "Set"} PIN for {selectedStaff?.full_name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Choose a 4-digit PIN this staff member will use to clock in or unlock their shift on a shared device. The PIN is hashed before being stored — never saved in plain text.
+            </p>
+            <div>
+              <label className="text-sm font-medium mb-1 block">New 4-digit PIN</label>
+              <Input
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                placeholder="••••"
+                value={pinValue}
+                onChange={(e) => setPinValue(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                className="text-center text-2xl tracking-[0.5em] font-mono"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Confirm PIN</label>
+              <Input
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                placeholder="••••"
+                value={pinConfirm}
+                onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                className="text-center text-2xl tracking-[0.5em] font-mono"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Avoid easy combinations like 0000, 1234, or repeated digits.
+            </p>
+            <Button
+              className="w-full"
+              onClick={savePin}
+              disabled={savingPin || pinValue.length !== 4 || pinConfirm.length !== 4}
+            >
+              {savingPin ? "Saving..." : staffPins[selectedStaff?.user_id] ? "Reset PIN" : "Set PIN"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={addStaffDialog} onOpenChange={setAddStaffDialog}>
         <DialogContent>
           <DialogHeader><DialogTitle>Add New Staff Member</DialogTitle></DialogHeader>
