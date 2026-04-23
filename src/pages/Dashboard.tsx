@@ -78,6 +78,9 @@ const Dashboard = () => {
   const [counterSalesToday, setCounterSalesToday] = useState(0);
   const [counterBillsToday, setCounterBillsToday] = useState(0);
   const [topCounterWaiter, setTopCounterWaiter] = useState<CounterWaiterStat | null>(null);
+  const [hotelCode, setHotelCode] = useState<string>("");
+  const [hotelName, setHotelName] = useState<string>("");
+  const [codeCopied, setCodeCopied] = useState(false);
 
   // Fetch logged-in user's display name from profiles
   useEffect(() => {
@@ -104,7 +107,7 @@ const Dashboard = () => {
         supabase.from("restaurant_tables").select("id, status").eq("hotel_id", hotelId),
         supabase.from("menu_items").select("name, current_stock, min_stock").eq("hotel_id", hotelId),
         supabase.from("kot_tickets").select("id").eq("hotel_id", hotelId).eq("status", "pending"),
-        supabase.from("hotels").select("subscription_tier, subscription_expiry").eq("id", hotelId).maybeSingle(),
+        supabase.from("hotels").select("subscription_tier, subscription_expiry, hotel_code, name").eq("id", hotelId).maybeSingle(),
         supabase.from("orders").select("total").eq("hotel_id", hotelId).eq("status", "billed"),
         supabase.from("ingredients").select("name, current_stock, min_threshold, unit").eq("hotel_id", hotelId),
         supabase
