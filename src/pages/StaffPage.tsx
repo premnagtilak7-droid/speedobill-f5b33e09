@@ -685,7 +685,58 @@ const StaffPage = () => {
           </div>
         </DialogContent>
       </Dialog>
-      {/* Add Staff Dialog */}
+
+      {/* PIN Dialog */}
+      <Dialog open={pinDialog} onOpenChange={setPinDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-primary" />
+              {staffPins[selectedStaff?.user_id] ? "Reset" : "Set"} PIN for {selectedStaff?.full_name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Choose a 4-digit PIN this staff member will use to clock in or unlock their shift on a shared device. The PIN is hashed before being stored — never saved in plain text.
+            </p>
+            <div>
+              <label className="text-sm font-medium mb-1 block">New 4-digit PIN</label>
+              <Input
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                placeholder="••••"
+                value={pinValue}
+                onChange={(e) => setPinValue(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                className="text-center text-2xl tracking-[0.5em] font-mono"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Confirm PIN</label>
+              <Input
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                placeholder="••••"
+                value={pinConfirm}
+                onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                className="text-center text-2xl tracking-[0.5em] font-mono"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Avoid easy combinations like 0000, 1234, or repeated digits.
+            </p>
+            <Button
+              className="w-full"
+              onClick={savePin}
+              disabled={savingPin || pinValue.length !== 4 || pinConfirm.length !== 4}
+            >
+              {savingPin ? "Saving..." : staffPins[selectedStaff?.user_id] ? "Reset PIN" : "Set PIN"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={addStaffDialog} onOpenChange={setAddStaffDialog}>
         <DialogContent>
           <DialogHeader><DialogTitle>Add New Staff Member</DialogTitle></DialogHeader>
