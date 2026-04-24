@@ -20,7 +20,6 @@ import RecentActivityFeed from "@/components/dashboard/RecentActivityFeed";
 import QuickBillSearch from "@/components/dashboard/QuickBillSearch";
 import TodayAtAGlance from "@/components/dashboard/TodayAtAGlance";
 import BirthdayAlerts from "@/components/dashboard/BirthdayAlerts";
-import StartShiftAudioBanner from "@/components/dashboard/StartShiftAudioBanner";
 
 interface LowStockItem {
   name: string;
