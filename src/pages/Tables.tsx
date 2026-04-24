@@ -922,6 +922,15 @@ const Tables = () => {
                 </button>
               );
             })}
+            {/* Quick Add Table to currently filtered section */}
+            {isOwner && sectionFilter !== "all" && (
+              <button
+                onClick={() => { setNewTableSection(sectionFilter); setAddOpen(true); }}
+                className="ml-auto flex items-center gap-1 rounded-full border border-dashed border-orange-500 px-3 py-1 text-xs font-semibold text-orange-500 hover:bg-orange-500/10"
+              >
+                <Plus className="h-3 w-3" /> Add table to {sectionFilter}
+              </button>
+            )}
           </div>
         )}
 
