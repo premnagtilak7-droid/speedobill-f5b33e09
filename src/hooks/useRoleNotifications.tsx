@@ -382,8 +382,43 @@ export function useRoleNotifications() {
               body: `Table ${co.table_number} placed ₹${Number(co.total_amount).toFixed(0)} order`,
               type: "order",
               createdAt: Date.now(),
+              navigateTo: "/incoming-orders",
             });
           }
+        }
+      )
+      .subscribe();
+
+    // ── New Orders (any source) — primary owner/manager notification ──
+    const newOrderChannel = supabase
+      .channel(`owner-new-orders-${hotelId}-${Date.now()}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "orders", filter: `hotel_id=eq.${hotelId}` },
+        async (payload) => {
+          const o = payload.new as any;
+          const { data: tbl } = await supabase
+            .from("restaurant_tables")
+            .select("table_number")
+            .eq("id", o.table_id)
+            .maybeSingle();
+          const tableNum = tbl?.table_number || "?";
+          const total = Number(o.total || 0).toFixed(0);
+
+          playLoudBell();
+          sendBrowserNotif(
+            "🔔 New Order",
+            `Table ${tableNum} — ₹${total}`,
+            `order-${o.id}`
+          );
+          pushNotification({
+            id: `order-${o.id}`,
+            title: `New Order: Table ${tableNum}`,
+            body: `Total ₹${total}`,
+            type: "order",
+            createdAt: Date.now(),
+            navigateTo: "/order-history",
+          });
         }
       )
       .subscribe();
@@ -392,6 +427,7 @@ export function useRoleNotifications() {
       supabase.removeChannel(voidChannel);
       supabase.removeChannel(billChannel);
       supabase.removeChannel(customerOrderChannel);
+      supabase.removeChannel(newOrderChannel);
     };
   }, [hotelId, role]);
 
