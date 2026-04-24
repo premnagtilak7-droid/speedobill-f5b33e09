@@ -23,6 +23,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { primeNotificationEngine } from "@/lib/notification-sounds";
 import { WaiterReadyBanner } from "@/components/WaiterReadyBanner";
 import SidebarPlanBadge from "@/components/SidebarPlanBadge";
+import SidebarSoundToggle from "@/components/SidebarSoundToggle";
+import ScreenWakeLock from "@/components/ScreenWakeLock";
 
 interface NavItem {
   label: string;
@@ -401,6 +403,7 @@ const AppLayout = () => {
 
           {/* Bottom actions inside scroll area */}
           <div className="border-t border-border/60 pt-3 space-y-1">
+            <SidebarSoundToggle collapsed={collapsed} />
             <BugReportButton collapsed={collapsed} />
             <button
               onClick={toggleTheme}
@@ -432,6 +435,9 @@ const AppLayout = () => {
 
   return (
     <div className="flex min-h-screen md:h-screen md:overflow-hidden mesh-gradient-bg">
+      {/* Keep tablet/phone screen awake while in the app */}
+      <ScreenWakeLock />
+
       {/* Mobile top bar */}
       <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between glass-topbar px-4 md:hidden"
         style={{ height: "calc(56px + env(safe-area-inset-top))", paddingTop: "env(safe-area-inset-top)" }}
