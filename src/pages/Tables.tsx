@@ -13,7 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import {
   Plus, Users, Trash2, Search, Minus, Printer, MessageCircle, Send, X,
   UtensilsCrossed, Grid3X3, LayoutGrid, ShoppingCart, CalendarCheck, Check, Sparkles,
-  Pause, Play, ArrowRightLeft, UserSearch, Gift, CreditCard, Mail, Store, Layers, Pencil,
+  Pause, Play, ArrowRightLeft, UserSearch, Gift, CreditCard, Mail, Store, Layers, Pencil, MoreVertical, FolderInput,
 } from "lucide-react";
 import { ChefHat } from "lucide-react";
 import { toast } from "sonner";
