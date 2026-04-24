@@ -27,6 +27,7 @@ interface MenuItem { id: string; name: string; category: string; price: number; 
 interface OrderLine { key: string; name: string; price: number; quantity: number; source: "menu" | "custom"; }
 interface HotelInfo { name: string; address: string | null; phone: string | null; tax_percent: number; gst_enabled: boolean; upi_qr_url: string | null; logo_url?: string | null; upi_id?: string | null; receipt_footer?: string | null; }
 interface ChefProfile { user_id: string; full_name: string | null; }
+interface FloorSection { id: string; name: string; color: string; icon: string; sort_order: number; }
 
 const formatCurrency = (v: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(v);
