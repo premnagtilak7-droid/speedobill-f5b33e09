@@ -732,16 +732,16 @@ const Tables = () => {
     >
       {/* header */}
       <div className="flex flex-wrap items-center justify-between gap-3 pt-4 md:pt-6 px-4 md:px-6">
-        <div>
+        <div className="min-w-0 flex-1">
           <h1 className="text-xl font-bold" style={{ color: headingColor }}>Tables</h1>
           <p className="text-sm" style={{ color: subTextColor }}>Tap a table to order · Cleaning → tap to mark empty</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2 flex-wrap justify-end">
           <Button
             size="sm"
             variant="outline"
             onClick={() => setReserveOpen(true)}
-            className="border-orange-500/60 bg-transparent text-orange-500 hover:bg-orange-500/10 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300"
+            className="shrink-0 border-orange-500/60 bg-transparent text-orange-500 hover:bg-orange-500/10 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300"
           >
             <CalendarCheck className="mr-1 h-4 w-4" /> Reserve
           </Button>
@@ -749,9 +749,9 @@ const Tables = () => {
             <Button
               size="sm"
               onClick={() => setAddOpen(true)}
-              className="bg-orange-500 text-white hover:bg-orange-600"
+              className="shrink-0 bg-orange-500 text-white hover:bg-orange-600 shadow-md"
             >
-              <Plus className="mr-1 h-4 w-4" /> Add Tables
+              <Plus className="mr-1 h-4 w-4" /> Add Table
             </Button>
           )}
         </div>
