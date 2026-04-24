@@ -865,6 +865,44 @@ const Tables = () => {
           ))}
         </div>
 
+        {/* section tabs */}
+        {sections.length > 0 && (
+          <div
+            className="flex flex-wrap gap-2 rounded-2xl border px-3 py-2"
+            style={{ background: cardBg, borderColor: cardBorder, boxShadow: cardShadow }}
+          >
+            <button
+              onClick={() => setSectionFilter("all")}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-all ${sectionFilter === "all" ? "scale-105" : "opacity-70"}`}
+              style={{
+                background: sectionFilter === "all" ? "#F97316" : "transparent",
+                color: sectionFilter === "all" ? "#FFFFFF" : headingColor,
+                borderColor: sectionFilter === "all" ? "#F97316" : cardBorder,
+              }}
+            >
+              <LayoutGrid className="h-3 w-3" /> All ({tables.length})
+            </button>
+            {sections.map((sec) => {
+              const count = tables.filter((t) => t.section_name === sec.name).length;
+              const active = sectionFilter === sec.name;
+              return (
+                <button
+                  key={sec.id}
+                  onClick={() => setSectionFilter(sec.name)}
+                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-all ${active ? "scale-105" : "opacity-80 hover:opacity-100"}`}
+                  style={{
+                    background: active ? sec.color : `${sec.color}1a`,
+                    color: active ? "#FFFFFF" : headingColor,
+                    borderColor: active ? sec.color : `${sec.color}66`,
+                  }}
+                >
+                  <span>{sec.icon}</span> {sec.name} ({count})
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* table grid */}
         {loading ? (
           <TableMapSkeleton />
@@ -878,7 +916,7 @@ const Tables = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {tables.map((table) => {
+            {(sectionFilter === "all" ? tables : tables.filter((t) => t.section_name === sectionFilter)).map((table) => {
               const s = tableStyles[table.status] || tableStyles.empty;
               const tint = isDark ? s.tintDark : s.tintLight;
               return (
