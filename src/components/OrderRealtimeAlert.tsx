@@ -83,7 +83,6 @@ export default function OrderRealtimeAlert() {
           toast(`🔔 NEW ORDER! Table ${tableLabel} — ₹${total}`, {
             id: `order-${order.id}`,
             duration: Infinity,
-            important: true,
             action: {
               label: "OK",
               onClick: () => toast.dismiss(`order-${order.id}`),

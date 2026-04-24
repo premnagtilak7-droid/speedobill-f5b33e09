@@ -15,8 +15,8 @@ import AppLayout from "@/components/AppLayout";
 import { lazy, useEffect, Suspense } from "react";
 import SpeedoBot from "@/components/SpeedoBot";
 import PwaSplashOnboarding from "@/components/PwaSplashOnboarding";
-import OneSignalBootstrap from "@/components/OneSignalBootstrap";
 import { AudioNotificationProvider } from "@/contexts/AudioNotificationContext";
+import OrderRealtimeAlert from "@/components/OrderRealtimeAlert";
 import { isPWA } from "@/lib/platform";
 
 const PageFallback = () => (
@@ -267,7 +267,7 @@ const App = () => (
           <SubscriptionProvider>
             <KioskProvider>
               <AudioNotificationProvider>
-                <OneSignalBootstrap />
+                <OrderRealtimeAlert />
                 <PwaSplashOnboarding />
                 <AppRoutes />
                 <SpeedoBot />
