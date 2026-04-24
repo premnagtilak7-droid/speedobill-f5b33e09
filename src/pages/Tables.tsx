@@ -388,6 +388,20 @@ const Tables = () => {
     await fetchSections();
   };
 
+  const moveTableToSection = async (tableId: string, sectionName: string) => {
+    const { error } = await supabase
+      .from("restaurant_tables")
+      .update({ section_name: sectionName })
+      .eq("id", tableId);
+    if (error) {
+      console.error("Move table failed:", error);
+      toast.error("Couldn't move table.");
+      return;
+    }
+    toast.success(`Moved to ${sectionName}`);
+    await fetchTables();
+  };
+
 
   const deleteTable = async (id: string) => {
     const { error } = await supabase.from("restaurant_tables").delete().eq("id", id);
