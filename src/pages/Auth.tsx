@@ -120,6 +120,7 @@ const Auth = () => {
   const [selectedStaff, setSelectedStaff] = useState<StaffOption | null>(null);
   const [pinDigits, setPinDigits] = useState("");
   const [staffLoading, setStaffLoading] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
@@ -277,6 +278,7 @@ const Auth = () => {
     const normalizedHotelCode = hotelCode.trim().toUpperCase();
 
     if (!email || !password || !fullName) { toast.error("Fill all fields"); return; }
+    if (!agreedToTerms) { toast.error("Please accept the Terms of Service and Privacy Policy to continue"); return; }
     if (pwStrength.score < 100) {
       const missing = pwStrength.checks.filter(c => !c.passed).map(c => c.label).join(", ");
       toast.error(`Password too weak. Missing: ${missing}`);
@@ -671,10 +673,25 @@ const Auth = () => {
                         <p className="text-xs text-muted-foreground">Waiter and chef accounts need a valid owner hotel code before they can open the app.</p>
                       </div>
                     )}
+                    <label className="flex items-start gap-2 cursor-pointer select-none rounded-lg border border-border bg-secondary/30 p-3">
+                      <input
+                        type="checkbox"
+                        checked={agreedToTerms}
+                        onChange={(e) => setAgreedToTerms(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 accent-primary cursor-pointer"
+                        aria-label="Agree to Terms of Service and Privacy Policy"
+                      />
+                      <span className="text-xs text-muted-foreground leading-relaxed">
+                        I agree to the{" "}
+                        <a href="/terms-conditions" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline">Terms of Service</a>
+                        {" "}and{" "}
+                        <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline">Privacy Policy</a>.
+                      </span>
+                    </label>
                   </>
                 )}
 
-                <Button className="w-full h-12 gradient-btn-primary text-base font-semibold rounded-xl" onClick={mode === "login" ? handleLogin : handleSignup} disabled={loading || (mode === "signup" && role !== "owner" && !hotelCode.trim())}>
+                <Button className="w-full h-12 gradient-btn-primary text-base font-semibold rounded-xl" onClick={mode === "login" ? handleLogin : handleSignup} disabled={loading || (mode === "signup" && (!agreedToTerms || (role !== "owner" && !hotelCode.trim())))}>
                   {loading ? (
                     <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   ) : (
