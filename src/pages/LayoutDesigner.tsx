@@ -166,10 +166,14 @@ const LayoutDesigner = () => {
       table_number: maxNum + 1,
       capacity: Number(newCapacity) || 4,
       section_name: newSection || "Main",
-      position_x: 50 + Math.random() * 300,
-      position_y: 50 + Math.random() * 200,
+      position_x: Math.round(50 + Math.random() * 300),
+      position_y: Math.round(50 + Math.random() * 200),
     });
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      console.error(error);
+      toast.error("Couldn't add table. Please try again.");
+      return;
+    }
     toast.success(`Table ${maxNum + 1} added`);
     setAddOpen(false);
     await fetchData();
@@ -188,7 +192,7 @@ const LayoutDesigner = () => {
     const { error } = await supabase.from("floor_sections").insert({
       hotel_id: hotelId, name: sectionName.trim(), color: sectionColor, sort_order: sortOrder,
     });
-    if (error) { toast.error(error.message); return; }
+    if (error) { console.error(error); toast.error("Couldn't add section. Please try again."); return; }
     toast.success(`Section "${sectionName}" added`);
     setSectionOpen(false); setSectionName(""); setSectionColor("#F97316");
     await fetchData();
