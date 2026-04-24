@@ -964,7 +964,127 @@ const Tables = () => {
           <DialogHeader><DialogTitle>Add Tables</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <Input type="number" placeholder="Number of tables" value={newCount} onChange={(e) => setNewCount(e.target.value)} min="1" max="50" />
-            <Button className="w-full" onClick={addTables}>Add Tables</Button>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Section</label>
+              <Select value={newTableSection} onValueChange={setNewTableSection}>
+                <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Main">🍽️ Main</SelectItem>
+                  {sections.map((sec) => (
+                    <SelectItem key={sec.id} value={sec.name}>{sec.icon} {sec.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {sections.length === 0 && (
+                <p className="mt-1 text-[10px] text-muted-foreground">Tip: Create sections (Ground Floor, Terrace, VIP…) from the <button type="button" onClick={() => { setAddOpen(false); setSectionsOpen(true); }} className="underline text-orange-500">Sections</button> button.</p>
+              )}
+            </div>
+            <Button className="w-full" onClick={addTables} style={{ backgroundColor: "#F97316", color: "#FFFFFF" }}>Add Tables</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Sections Manager Dialog ── */}
+      <Dialog open={sectionsOpen} onOpenChange={setSectionsOpen}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Layers className="h-5 w-5 text-indigo-500" /> Manage Sections / Floors</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* existing sections */}
+            <div className="space-y-2">
+              {sections.length === 0 ? (
+                <p className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30 p-4 text-center text-xs text-muted-foreground">
+                  No sections yet. Create your first one below — e.g., Ground Floor, Terrace, VIP, Bar Area.
+                </p>
+              ) : (
+                sections.map((sec) => {
+                  const count = tables.filter((t) => t.section_name === sec.name).length;
+                  return (
+                    <div
+                      key={sec.id}
+                      className="flex items-center justify-between rounded-lg border p-2.5"
+                      style={{ background: `${sec.color}10`, borderColor: `${sec.color}55` }}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg" style={{ background: sec.color }}>
+                          {sec.icon}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold">{sec.name}</p>
+                          <p className="text-[11px] text-muted-foreground">{count} table{count === 1 ? "" : "s"}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => deleteSection(sec.id, sec.name)}
+                        className="rounded-full p-1.5 text-red-500 hover:bg-red-500/10"
+                        aria-label={`Delete ${sec.name}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* add new */}
+            <div className="rounded-lg border border-dashed p-3 space-y-2.5">
+              <p className="text-xs font-semibold text-muted-foreground">+ Add New Section</p>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="🍽️"
+                  value={secIcon}
+                  onChange={(e) => setSecIcon(e.target.value.slice(0, 4))}
+                  className="w-16 text-center text-lg"
+                  maxLength={4}
+                />
+                <Input
+                  placeholder="e.g. Ground Floor, Terrace, VIP"
+                  value={secName}
+                  onChange={(e) => setSecName(e.target.value)}
+                  className="flex-1"
+                />
+                <input
+                  type="color"
+                  value={secColor}
+                  onChange={(e) => setSecColor(e.target.value)}
+                  className="h-10 w-12 cursor-pointer rounded border border-border bg-transparent"
+                  aria-label="Section color"
+                />
+              </div>
+              {/* quick presets */}
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { n: "Ground Floor", i: "🏢" },
+                  { n: "First Floor", i: "🏬" },
+                  { n: "Terrace", i: "🌇" },
+                  { n: "Rooftop", i: "🌃" },
+                  { n: "Garden", i: "🌳" },
+                  { n: "AC Section", i: "❄️" },
+                  { n: "VIP", i: "👑" },
+                  { n: "Bar Area", i: "🍸" },
+                  { n: "Private Dining", i: "🚪" },
+                ].map((p) => (
+                  <button
+                    key={p.n}
+                    type="button"
+                    onClick={() => { setSecName(p.n); setSecIcon(p.i); }}
+                    className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] hover:bg-muted"
+                  >
+                    {p.i} {p.n}
+                  </button>
+                ))}
+              </div>
+              <Button
+                onClick={addSection}
+                className="w-full"
+                style={{ backgroundColor: "#F97316", color: "#FFFFFF" }}
+                disabled={!secName.trim()}
+              >
+                <Plus className="mr-1 h-4 w-4" /> Add Section
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
