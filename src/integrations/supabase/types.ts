@@ -610,6 +610,7 @@ export type Database = {
           color: string
           created_at: string
           hotel_id: string
+          icon: string
           id: string
           name: string
           sort_order: number
@@ -618,6 +619,7 @@ export type Database = {
           color?: string
           created_at?: string
           hotel_id: string
+          icon?: string
           id?: string
           name: string
           sort_order?: number
@@ -626,6 +628,7 @@ export type Database = {
           color?: string
           created_at?: string
           hotel_id?: string
+          icon?: string
           id?: string
           name?: string
           sort_order?: number

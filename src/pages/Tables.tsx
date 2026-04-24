@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Plus, Users, Trash2, Search, Minus, Printer, MessageCircle, Send, X,
   UtensilsCrossed, Grid3X3, LayoutGrid, ShoppingCart, CalendarCheck, Check, Sparkles,
-  Pause, Play, ArrowRightLeft, UserSearch, Gift, CreditCard, Mail, Store,
+  Pause, Play, ArrowRightLeft, UserSearch, Gift, CreditCard, Mail, Store, Layers, Pencil,
 } from "lucide-react";
 import { ChefHat } from "lucide-react";
 import { toast } from "sonner";
@@ -27,6 +27,7 @@ interface MenuItem { id: string; name: string; category: string; price: number; 
 interface OrderLine { key: string; name: string; price: number; quantity: number; source: "menu" | "custom"; }
 interface HotelInfo { name: string; address: string | null; phone: string | null; tax_percent: number; gst_enabled: boolean; upi_qr_url: string | null; logo_url?: string | null; upi_id?: string | null; receipt_footer?: string | null; }
 interface ChefProfile { user_id: string; full_name: string | null; }
+interface FloorSection { id: string; name: string; color: string; icon: string; sort_order: number; }
 
 const formatCurrency = (v: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(v);
@@ -102,7 +103,16 @@ const Tables = () => {
   const [addOpen, setAddOpen] = useState(false);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [newCount, setNewCount] = useState("1");
+  const [newTableSection, setNewTableSection] = useState<string>("Main");
   const [reserveOpen, setReserveOpen] = useState(false);
+
+  /* ── sections ── */
+  const [sections, setSections] = useState<FloorSection[]>([]);
+  const [sectionFilter, setSectionFilter] = useState<string>("all");
+  const [sectionsOpen, setSectionsOpen] = useState(false);
+  const [secName, setSecName] = useState("");
+  const [secIcon, setSecIcon] = useState("🍽️");
+  const [secColor, setSecColor] = useState("#F97316");
 
   /* ── reservation form ── */
   const [resTableId, setResTableId] = useState("");
@@ -198,14 +208,28 @@ const Tables = () => {
       .then(({ data }) => { if (data) setCounterBillingEnabled(data.counter_billing_enabled); });
   }, [hotelId]);
 
+  // Fetch sections
+  const fetchSections = useCallback(async () => {
+    if (!hotelId) return;
+    const { data } = await supabase
+      .from("floor_sections")
+      .select("id, name, color, icon, sort_order")
+      .eq("hotel_id", hotelId)
+      .order("sort_order");
+    setSections((data || []) as FloorSection[]);
+  }, [hotelId]);
+
+  useEffect(() => { void fetchSections(); }, [fetchSections]);
+
   useEffect(() => {
     if (!hotelId) return;
     const ch = supabase
       .channel("tables-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "restaurant_tables", filter: `hotel_id=eq.${hotelId}` }, () => void fetchTables())
+      .on("postgres_changes", { event: "*", schema: "public", table: "floor_sections", filter: `hotel_id=eq.${hotelId}` }, () => void fetchSections())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [hotelId, fetchTables]);
+  }, [hotelId, fetchTables, fetchSections]);
 
   /* ────────── derived ────────── */
   const categories = useMemo(() => ["all", ...Array.from(new Set(menuItems.map((i) => i.category).filter(Boolean)))], [menuItems]);
@@ -311,13 +335,51 @@ const Tables = () => {
   const addTables = async () => {
     const count = parseInt(newCount, 10);
     if (!count || count < 1 || !hotelId) return;
+    const sectionToUse = (newTableSection || "Main").trim() || "Main";
     const maxNum = tables.length > 0 ? Math.max(...tables.map((t) => t.table_number)) : 0;
-    const inserts = Array.from({ length: count }, (_, i) => ({ hotel_id: hotelId, table_number: maxNum + i + 1 }));
+    const inserts = Array.from({ length: count }, (_, i) => ({
+      hotel_id: hotelId,
+      table_number: maxNum + i + 1,
+      section_name: sectionToUse,
+    }));
     const { error } = await supabase.from("restaurant_tables").insert(inserts);
-    if (error) { toast.error(error.message); return; }
-    toast.success(`${count} table(s) added`);
+    if (error) {
+      console.error("Add tables failed:", error);
+      toast.error("Couldn't add tables. Please try again.");
+      return;
+    }
+    toast.success(`${count} table(s) added to ${sectionToUse}`);
     setAddOpen(false); setNewCount("1"); await fetchTables();
   };
+
+  /* ────────── section actions ────────── */
+  const addSection = async () => {
+    if (!hotelId || !secName.trim()) { toast.error("Enter section name"); return; }
+    const { error } = await supabase.from("floor_sections").insert({
+      hotel_id: hotelId,
+      name: secName.trim(),
+      icon: secIcon || "🍽️",
+      color: secColor || "#F97316",
+      sort_order: sections.length,
+    });
+    if (error) {
+      console.error("Add section failed:", error);
+      toast.error("Couldn't add section. Please try again.");
+      return;
+    }
+    toast.success(`Section "${secName.trim()}" added`);
+    setSecName(""); setSecIcon("🍽️"); setSecColor("#F97316");
+    await fetchSections();
+  };
+
+  const deleteSection = async (id: string, name: string) => {
+    if (!confirm(`Delete section "${name}"? Tables in it stay but lose their section.`)) return;
+    const { error } = await supabase.from("floor_sections").delete().eq("id", id);
+    if (error) { toast.error("Couldn't delete section"); return; }
+    toast.success("Section deleted");
+    await fetchSections();
+  };
+
 
   const deleteTable = async (id: string) => {
     const { error } = await supabase.from("restaurant_tables").delete().eq("id", id);
@@ -737,6 +799,16 @@ const Tables = () => {
           <p className="text-sm" style={{ color: subTextColor }}>Tap a table to order · Cleaning → tap to mark empty</p>
         </div>
         <div className="flex shrink-0 items-center gap-2 flex-wrap justify-end">
+          {isOwner && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setSectionsOpen(true)}
+              className="shrink-0 border-indigo-500/60 bg-transparent text-indigo-600 hover:bg-indigo-500/10 dark:text-indigo-300"
+            >
+              <Layers className="mr-1 h-4 w-4" /> Sections
+            </Button>
+          )}
           <Button
             size="sm"
             variant="outline"
@@ -793,6 +865,44 @@ const Tables = () => {
           ))}
         </div>
 
+        {/* section tabs */}
+        {sections.length > 0 && (
+          <div
+            className="flex flex-wrap gap-2 rounded-2xl border px-3 py-2"
+            style={{ background: cardBg, borderColor: cardBorder, boxShadow: cardShadow }}
+          >
+            <button
+              onClick={() => setSectionFilter("all")}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-all ${sectionFilter === "all" ? "scale-105" : "opacity-70"}`}
+              style={{
+                background: sectionFilter === "all" ? "#F97316" : "transparent",
+                color: sectionFilter === "all" ? "#FFFFFF" : headingColor,
+                borderColor: sectionFilter === "all" ? "#F97316" : cardBorder,
+              }}
+            >
+              <LayoutGrid className="h-3 w-3" /> All ({tables.length})
+            </button>
+            {sections.map((sec) => {
+              const count = tables.filter((t) => t.section_name === sec.name).length;
+              const active = sectionFilter === sec.name;
+              return (
+                <button
+                  key={sec.id}
+                  onClick={() => setSectionFilter(sec.name)}
+                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-all ${active ? "scale-105" : "opacity-80 hover:opacity-100"}`}
+                  style={{
+                    background: active ? sec.color : `${sec.color}1a`,
+                    color: active ? "#FFFFFF" : headingColor,
+                    borderColor: active ? sec.color : `${sec.color}66`,
+                  }}
+                >
+                  <span>{sec.icon}</span> {sec.name} ({count})
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* table grid */}
         {loading ? (
           <TableMapSkeleton />
@@ -806,7 +916,7 @@ const Tables = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {tables.map((table) => {
+            {(sectionFilter === "all" ? tables : tables.filter((t) => t.section_name === sectionFilter)).map((table) => {
               const s = tableStyles[table.status] || tableStyles.empty;
               const tint = isDark ? s.tintDark : s.tintLight;
               return (
@@ -854,7 +964,127 @@ const Tables = () => {
           <DialogHeader><DialogTitle>Add Tables</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <Input type="number" placeholder="Number of tables" value={newCount} onChange={(e) => setNewCount(e.target.value)} min="1" max="50" />
-            <Button className="w-full" onClick={addTables}>Add Tables</Button>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Section</label>
+              <Select value={newTableSection} onValueChange={setNewTableSection}>
+                <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Main">🍽️ Main</SelectItem>
+                  {sections.map((sec) => (
+                    <SelectItem key={sec.id} value={sec.name}>{sec.icon} {sec.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {sections.length === 0 && (
+                <p className="mt-1 text-[10px] text-muted-foreground">Tip: Create sections (Ground Floor, Terrace, VIP…) from the <button type="button" onClick={() => { setAddOpen(false); setSectionsOpen(true); }} className="underline text-orange-500">Sections</button> button.</p>
+              )}
+            </div>
+            <Button className="w-full" onClick={addTables} style={{ backgroundColor: "#F97316", color: "#FFFFFF" }}>Add Tables</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Sections Manager Dialog ── */}
+      <Dialog open={sectionsOpen} onOpenChange={setSectionsOpen}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Layers className="h-5 w-5 text-indigo-500" /> Manage Sections / Floors</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* existing sections */}
+            <div className="space-y-2">
+              {sections.length === 0 ? (
+                <p className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30 p-4 text-center text-xs text-muted-foreground">
+                  No sections yet. Create your first one below — e.g., Ground Floor, Terrace, VIP, Bar Area.
+                </p>
+              ) : (
+                sections.map((sec) => {
+                  const count = tables.filter((t) => t.section_name === sec.name).length;
+                  return (
+                    <div
+                      key={sec.id}
+                      className="flex items-center justify-between rounded-lg border p-2.5"
+                      style={{ background: `${sec.color}10`, borderColor: `${sec.color}55` }}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg" style={{ background: sec.color }}>
+                          {sec.icon}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold">{sec.name}</p>
+                          <p className="text-[11px] text-muted-foreground">{count} table{count === 1 ? "" : "s"}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => deleteSection(sec.id, sec.name)}
+                        className="rounded-full p-1.5 text-red-500 hover:bg-red-500/10"
+                        aria-label={`Delete ${sec.name}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* add new */}
+            <div className="rounded-lg border border-dashed p-3 space-y-2.5">
+              <p className="text-xs font-semibold text-muted-foreground">+ Add New Section</p>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="🍽️"
+                  value={secIcon}
+                  onChange={(e) => setSecIcon(e.target.value.slice(0, 4))}
+                  className="w-16 text-center text-lg"
+                  maxLength={4}
+                />
+                <Input
+                  placeholder="e.g. Ground Floor, Terrace, VIP"
+                  value={secName}
+                  onChange={(e) => setSecName(e.target.value)}
+                  className="flex-1"
+                />
+                <input
+                  type="color"
+                  value={secColor}
+                  onChange={(e) => setSecColor(e.target.value)}
+                  className="h-10 w-12 cursor-pointer rounded border border-border bg-transparent"
+                  aria-label="Section color"
+                />
+              </div>
+              {/* quick presets */}
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { n: "Ground Floor", i: "🏢" },
+                  { n: "First Floor", i: "🏬" },
+                  { n: "Terrace", i: "🌇" },
+                  { n: "Rooftop", i: "🌃" },
+                  { n: "Garden", i: "🌳" },
+                  { n: "AC Section", i: "❄️" },
+                  { n: "VIP", i: "👑" },
+                  { n: "Bar Area", i: "🍸" },
+                  { n: "Private Dining", i: "🚪" },
+                ].map((p) => (
+                  <button
+                    key={p.n}
+                    type="button"
+                    onClick={() => { setSecName(p.n); setSecIcon(p.i); }}
+                    className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] hover:bg-muted"
+                  >
+                    {p.i} {p.n}
+                  </button>
+                ))}
+              </div>
+              <Button
+                onClick={addSection}
+                className="w-full"
+                style={{ backgroundColor: "#F97316", color: "#FFFFFF" }}
+                disabled={!secName.trim()}
+              >
+                <Plus className="mr-1 h-4 w-4" /> Add Section
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

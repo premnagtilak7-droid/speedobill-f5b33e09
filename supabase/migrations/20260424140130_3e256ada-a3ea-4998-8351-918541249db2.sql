@@ -1,0 +1,1 @@
+ALTER TABLE public.floor_sections ADD COLUMN IF NOT EXISTS icon text NOT NULL DEFAULT '🍽️';
