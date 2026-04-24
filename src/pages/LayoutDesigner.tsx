@@ -192,7 +192,7 @@ const LayoutDesigner = () => {
     const { error } = await supabase.from("floor_sections").insert({
       hotel_id: hotelId, name: sectionName.trim(), color: sectionColor, sort_order: sortOrder,
     });
-    if (error) { toast.error(error.message); return; }
+    if (error) { console.error(error); toast.error("Couldn't add section. Please try again."); return; }
     toast.success(`Section "${sectionName}" added`);
     setSectionOpen(false); setSectionName(""); setSectionColor("#F97316");
     await fetchData();
