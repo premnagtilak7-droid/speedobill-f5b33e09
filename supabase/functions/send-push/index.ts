@@ -1,6 +1,10 @@
 // Send OneSignal push notifications scoped to a specific hotel.
 // Reads ONESIGNAL_REST_API_KEY and ONESIGNAL_APP_ID from Supabase secrets.
-// Validates the caller's JWT and ensures notifications stay within the caller's hotel.
+//
+// Two trusted call modes:
+//   1) End-user call: Authorization: Bearer <user_jwt> — hotel resolved from caller's profile.
+//   2) Internal/trigger call: Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>
+//      — caller MUST pass body.hotelId; this is used by DB webhooks/pg_net triggers.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -20,13 +24,12 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 interface SendPushBody {
   title: string;
   message: string;
-  // Optional: limit to specific roles within the caller's hotel
   roles?: Array<"owner" | "manager" | "waiter" | "chef">;
-  // Optional: limit to specific user ids (must belong to caller's hotel)
   userIds?: string[];
-  // Optional: extra data to attach (deep-link path, etc.)
   data?: Record<string, unknown>;
   url?: string;
+  // Required only when called with the service role key (internal/trigger mode)
+  hotelId?: string;
 }
 
 Deno.serve(async (req) => {
@@ -43,39 +46,46 @@ Deno.serve(async (req) => {
     if (!authHeader?.startsWith("Bearer ")) {
       return json({ error: "Unauthorized" }, 401);
     }
-
-    // Verify caller
-    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims) {
-      return json({ error: "Unauthorized" }, 401);
-    }
-    const callerId = claimsData.claims.sub as string;
+    const token = authHeader.replace("Bearer ", "").trim();
 
     const body = (await req.json().catch(() => ({}))) as SendPushBody;
     if (!body?.title || !body?.message) {
       return json({ error: "title and message are required" }, 400);
     }
 
-    // Service role for trusted reads (RLS bypass) — never returned to client
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    let hotelId: string | null = null;
 
-    // Resolve caller's hotel — this is the ONLY hotel they can target
-    const { data: callerProfile, error: callerErr } = await admin
-      .from("profiles")
-      .select("hotel_id")
-      .eq("user_id", callerId)
-      .maybeSingle();
+    // ── Internal/trigger mode: caller is the service role ──
+    if (token === SUPABASE_SERVICE_ROLE_KEY) {
+      if (!body.hotelId) {
+        return json({ error: "hotelId is required for internal calls" }, 400);
+      }
+      hotelId = body.hotelId;
+    } else {
+      // ── End-user mode: validate JWT and resolve hotel from profile ──
+      const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
+      if (claimsErr || !claimsData?.claims) {
+        return json({ error: "Unauthorized" }, 401);
+      }
+      const callerId = claimsData.claims.sub as string;
 
-    if (callerErr || !callerProfile?.hotel_id) {
-      return json({ error: "Caller has no hotel" }, 403);
+      const { data: callerProfile, error: callerErr } = await admin
+        .from("profiles")
+        .select("hotel_id")
+        .eq("user_id", callerId)
+        .maybeSingle();
+
+      if (callerErr || !callerProfile?.hotel_id) {
+        return json({ error: "Caller has no hotel" }, 403);
+      }
+      hotelId = callerProfile.hotel_id as string;
     }
-    const hotelId = callerProfile.hotel_id as string;
 
-    // Build the audience: all users in this hotel, optionally filtered
+    // Build the audience strictly within the resolved hotel
     let profileQuery = admin
       .from("profiles")
       .select("user_id, role")
@@ -100,7 +110,6 @@ Deno.serve(async (req) => {
       return json({ ok: true, sent: 0, reason: "no recipients" });
     }
 
-    // OneSignal v11+ uses external_id aliases (we set external_id = supabase user_id)
     const oneSignalRes = await fetch("https://api.onesignal.com/notifications", {
       method: "POST",
       headers: {
