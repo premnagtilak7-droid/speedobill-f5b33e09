@@ -799,6 +799,16 @@ const Tables = () => {
           <p className="text-sm" style={{ color: subTextColor }}>Tap a table to order · Cleaning → tap to mark empty</p>
         </div>
         <div className="flex shrink-0 items-center gap-2 flex-wrap justify-end">
+          {isOwner && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setSectionsOpen(true)}
+              className="shrink-0 border-indigo-500/60 bg-transparent text-indigo-600 hover:bg-indigo-500/10 dark:text-indigo-300"
+            >
+              <Layers className="mr-1 h-4 w-4" /> Sections
+            </Button>
+          )}
           <Button
             size="sm"
             variant="outline"
