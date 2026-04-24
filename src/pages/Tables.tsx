@@ -208,14 +208,28 @@ const Tables = () => {
       .then(({ data }) => { if (data) setCounterBillingEnabled(data.counter_billing_enabled); });
   }, [hotelId]);
 
+  // Fetch sections
+  const fetchSections = useCallback(async () => {
+    if (!hotelId) return;
+    const { data } = await supabase
+      .from("floor_sections")
+      .select("id, name, color, icon, sort_order")
+      .eq("hotel_id", hotelId)
+      .order("sort_order");
+    setSections((data || []) as FloorSection[]);
+  }, [hotelId]);
+
+  useEffect(() => { void fetchSections(); }, [fetchSections]);
+
   useEffect(() => {
     if (!hotelId) return;
     const ch = supabase
       .channel("tables-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "restaurant_tables", filter: `hotel_id=eq.${hotelId}` }, () => void fetchTables())
+      .on("postgres_changes", { event: "*", schema: "public", table: "floor_sections", filter: `hotel_id=eq.${hotelId}` }, () => void fetchSections())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [hotelId, fetchTables]);
+  }, [hotelId, fetchTables, fetchSections]);
 
   /* ────────── derived ────────── */
   const categories = useMemo(() => ["all", ...Array.from(new Set(menuItems.map((i) => i.category).filter(Boolean)))], [menuItems]);
