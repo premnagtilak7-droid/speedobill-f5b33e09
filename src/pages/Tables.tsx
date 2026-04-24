@@ -9,10 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   Plus, Users, Trash2, Search, Minus, Printer, MessageCircle, Send, X,
   UtensilsCrossed, Grid3X3, LayoutGrid, ShoppingCart, CalendarCheck, Check, Sparkles,
-  Pause, Play, ArrowRightLeft, UserSearch, Gift, CreditCard, Mail, Store, Layers, Pencil,
+  Pause, Play, ArrowRightLeft, UserSearch, Gift, CreditCard, Mail, Store, Layers, Pencil, MoreVertical, FolderInput,
 } from "lucide-react";
 import { ChefHat } from "lucide-react";
 import { toast } from "sonner";
@@ -385,6 +386,20 @@ const Tables = () => {
     if (error) { toast.error("Couldn't delete section"); return; }
     toast.success("Section deleted");
     await fetchSections();
+  };
+
+  const moveTableToSection = async (tableId: string, sectionName: string) => {
+    const { error } = await supabase
+      .from("restaurant_tables")
+      .update({ section_name: sectionName })
+      .eq("id", tableId);
+    if (error) {
+      console.error("Move table failed:", error);
+      toast.error("Couldn't move table.");
+      return;
+    }
+    toast.success(`Moved to ${sectionName}`);
+    await fetchTables();
   };
 
 
@@ -907,6 +922,15 @@ const Tables = () => {
                 </button>
               );
             })}
+            {/* Quick Add Table to currently filtered section */}
+            {isOwner && sectionFilter !== "all" && (
+              <button
+                onClick={() => { setNewTableSection(sectionFilter); setAddOpen(true); }}
+                className="ml-auto flex items-center gap-1 rounded-full border border-dashed border-orange-500 px-3 py-1 text-xs font-semibold text-orange-500 hover:bg-orange-500/10"
+              >
+                <Plus className="h-3 w-3" /> Add table to {sectionFilter}
+              </button>
+            )}
           </div>
         )}
 
@@ -926,6 +950,7 @@ const Tables = () => {
             {(sectionFilter === "all" ? tables : tables.filter((t) => t.section_name === sectionFilter)).map((table) => {
               const s = tableStyles[table.status] || tableStyles.empty;
               const tint = isDark ? s.tintDark : s.tintLight;
+              const tableSection = sections.find((sec) => sec.name === table.section_name);
               return (
                 <div
                   key={table.id}
@@ -943,6 +968,14 @@ const Tables = () => {
                       <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
                       {s.label}
                     </span>
+                    {tableSection && sectionFilter === "all" && (
+                      <div
+                        className="mt-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-medium"
+                        style={{ background: `${tableSection.color}20`, color: tableSection.color }}
+                      >
+                        <span>{tableSection.icon}</span> {tableSection.name}
+                      </div>
+                    )}
                     {table.status === "cleaning" && (
                       <div className="mt-2 flex items-center justify-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-300">
                         <Check className="h-3 w-3" /> Tap to mark empty
@@ -950,13 +983,46 @@ const Tables = () => {
                     )}
                   </div>
                   {isOwner && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); void deleteTable(table.id); }}
-                      className="absolute right-1.5 top-2.5 rounded-full bg-black/40 backdrop-blur p-1 text-red-400 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/20"
-                      aria-label="Delete table"
+                    <div
+                      className="absolute right-1.5 top-2.5 opacity-0 transition-opacity group-hover:opacity-100"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className="rounded-full bg-black/40 backdrop-blur p-1 text-white hover:bg-black/60"
+                            aria-label="Table actions"
+                          >
+                            <MoreVertical className="h-3.5 w-3.5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuLabel className="text-xs">Move to section</DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={() => moveTableToSection(table.id, "Main")}
+                            disabled={table.section_name === "Main"}
+                          >
+                            🍽️ Main
+                          </DropdownMenuItem>
+                          {sections.map((sec) => (
+                            <DropdownMenuItem
+                              key={sec.id}
+                              onClick={() => moveTableToSection(table.id, sec.name)}
+                              disabled={table.section_name === sec.name}
+                            >
+                              <span className="mr-2">{sec.icon}</span> {sec.name}
+                            </DropdownMenuItem>
+                          ))}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => void deleteTable(table.id)}
+                            className="text-red-500 focus:text-red-500"
+                          >
+                            <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete table
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   )}
                 </div>
               );
