@@ -78,6 +78,11 @@ const SettingsPage = () => {
   // Sound volume
   const [volume, setVolume] = useState(getNotificationVolume());
 
+  // Push notification bell sound
+  const { isAudioEnabled, bellUrl, setBellUrl, enableAudio, testBell } = useAudioNotification();
+  const [bellInput, setBellInput] = useState(bellUrl);
+  useEffect(() => { setBellInput(bellUrl); }, [bellUrl]);
+
   useEffect(() => {
     if (!hotelId || !user) return;
     (async () => {
