@@ -15,6 +15,7 @@ import { Settings, Copy, Key, Shield, FileText, ExternalLink, Volume2, Upload, I
 import InstallAppPrompt from "@/components/InstallAppPrompt";
 import { useNavigate } from "react-router-dom";
 import { setNotificationVolume, getNotificationVolume, playLoudBell } from "@/lib/notification-sounds";
+import { useAudioNotification, DEFAULT_BELL_SOUND_URL } from "@/contexts/AudioNotificationContext";
 import { convertToWebP } from "@/lib/image-utils";
 import OperatingHoursEditor, { DEFAULT_HOURS, type OperatingHours } from "@/components/settings/OperatingHoursEditor";
 import {
@@ -76,6 +77,11 @@ const SettingsPage = () => {
 
   // Sound volume
   const [volume, setVolume] = useState(getNotificationVolume());
+
+  // Push notification bell sound
+  const { isAudioEnabled, bellUrl, setBellUrl, enableAudio, testBell } = useAudioNotification();
+  const [bellInput, setBellInput] = useState(bellUrl);
+  useEffect(() => { setBellInput(bellUrl); }, [bellUrl]);
 
   useEffect(() => {
     if (!hotelId || !user) return;
@@ -506,6 +512,94 @@ const SettingsPage = () => {
           <Button variant="outline" size="sm" onClick={() => playLoudBell()}>
             Test Sound
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Push Notification Bell Sound */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Bell className="h-4 w-4" /> Push Notification Sound
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-muted/40 border border-border">
+            <div className="text-xs">
+              <p className="font-medium text-foreground">
+                Audio status:{" "}
+                {isAudioEnabled ? (
+                  <span className="text-emerald-500">Unlocked ✓</span>
+                ) : (
+                  <span className="text-amber-500">Locked — tap to unlock</span>
+                )}
+              </p>
+              <p className="text-muted-foreground mt-0.5">
+                Browsers require a tap before alerts can play sound.
+              </p>
+            </div>
+            {!isAudioEnabled && (
+              <Button size="sm" onClick={() => void enableAudio()}>
+                Unlock
+              </Button>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground">
+              Bell sound URL <span className="text-muted-foreground">(optional)</span>
+            </label>
+            <Input
+              value={bellInput}
+              placeholder={DEFAULT_BELL_SOUND_URL}
+              onChange={(e) => setBellInput(e.target.value)}
+              spellCheck={false}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Paste a public Supabase Storage URL for{" "}
+              <code className="text-foreground/80">kitchen_bell.mp3</code>, or leave blank
+              to use the bundled default.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              onClick={() => {
+                setBellUrl(bellInput);
+                toast.success("Bell sound saved");
+              }}
+            >
+              Save URL
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                if (!isAudioEnabled) {
+                  const ok = await enableAudio();
+                  if (!ok) {
+                    toast.error("Tap again to unlock audio first.");
+                    return;
+                  }
+                }
+                await testBell();
+                toast.success("🔔 Test bell played");
+              }}
+            >
+              <Volume2 className="h-3.5 w-3.5 mr-1.5" /> Test Sound
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setBellInput(DEFAULT_BELL_SOUND_URL);
+                setBellUrl(DEFAULT_BELL_SOUND_URL);
+                toast.success("Reset to default bell");
+              }}
+            >
+              Reset
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

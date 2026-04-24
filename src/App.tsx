@@ -16,6 +16,7 @@ import { lazy, useEffect, Suspense } from "react";
 import SpeedoBot from "@/components/SpeedoBot";
 import PwaSplashOnboarding from "@/components/PwaSplashOnboarding";
 import OneSignalBootstrap from "@/components/OneSignalBootstrap";
+import { AudioNotificationProvider } from "@/contexts/AudioNotificationContext";
 import { isPWA } from "@/lib/platform";
 
 const PageFallback = () => (
@@ -265,10 +266,12 @@ const App = () => (
         <AuthProvider>
           <SubscriptionProvider>
             <KioskProvider>
-              <OneSignalBootstrap />
-              <PwaSplashOnboarding />
-              <AppRoutes />
-              <SpeedoBot />
+              <AudioNotificationProvider>
+                <OneSignalBootstrap />
+                <PwaSplashOnboarding />
+                <AppRoutes />
+                <SpeedoBot />
+              </AudioNotificationProvider>
             </KioskProvider>
           </SubscriptionProvider>
         </AuthProvider>
