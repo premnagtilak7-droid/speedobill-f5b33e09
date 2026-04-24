@@ -749,7 +749,8 @@ const Tables = () => {
             <Button
               size="sm"
               onClick={() => setAddOpen(true)}
-              className="shrink-0 bg-orange-500 text-white hover:bg-orange-600 shadow-md"
+              className="shrink-0 shadow-md border-0"
+              style={{ backgroundColor: "#F97316", color: "#FFFFFF" }}
             >
               <Plus className="mr-1 h-4 w-4" /> Add Table
             </Button>
