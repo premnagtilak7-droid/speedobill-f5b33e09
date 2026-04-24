@@ -335,13 +335,51 @@ const Tables = () => {
   const addTables = async () => {
     const count = parseInt(newCount, 10);
     if (!count || count < 1 || !hotelId) return;
+    const sectionToUse = (newTableSection || "Main").trim() || "Main";
     const maxNum = tables.length > 0 ? Math.max(...tables.map((t) => t.table_number)) : 0;
-    const inserts = Array.from({ length: count }, (_, i) => ({ hotel_id: hotelId, table_number: maxNum + i + 1 }));
+    const inserts = Array.from({ length: count }, (_, i) => ({
+      hotel_id: hotelId,
+      table_number: maxNum + i + 1,
+      section_name: sectionToUse,
+    }));
     const { error } = await supabase.from("restaurant_tables").insert(inserts);
-    if (error) { toast.error(error.message); return; }
-    toast.success(`${count} table(s) added`);
+    if (error) {
+      console.error("Add tables failed:", error);
+      toast.error("Couldn't add tables. Please try again.");
+      return;
+    }
+    toast.success(`${count} table(s) added to ${sectionToUse}`);
     setAddOpen(false); setNewCount("1"); await fetchTables();
   };
+
+  /* ────────── section actions ────────── */
+  const addSection = async () => {
+    if (!hotelId || !secName.trim()) { toast.error("Enter section name"); return; }
+    const { error } = await supabase.from("floor_sections").insert({
+      hotel_id: hotelId,
+      name: secName.trim(),
+      icon: secIcon || "🍽️",
+      color: secColor || "#F97316",
+      sort_order: sections.length,
+    });
+    if (error) {
+      console.error("Add section failed:", error);
+      toast.error("Couldn't add section. Please try again.");
+      return;
+    }
+    toast.success(`Section "${secName.trim()}" added`);
+    setSecName(""); setSecIcon("🍽️"); setSecColor("#F97316");
+    await fetchSections();
+  };
+
+  const deleteSection = async (id: string, name: string) => {
+    if (!confirm(`Delete section "${name}"? Tables in it stay but lose their section.`)) return;
+    const { error } = await supabase.from("floor_sections").delete().eq("id", id);
+    if (error) { toast.error("Couldn't delete section"); return; }
+    toast.success("Section deleted");
+    await fetchSections();
+  };
+
 
   const deleteTable = async (id: string) => {
     const { error } = await supabase.from("restaurant_tables").delete().eq("id", id);
