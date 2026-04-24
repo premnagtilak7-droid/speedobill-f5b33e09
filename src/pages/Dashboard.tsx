@@ -20,7 +20,6 @@ import RecentActivityFeed from "@/components/dashboard/RecentActivityFeed";
 import QuickBillSearch from "@/components/dashboard/QuickBillSearch";
 import TodayAtAGlance from "@/components/dashboard/TodayAtAGlance";
 import BirthdayAlerts from "@/components/dashboard/BirthdayAlerts";
-import StartShiftAudioBanner from "@/components/dashboard/StartShiftAudioBanner";
 
 interface LowStockItem {
   name: string;
@@ -254,9 +253,6 @@ const Dashboard = () => {
 
   return (
     <div className="p-5 md:p-6 space-y-5 max-w-[1400px] mx-auto">
-      {/* Audio unlock banner — auto-hides after audio is enabled */}
-      <StartShiftAudioBanner />
-
       {/* Welcome banner — gradient navy card with orange left rail + restaurant illustration */}
       <div className="relative overflow-hidden rounded-2xl animate-pop-in shadow-[0_8px_40px_-12px_hsl(var(--primary)/0.25)]">
         {/* Orange left accent rail */}
