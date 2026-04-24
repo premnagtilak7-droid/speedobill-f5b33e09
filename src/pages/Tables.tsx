@@ -652,6 +652,13 @@ const Tables = () => {
 
       toast.success(sendToKds ? (assignedChefName ? `Sent to ${assignedChefName} ✓` : "Sent to KDS ✓") : "Order saved ✓");
 
+      // Confirmation that kitchen push notification was triggered (DB trigger fires on order INSERT)
+      if (sendToKds) {
+        setTimeout(() => {
+          toast.success("📨 Push Sent — Kitchen notified", { duration: 2000 });
+        }, 400);
+      }
+
       // Audit: order placed
       if (orderId) {
         void writeAudit({
