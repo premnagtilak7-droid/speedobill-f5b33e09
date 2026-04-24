@@ -11,6 +11,12 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const ONESIGNAL_APP_ID = "2dd083f3-b114-4d3d-82d6-1d743fdcf28c";
+/**
+ * High-importance Android notification channel ID.
+ * Must match the channel created in OneSignal Dashboard → Settings → Android.
+ * "High" importance ensures heads-up notifications + sound on locked screens.
+ */
+export const ONESIGNAL_ANDROID_CHANNEL_ID = "speedobill_orders_high";
 
 declare global {
   interface Window {
@@ -59,6 +65,9 @@ export async function initOneSignal(): Promise<void> {
             serviceWorkerPath: "/OneSignalSDKWorker.js",
             serviceWorkerParam: { scope: "/" },
             notifyButton: { enable: false },
+            // Android: bind subscriptions to a HIGH-importance channel so the
+            // OS plays sound + shows heads-up even when the screen is locked.
+            androidChannelId: ONESIGNAL_ANDROID_CHANNEL_ID,
           });
           initialized = true;
         } catch (e) {

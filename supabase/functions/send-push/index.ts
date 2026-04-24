@@ -123,6 +123,16 @@ Deno.serve(async (req) => {
         headings: { en: body.title },
         contents: { en: body.message },
         url: body.url,
+        // ── Sound configuration ──
+        // iOS: file must live in the iOS app bundle (or default).
+        ios_sound: "bell.wav",
+        // Android: file name (no extension) inside res/raw, OR default.
+        android_sound: "bell",
+        // Bind to the HIGH-importance channel so locked-screen alerts play sound.
+        android_channel_id: "speedobill_orders_high",
+        // Web push: hint to the OneSignal SW. Web sound playback is best-effort.
+        web_push_topic: "order",
+        priority: 10,
         data: { hotel_id: hotelId, ...(body.data || {}) },
       }),
     });
