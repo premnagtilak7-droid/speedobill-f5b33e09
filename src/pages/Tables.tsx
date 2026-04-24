@@ -355,16 +355,23 @@ const Tables = () => {
   /* ────────── section actions ────────── */
   const addSection = async () => {
     if (!hotelId || !secName.trim()) { toast.error("Enter section name"); return; }
-    const { error } = await supabase.from("floor_sections").insert({
+    const payload = {
       hotel_id: hotelId,
       name: secName.trim(),
       icon: secIcon || "🍽️",
       color: secColor || "#F97316",
       sort_order: sections.length,
-    });
+    };
+    // Try once, retry on transient network failure
+    let { error } = await supabase.from("floor_sections").insert(payload);
+    if (error && /failed to fetch|network/i.test(error.message || "")) {
+      await new Promise((r) => setTimeout(r, 800));
+      ({ error } = await supabase.from("floor_sections").insert(payload));
+    }
     if (error) {
       console.error("Add section failed:", error);
-      toast.error("Couldn't add section. Please try again.");
+      const isNetwork = /failed to fetch|network/i.test(error.message || "");
+      toast.error(isNetwork ? "Network hiccup — please try again." : "Couldn't add section. Please try again.");
       return;
     }
     toast.success(`Section "${secName.trim()}" added`);
