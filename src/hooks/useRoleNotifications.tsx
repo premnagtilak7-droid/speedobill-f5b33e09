@@ -22,6 +22,7 @@ export interface AppNotification {
   body: string;
   type: "order" | "ready" | "void" | "bill" | "info";
   createdAt: number;
+  navigateTo?: string;
 }
 
 type NotifCallback = (notif: AppNotification) => void;
@@ -39,13 +40,22 @@ function emit(notif: AppNotification) {
 function pushNotification(notif: AppNotification) {
   emit(notif);
 
+  const action = notif.navigateTo
+    ? { label: "Open Order", onClick: () => { window.location.href = notif.navigateTo!; } }
+    : undefined;
+
   if (notif.type === "ready") {
-    toast.success(notif.title, { description: notif.body, duration: 4000 });
+    toast.success(notif.title, { description: notif.body, duration: 15000, action });
     return;
   }
 
   if (notif.type === "void" || notif.type === "bill") {
-    toast.warning(notif.title, { description: notif.body, duration: 4500 });
+    toast.warning(notif.title, { description: notif.body, duration: 8000, action });
+    return;
+  }
+
+  if (notif.type === "order") {
+    toast.info(notif.title, { description: notif.body, duration: 15000, action });
     return;
   }
 
