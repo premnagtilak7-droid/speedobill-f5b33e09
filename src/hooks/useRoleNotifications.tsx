@@ -22,6 +22,7 @@ export interface AppNotification {
   body: string;
   type: "order" | "ready" | "void" | "bill" | "info";
   createdAt: number;
+  navigateTo?: string;
 }
 
 type NotifCallback = (notif: AppNotification) => void;
@@ -39,13 +40,22 @@ function emit(notif: AppNotification) {
 function pushNotification(notif: AppNotification) {
   emit(notif);
 
+  const action = notif.navigateTo
+    ? { label: "Open Order", onClick: () => { window.location.href = notif.navigateTo!; } }
+    : undefined;
+
   if (notif.type === "ready") {
-    toast.success(notif.title, { description: notif.body, duration: 4000 });
+    toast.success(notif.title, { description: notif.body, duration: 15000, action });
     return;
   }
 
   if (notif.type === "void" || notif.type === "bill") {
-    toast.warning(notif.title, { description: notif.body, duration: 4500 });
+    toast.warning(notif.title, { description: notif.body, duration: 8000, action });
+    return;
+  }
+
+  if (notif.type === "order") {
+    toast.info(notif.title, { description: notif.body, duration: 15000, action });
     return;
   }
 
@@ -372,8 +382,43 @@ export function useRoleNotifications() {
               body: `Table ${co.table_number} placed ₹${Number(co.total_amount).toFixed(0)} order`,
               type: "order",
               createdAt: Date.now(),
+              navigateTo: "/incoming-orders",
             });
           }
+        }
+      )
+      .subscribe();
+
+    // ── New Orders (any source) — primary owner/manager notification ──
+    const newOrderChannel = supabase
+      .channel(`owner-new-orders-${hotelId}-${Date.now()}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "orders", filter: `hotel_id=eq.${hotelId}` },
+        async (payload) => {
+          const o = payload.new as any;
+          const { data: tbl } = await supabase
+            .from("restaurant_tables")
+            .select("table_number")
+            .eq("id", o.table_id)
+            .maybeSingle();
+          const tableNum = tbl?.table_number || "?";
+          const total = Number(o.total || 0).toFixed(0);
+
+          playLoudBell();
+          sendBrowserNotif(
+            "🔔 New Order",
+            `Table ${tableNum} — ₹${total}`,
+            `order-${o.id}`
+          );
+          pushNotification({
+            id: `order-${o.id}`,
+            title: `New Order: Table ${tableNum}`,
+            body: `Total ₹${total}`,
+            type: "order",
+            createdAt: Date.now(),
+            navigateTo: "/order-history",
+          });
         }
       )
       .subscribe();
@@ -382,6 +427,7 @@ export function useRoleNotifications() {
       supabase.removeChannel(voidChannel);
       supabase.removeChannel(billChannel);
       supabase.removeChannel(customerOrderChannel);
+      supabase.removeChannel(newOrderChannel);
     };
   }, [hotelId, role]);
 
