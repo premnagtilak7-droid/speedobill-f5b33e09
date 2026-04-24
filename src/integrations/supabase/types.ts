@@ -1491,6 +1491,39 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: {
+          created_at: string
+          device_info: Json | null
+          hotel_id: string
+          id: string
+          last_seen_at: string
+          onesignal_player_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_info?: Json | null
+          hotel_id: string
+          id?: string
+          last_seen_at?: string
+          onesignal_player_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_info?: Json | null
+          hotel_id?: string
+          id?: string
+          last_seen_at?: string
+          onesignal_player_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       recipes: {
         Row: {
           created_at: string
