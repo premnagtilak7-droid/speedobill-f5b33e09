@@ -103,7 +103,16 @@ const Tables = () => {
   const [addOpen, setAddOpen] = useState(false);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [newCount, setNewCount] = useState("1");
+  const [newTableSection, setNewTableSection] = useState<string>("Main");
   const [reserveOpen, setReserveOpen] = useState(false);
+
+  /* ── sections ── */
+  const [sections, setSections] = useState<FloorSection[]>([]);
+  const [sectionFilter, setSectionFilter] = useState<string>("all");
+  const [sectionsOpen, setSectionsOpen] = useState(false);
+  const [secName, setSecName] = useState("");
+  const [secIcon, setSecIcon] = useState("🍽️");
+  const [secColor, setSecColor] = useState("#F97316");
 
   /* ── reservation form ── */
   const [resTableId, setResTableId] = useState("");
