@@ -30,6 +30,7 @@ export interface PaymentHotel {
   pay_razorpay_enabled?: boolean;
   pay_request_bill_enabled?: boolean;
   tip_options?: number[] | null;
+  payment_verify_mode?: string | null;
 }
 
 export type PaymentMethod = "upi" | "cash" | "card" | "razorpay" | "request_bill";
