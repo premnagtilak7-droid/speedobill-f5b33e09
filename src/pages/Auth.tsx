@@ -11,7 +11,7 @@ import { getAuthRedirectOrigin, getResetPasswordRedirectUrl } from "@/lib/platfo
 import { Progress } from "@/components/ui/progress";
 
 type AuthMode = "login" | "signup";
-type RoleChoice = "owner" | "waiter" | "chef";
+type RoleChoice = "owner" | "waiter" | "chef" | "captain";
 type StaffStep = "code" | "select" | "pin";
 interface StaffOption { user_id: string; full_name: string; role: string; }
 
