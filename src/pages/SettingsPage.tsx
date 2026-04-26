@@ -117,6 +117,13 @@ const SettingsPage = () => {
         setReceiptFooter(data.receipt_footer || "Thank you! Visit again.");
         setShowGstOnReceipt(data.show_gst_on_receipt ?? true);
         setReceiptHeaderStyle(data.receipt_header_style || "bold");
+        setPayUpiEnabled(data.pay_upi_enabled ?? true);
+        setPayCashEnabled(data.pay_cash_enabled ?? true);
+        setPayCardEnabled(data.pay_card_enabled ?? false);
+        setPayRazorpayEnabled(data.pay_razorpay_enabled ?? false);
+        setPayRequestBillEnabled(data.pay_request_bill_enabled ?? true);
+        setRazorpayKeyId(data.razorpay_key_id || "");
+        if (Array.isArray(data.tip_options)) setTipOptionsStr(data.tip_options.join(","));
         if (data.operating_hours && typeof data.operating_hours === "object") {
           setHours({ ...DEFAULT_HOURS, ...(data.operating_hours as OperatingHours) });
         }
