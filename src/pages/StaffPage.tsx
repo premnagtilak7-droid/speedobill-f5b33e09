@@ -42,11 +42,33 @@ const StaffPage = () => {
   const [pinValue, setPinValue] = useState("");
   const [pinConfirm, setPinConfirm] = useState("");
   const [savingPin, setSavingPin] = useState(false);
+  const [floorSections, setFloorSections] = useState<{ id: string; name: string }[]>([]);
+  const [savingSection, setSavingSection] = useState(false);
 
   useEffect(() => {
     if (!hotelId) return;
     loadData();
+    supabase
+      .from("floor_sections")
+      .select("id, name")
+      .eq("hotel_id", hotelId)
+      .order("sort_order")
+      .then(({ data }) => setFloorSections((data ?? []) as any));
   }, [hotelId]);
+
+  const updateCaptainSection = async (userId: string, sectionName: string | null) => {
+    setSavingSection(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ assigned_section_name: sectionName } as any)
+      .eq("user_id", userId);
+    setSavingSection(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(sectionName ? `Section set to ${sectionName}` : "Section cleared");
+    setStaff(prev => prev.map(s => s.user_id === userId ? { ...s, assigned_section_name: sectionName } : s));
+    setSelectedStaff((prev: any) => prev && prev.user_id === userId ? { ...prev, assigned_section_name: sectionName } : prev);
+  };
+
 
   const loadData = async () => {
     if (!hotelId) return;
@@ -568,7 +590,38 @@ const StaffPage = () => {
                   </div>
                 </div>
 
-                {/* Actions */}
+                {/* Captain section assignment */}
+                {selectedStaff.role === "captain" && (
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+                    <p className="text-sm font-semibold flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-primary" /> Assigned Floor Section
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Captain will only see tables in this section.
+                    </p>
+                    <Select
+                      value={selectedStaff.assigned_section_name || "__none__"}
+                      onValueChange={(v) => updateCaptainSection(selectedStaff.user_id, v === "__none__" ? null : v)}
+                      disabled={savingSection}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a section" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">— Unassigned —</SelectItem>
+                        {floorSections.map((sec) => (
+                          <SelectItem key={sec.id} value={sec.name}>{sec.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {floorSections.length === 0 && (
+                      <p className="text-xs text-yellow-500">
+                        No floor sections defined yet. Add them under Floor Plan.
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex gap-2 flex-wrap">
                   <Button size="sm" variant="outline" onClick={() => { setSalaryDialog(true); setSalaryForm({ base_salary: "", advance_paid: "", bonus: "", deductions: "", notes: "", month: format(new Date(), "yyyy-MM") }); }}>
                     <Wallet className="h-3.5 w-3.5 mr-1" /> Add Salary
@@ -779,6 +832,7 @@ const StaffPage = () => {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="waiter">Waiter</SelectItem>
+                  <SelectItem value="captain">Captain</SelectItem>
                   <SelectItem value="chef">Chef</SelectItem>
                   <SelectItem value="manager">Manager</SelectItem>
                 </SelectContent>

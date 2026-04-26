@@ -3,7 +3,7 @@ import type { Enums } from "@/integrations/supabase/types";
 import { getScopedStorageKey } from "@/lib/backend-cache";
 import { safeStorage } from "@/lib/safe-storage";
 
-export type AppRole = "owner" | "waiter" | "chef" | "manager" | string;
+export type AppRole = "owner" | "waiter" | "chef" | "manager" | "captain" | string;
 
 interface AccessContext {
   role: AppRole | null;
@@ -12,7 +12,7 @@ interface AccessContext {
 
 type DbAppRole = Enums<"app_role">;
 
-const STAFF_ROLES = new Set<DbAppRole>(["waiter", "chef", "manager"]);
+const STAFF_ROLES = new Set<DbAppRole>(["waiter", "chef", "manager", "captain"] as DbAppRole[]);
 
 const resolveRole = (primaryRole: string | null | undefined, fallbackRole?: string | null): AppRole | null => {
   const role = primaryRole ?? fallbackRole ?? null;

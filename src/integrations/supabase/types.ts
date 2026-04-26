@@ -1447,6 +1447,7 @@ export type Database = {
         Row: {
           address: string | null
           assigned_section_id: string | null
+          assigned_section_name: string | null
           created_at: string
           email: string | null
           full_name: string | null
@@ -1473,6 +1474,7 @@ export type Database = {
         Insert: {
           address?: string | null
           assigned_section_id?: string | null
+          assigned_section_name?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -1499,6 +1501,7 @@ export type Database = {
         Update: {
           address?: string | null
           assigned_section_id?: string | null
+          assigned_section_name?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null

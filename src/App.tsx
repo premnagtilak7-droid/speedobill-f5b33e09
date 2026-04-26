@@ -35,6 +35,7 @@ import LandingPage from "./pages/LandingPage";
 import MenuPage from "./pages/MenuPage";
 import Dashboard from "./pages/Dashboard";
 const ManagerDashboard = lazy(() => import("./pages/ManagerDashboard"));
+const CaptainDashboard = lazy(() => import("./pages/CaptainDashboard"));
 import VoidReports from "./pages/VoidReports";
 import DailyClosing from "./pages/DailyClosing";
 import StaffPage from "./pages/StaffPage";
@@ -131,13 +132,15 @@ const AppRoutes = () => {
     ? "/creator-admin"
     : role === "chef"
       ? "/kds"
-      : role === "waiter"
-        ? "/tables"
-        : role === "manager"
-          ? "/manager"
-          : role === "owner"
-            ? "/dashboard"
-            : "/tables";
+      : role === "captain"
+        ? "/captain"
+        : role === "waiter"
+          ? "/tables"
+          : role === "manager"
+            ? "/manager"
+            : role === "owner"
+              ? "/dashboard"
+              : "/tables";
 
   useEffect(() => {
     if (
@@ -214,20 +217,23 @@ const AppRoutes = () => {
 
         <Route element={<ProtectedRoute requireActiveSubscription><AppLayout /></ProtectedRoute>}>
           {/* Shared routes — all roles */}
-          <Route path="/tables" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><Tables /></RoleGuard>} />
-          <Route path="/counter" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><CounterOrderPage /></RoleGuard>} />
-          <Route path="/my-orders" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><WaiterOrders /></RoleGuard>} />
+          <Route path="/tables" element={<RoleGuard allowed={["owner", "manager", "waiter", "captain"]}><Tables /></RoleGuard>} />
+          <Route path="/counter" element={<RoleGuard allowed={["owner", "manager", "waiter", "captain"]}><CounterOrderPage /></RoleGuard>} />
+          <Route path="/my-orders" element={<RoleGuard allowed={["owner", "manager", "waiter", "captain"]}><WaiterOrders /></RoleGuard>} />
           {/* /kitchen removed — KDS is the single kitchen display */}
-          <Route path="/menu" element={<RoleGuard allowed={["owner", "manager", "waiter", "chef"]}><MenuPage /></RoleGuard>} />
+          <Route path="/menu" element={<RoleGuard allowed={["owner", "manager", "waiter", "chef", "captain"]}><MenuPage /></RoleGuard>} />
           <Route path="/kds" element={<RoleGuard allowed={["owner", "manager", "chef"]}><PlanGuard featureName="Kitchen Display System (KDS)"><ChefKDS /></PlanGuard></RoleGuard>} />
+
+          {/* Captain console */}
+          <Route path="/captain" element={<RoleGuard allowed={["owner", "manager", "captain"]}><CaptainDashboard /></RoleGuard>} />
 
           {/* Owner + Manager shared routes */}
           <Route path="/dashboard" element={<RoleGuard allowed={["owner", "manager"]}><Dashboard /></RoleGuard>} />
           <Route path="/manager" element={<RoleGuard allowed={["owner", "manager"]}><ManagerDashboard /></RoleGuard>} />
-          <Route path="/incoming-orders" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><IncomingOrders /></RoleGuard>} />
+          <Route path="/incoming-orders" element={<RoleGuard allowed={["owner", "manager", "waiter", "captain"]}><IncomingOrders /></RoleGuard>} />
           <Route path="/analytics" element={<RoleGuard allowed={["owner", "manager"]}><PlanGuard featureName="Analytics & Reports"><Analytics /></PlanGuard></RoleGuard>} />
           <Route path="/reports" element={<RoleGuard allowed={["owner", "manager"]}><PlanGuard featureName="Analytics & Reports"><ReportsPage /></PlanGuard></RoleGuard>} />
-          <Route path="/order-history" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><OrderHistory /></RoleGuard>} />
+          <Route path="/order-history" element={<RoleGuard allowed={["owner", "manager", "waiter", "captain"]}><OrderHistory /></RoleGuard>} />
           <Route path="/void-reports" element={<RoleGuard allowed={["owner", "manager"]}><VoidReports /></RoleGuard>} />
           <Route path="/staff" element={<RoleGuard allowed={["owner", "manager"]}><StaffPage /></RoleGuard>} />
           <Route path="/staff-performance" element={<RoleGuard allowed={["owner", "manager"]}><StaffPerformance /></RoleGuard>} />
@@ -254,7 +260,7 @@ const AppRoutes = () => {
           <Route path="/settings" element={<RoleGuard allowed={["owner"]}><SettingsPage /></RoleGuard>} />
 
           {/* Staff self-profile — waiter, chef, manager */}
-          <Route path="/staff-profile" element={<RoleGuard allowed={["owner", "manager", "waiter", "chef"]}><StaffProfile /></RoleGuard>} />
+          <Route path="/staff-profile" element={<RoleGuard allowed={["owner", "manager", "waiter", "chef", "captain"]}><StaffProfile /></RoleGuard>} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

@@ -11,7 +11,7 @@ import { getAuthRedirectOrigin, getResetPasswordRedirectUrl } from "@/lib/platfo
 import { Progress } from "@/components/ui/progress";
 
 type AuthMode = "login" | "signup";
-type RoleChoice = "owner" | "waiter" | "chef";
+type RoleChoice = "owner" | "waiter" | "chef" | "captain";
 type StaffStep = "code" | "select" | "pin";
 interface StaffOption { user_id: string; full_name: string; role: string; }
 
@@ -210,6 +210,7 @@ const Auth = () => {
       const target =
         selectedStaff.role === "chef" ? "/kds" :
         selectedStaff.role === "manager" ? "/manager" :
+        selectedStaff.role === "captain" ? "/captain" :
         "/tables";
       window.location.replace(target);
     } catch (err: any) {
@@ -652,6 +653,7 @@ const Auth = () => {
                       <div className="flex gap-2">
                         {([
                           { key: "owner" as RoleChoice, icon: "👑", label: "Owner" },
+                          { key: "captain" as RoleChoice, icon: "🫡", label: "Captain" },
                           { key: "waiter" as RoleChoice, icon: "🍽️", label: "Waiter" },
                           { key: "chef" as RoleChoice, icon: "👨‍🍳", label: "Chef" },
                         ]).map(r => (
@@ -669,11 +671,11 @@ const Auth = () => {
                         ))}
                       </div>
                     </div>
-                    {(role === "waiter" || role === "chef") && (
+                    {(role === "waiter" || role === "chef" || role === "captain") && (
                       <div className="space-y-1">
                         <label className="text-sm font-bold text-foreground">Hotel Code</label>
                         <Input placeholder="e.g. QB-1234" value={hotelCode} onChange={e => setHotelCode(e.target.value.toUpperCase())} className="h-11 bg-secondary/50 border-border" />
-                        <p className="text-xs text-muted-foreground">Waiter and chef accounts need a valid owner hotel code before they can open the app.</p>
+                        <p className="text-xs text-muted-foreground">Captain, waiter and chef accounts need a valid owner hotel code before they can open the app.</p>
                       </div>
                     )}
                     <label className="flex items-start gap-2 cursor-pointer select-none rounded-lg border border-border bg-secondary/30 p-3">
