@@ -448,7 +448,94 @@ const SettingsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Operating Hours */}
+      {/* Customer Payment Methods (QR ordering) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <QrCode className="h-4 w-4" /> Customer Payment Methods
+          </CardTitle>
+          <p className="text-[11px] text-muted-foreground">
+            Choose what guests see when they tap "Pay" after their QR-ordered meal.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold">UPI Payment</p>
+              <p className="text-[10px] text-muted-foreground">Guest scans QR + enters 12-digit UTR. Waiter verifies.</p>
+            </div>
+            <Switch checked={payUpiEnabled} onCheckedChange={setPayUpiEnabled} />
+          </div>
+          {payUpiEnabled && !upiId && (
+            <p className="text-[11px] text-amber-600 -mt-2">
+              ⚠ Add a UPI ID in "Branding & Receipt" above for UPI payments to work.
+            </p>
+          )}
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold">Cash Payment</p>
+              <p className="text-[10px] text-muted-foreground">Guest signals waiter to come collect cash.</p>
+            </div>
+            <Switch checked={payCashEnabled} onCheckedChange={setPayCashEnabled} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold">Card Payment</p>
+              <p className="text-[10px] text-muted-foreground">Waiter brings the POS machine to the table.</p>
+            </div>
+            <Switch checked={payCardEnabled} onCheckedChange={setPayCardEnabled} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold">Razorpay</p>
+              <p className="text-[10px] text-muted-foreground">Use only if you have a Razorpay account.</p>
+            </div>
+            <Switch checked={payRazorpayEnabled} onCheckedChange={setPayRazorpayEnabled} />
+          </div>
+          {payRazorpayEnabled && (
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Razorpay Key ID (publishable)</label>
+              <Input
+                placeholder="rzp_live_xxxxxxxxxxxx"
+                value={razorpayKeyId}
+                onChange={(e) => setRazorpayKeyId(e.target.value)}
+                className="font-mono text-xs"
+              />
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold">Request Physical Bill</p>
+              <p className="text-[10px] text-muted-foreground">Simplest option — waiter brings bill, guest pays however.</p>
+            </div>
+            <Switch checked={payRequestBillEnabled} onCheckedChange={setPayRequestBillEnabled} />
+          </div>
+
+          <div className="space-y-1 pt-2 border-t border-border/40">
+            <label className="text-xs text-muted-foreground">Tip Options (% — comma separated, max 4)</label>
+            <Input
+              placeholder="5,10,15"
+              value={tipOptionsStr}
+              onChange={(e) => setTipOptionsStr(e.target.value.replace(/[^\d.,\s]/g, "").slice(0, 30))}
+            />
+            <p className="text-[10px] text-muted-foreground">Shown to guest at payment. Leave blank to hide tips.</p>
+          </div>
+
+          <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-lg p-3">
+            <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1">
+              <Shield className="h-3 w-3" /> Anti-fraud
+            </p>
+            <p className="text-[10px] text-amber-700/80 dark:text-amber-400/80 mt-1">
+              UPI payments require a 12-digit UTR + waiter verification. Duplicate UTRs are flagged automatically.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2"><Clock className="h-4 w-4" /> Operating Hours</CardTitle>
