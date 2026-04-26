@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef, memo, useCallback, Suspense } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/NotificationBell";
+import HeaderSoundButton from "@/components/HeaderSoundButton";
 import { useRoleNotifications } from "@/hooks/useRoleNotifications";
 import SectionErrorBoundary from "@/components/SectionErrorBoundary";
 import { useIncomingOrders } from "@/hooks/useIncomingOrders";
