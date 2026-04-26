@@ -35,6 +35,7 @@ import LandingPage from "./pages/LandingPage";
 import MenuPage from "./pages/MenuPage";
 import Dashboard from "./pages/Dashboard";
 const ManagerDashboard = lazy(() => import("./pages/ManagerDashboard"));
+const CaptainDashboard = lazy(() => import("./pages/CaptainDashboard"));
 import VoidReports from "./pages/VoidReports";
 import DailyClosing from "./pages/DailyClosing";
 import StaffPage from "./pages/StaffPage";
