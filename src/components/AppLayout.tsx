@@ -187,7 +187,33 @@ const chefSections: NavSection[] = [
   },
 ];
 
-// Bottom nav items per role
+const captainSections: NavSection[] = [
+  {
+    title: "MAIN",
+    items: [
+      { label: "Captain Console", icon: LayoutDashboard, path: "/captain" },
+      { label: "My Tables", icon: Grid3X3, path: "/tables" },
+      { label: "Incoming", icon: Bell, path: "/incoming-orders" },
+      { label: "Take Order", icon: Store, path: "/counter" },
+      { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
+      { label: "Order History", icon: ScrollText, path: "/order-history" },
+    ],
+  },
+  {
+    title: "ACCOUNT",
+    items: [
+      { label: "My Profile", icon: Users, path: "/staff-profile" },
+    ],
+  },
+];
+
+const captainBottomNav: NavItem[] = [
+  { label: "Console", icon: LayoutDashboard, path: "/captain" },
+  { label: "Tables", icon: Grid3X3, path: "/tables" },
+  { label: "Order", icon: Store, path: "/counter" },
+  { label: "Incoming", icon: Bell, path: "/incoming-orders" },
+  { label: "More", icon: Menu, path: "__more__" },
+];
 const ownerBottomNav: NavItem[] = [
   { label: "Home", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Tables", icon: Grid3X3, path: "/tables" },
