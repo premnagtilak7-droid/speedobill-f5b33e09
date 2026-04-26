@@ -67,22 +67,26 @@ Deno.serve(async (req) => {
         .order("category")
         .order("name");
 
-      // Fetch loyalty config
       const { data: loyaltyConfig } = await admin
         .from("hotel_loyalty_configs")
         .select("enabled, visit_goal, reward_type, reward_description, reward_value, min_bill_value")
         .eq("hotel_id", table.hotel_id)
         .maybeSingle();
 
-      // Fetch hotel branding (white-label)
       const { data: hotel } = await admin
         .from("hotels")
-        .select("name, logo_url, business_type")
+        .select("name, logo_url, business_type, upi_id, upi_qr_url, tax_percent, gst_enabled, waiter_confirms_first")
         .eq("id", table.hotel_id)
         .maybeSingle();
 
       return json({
-        table: { id: table.id, table_number: table.table_number, hotel_id: table.hotel_id, status: table.status, section_name: (table as any).section_name },
+        table: {
+          id: table.id,
+          table_number: table.table_number,
+          hotel_id: table.hotel_id,
+          status: table.status,
+          section_name: (table as any).section_name,
+        },
         menu: menu || [],
         loyalty_config: loyaltyConfig || null,
         hotel: hotel || null,
@@ -108,13 +112,12 @@ Deno.serve(async (req) => {
 
     // ── 3. PLACE ORDER ──
     if (action === "place_order") {
-      const { table_id, hotel_id, table_number, items, total_amount, customer_name, customer_phone } = body;
+      const { table_id, hotel_id, table_number, items, customer_name, customer_phone, special_instructions } = body;
 
       if (!table_id || !hotel_id || !items || !Array.isArray(items) || items.length === 0) {
         return json({ error: "Missing required order fields" }, 400);
       }
 
-      // Validate table belongs to hotel
       const { data: validTable } = await admin
         .from("restaurant_tables")
         .select("id")
@@ -124,7 +127,6 @@ Deno.serve(async (req) => {
 
       if (!validTable) return json({ error: "Invalid table/hotel combination" }, 400);
 
-      // Validate items against actual menu
       const menuItemNames = items.map((i: any) => String(i.name));
       const { data: validMenu } = await admin
         .from("menu_items")
@@ -148,36 +150,40 @@ Deno.serve(async (req) => {
 
       const safeTotal = sanitizedItems.reduce((s: number, i: any) => s + i.price * i.quantity, 0);
 
-      const { error: orderErr } = await admin.from("customer_orders").insert({
-        hotel_id,
-        table_id,
-        table_number: Number(table_number) || 0,
-        items: sanitizedItems,
-        total_amount: safeTotal,
-        customer_name: customer_name ? String(customer_name).slice(0, 100) : null,
-        customer_phone: customer_phone ? String(customer_phone).slice(0, 20) : null,
-        status: "incoming",
-        payment_status: "pending",
-      });
+      const { data: inserted, error: orderErr } = await admin
+        .from("customer_orders")
+        .insert({
+          hotel_id,
+          table_id,
+          table_number: Number(table_number) || 0,
+          items: sanitizedItems,
+          total_amount: safeTotal,
+          customer_name: customer_name ? String(customer_name).slice(0, 100) : null,
+          customer_phone: customer_phone ? String(customer_phone).slice(0, 20) : null,
+          status: "incoming",
+          payment_status: "pending",
+          modifiers: special_instructions
+            ? [{ note: String(special_instructions).slice(0, 500) }]
+            : [],
+        })
+        .select("id")
+        .single();
 
       if (orderErr) return json({ error: "Failed to place order" }, 500);
-      return json({ success: true });
+      return json({ success: true, order_id: inserted?.id });
     }
 
-    // ── 4. SERVICE CALL ──
-    if (action === "service_call") {
-      const { table_id, hotel_id, table_number, call_type } = body;
+    // ── 4. WAITER CALL (water / cutlery / cleaning / menu / bill / other) ──
+    if (action === "waiter_call") {
+      const { table_id, hotel_id, table_number, request_type, message, guest_name } = body;
 
-      if (!table_id || !hotel_id || !call_type) {
-        return json({ error: "Missing service call fields" }, 400);
+      if (!table_id || !hotel_id || !request_type) {
+        return json({ error: "Missing fields" }, 400);
       }
 
-      const validTypes = ["service", "water"];
-      if (!validTypes.includes(call_type)) {
-        return json({ error: "Invalid call type" }, 400);
-      }
+      const validTypes = ["water", "cutlery", "cleaning", "menu", "bill", "other", "service"];
+      const safeType = validTypes.includes(request_type) ? request_type : "other";
 
-      // Validate table belongs to hotel
       const { data: validTable } = await admin
         .from("restaurant_tables")
         .select("id")
@@ -187,6 +193,37 @@ Deno.serve(async (req) => {
 
       if (!validTable) return json({ error: "Invalid table" }, 400);
 
+      const { error: wcErr } = await admin.from("waiter_calls").insert({
+        hotel_id,
+        table_id,
+        table_number: Number(table_number) || 0,
+        request_type: safeType,
+        message: message ? String(message).slice(0, 200) : "",
+        guest_name: guest_name ? String(guest_name).slice(0, 100) : "",
+        status: "pending",
+      });
+
+      if (wcErr) return json({ error: "Failed to send request" }, 500);
+      return json({ success: true });
+    }
+
+    // ── 4b. LEGACY service_call (kept for backward compatibility) ──
+    if (action === "service_call") {
+      const { table_id, hotel_id, table_number, call_type } = body;
+      if (!table_id || !hotel_id || !call_type) {
+        return json({ error: "Missing service call fields" }, 400);
+      }
+      const validTypes = ["service", "water"];
+      if (!validTypes.includes(call_type)) {
+        return json({ error: "Invalid call type" }, 400);
+      }
+      const { data: validTable } = await admin
+        .from("restaurant_tables")
+        .select("id")
+        .eq("id", table_id)
+        .eq("hotel_id", hotel_id)
+        .maybeSingle();
+      if (!validTable) return json({ error: "Invalid table" }, 400);
       const { error: scErr } = await admin.from("service_calls").insert({
         hotel_id,
         table_id,
@@ -194,9 +231,21 @@ Deno.serve(async (req) => {
         call_type,
         status: "active",
       });
-
       if (scErr) return json({ error: "Failed to send request" }, 500);
       return json({ success: true });
+    }
+
+    // ── 5. GET ORDER STATUS (for live tracker) ──
+    if (action === "get_order_status") {
+      const { order_id } = body;
+      if (!order_id) return json({ error: "Missing order_id" }, 400);
+      const { data } = await admin
+        .from("customer_orders")
+        .select("id, status, payment_status, total_amount, table_number, created_at")
+        .eq("id", order_id)
+        .maybeSingle();
+      if (!data) return json({ error: "Order not found" }, 404);
+      return json({ order: data });
     }
 
     return json({ error: "Unknown action" }, 400);
