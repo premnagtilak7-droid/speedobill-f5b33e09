@@ -48,6 +48,32 @@ interface QueuedOrder {
   items: Array<{ name: string; quantity: number; price: number }>;
 }
 
+interface PaymentRow {
+  id: string;
+  hotel_id: string;
+  table_id: string | null;
+  table_number: number | null;
+  method: string;
+  amount: number;
+  tip_amount: number;
+  utr: string | null;
+  status: string;
+  customer_name: string | null;
+  customer_phone: string | null;
+  created_at: string;
+}
+
+interface QueuedPayment {
+  id: string;
+  tableLabel: string;
+  method: string;
+  amount: number;
+  tip: number;
+  utr: string | null;
+  customerName: string;
+  duplicateUtr: boolean;
+}
+
 const NEW_ORDER_SOUND = "/sounds/kitchen_bell.mp3";
 const READY_SOUND = "/sounds/ding.mp3";
 const PAID_SOUND = "/sounds/cash_register.mp3";
