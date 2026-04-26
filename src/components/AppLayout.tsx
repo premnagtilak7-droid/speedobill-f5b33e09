@@ -305,21 +305,25 @@ const AppLayout = () => {
     ? creatorSections
     : role === "manager"
       ? managerSections
-      : role === "waiter"
-        ? waiterSections
-        : role === "chef"
-          ? chefSections
-          : [];
+      : role === "captain"
+        ? captainSections
+        : role === "waiter"
+          ? waiterSections
+          : role === "chef"
+            ? chefSections
+            : [];
 
   const bottomNavItems = role === "owner"
     ? creatorBottomNav
     : role === "manager"
       ? ownerBottomNav
-      : role === "waiter"
-        ? waiterBottomNav
-        : role === "chef"
-          ? chefBottomNav
-          : [];
+      : role === "captain"
+        ? captainBottomNav
+        : role === "waiter"
+          ? waiterBottomNav
+          : role === "chef"
+            ? chefBottomNav
+            : [];
 
   const roleLabel = isCreator ? "Creator Admin" : role ? role.charAt(0).toUpperCase() + role.slice(1) : "Staff";
 
