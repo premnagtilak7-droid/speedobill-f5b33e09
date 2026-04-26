@@ -778,6 +778,7 @@ export type Database = {
           updated_at: string
           upi_id: string | null
           upi_qr_url: string | null
+          waiter_confirms_first: boolean
           waitlist_notify_on_available: boolean
         }
         Insert: {
@@ -807,6 +808,7 @@ export type Database = {
           updated_at?: string
           upi_id?: string | null
           upi_qr_url?: string | null
+          waiter_confirms_first?: boolean
           waitlist_notify_on_available?: boolean
         }
         Update: {
@@ -836,6 +838,7 @@ export type Database = {
           updated_at?: string
           upi_id?: string | null
           upi_qr_url?: string | null
+          waiter_confirms_first?: boolean
           waitlist_notify_on_available?: boolean
         }
         Relationships: []
@@ -2133,6 +2136,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      waiter_calls: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          created_at: string
+          done_at: string | null
+          guest_name: string
+          hotel_id: string
+          id: string
+          message: string
+          request_type: string
+          status: string
+          table_id: string
+          table_number: number
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string
+          done_at?: string | null
+          guest_name?: string
+          hotel_id: string
+          id?: string
+          message?: string
+          request_type?: string
+          status?: string
+          table_id: string
+          table_number: number
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string
+          done_at?: string | null
+          guest_name?: string
+          hotel_id?: string
+          id?: string
+          message?: string
+          request_type?: string
+          status?: string
+          table_id?: string
+          table_number?: number
+        }
+        Relationships: []
       }
       waitlist: {
         Row: {

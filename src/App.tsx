@@ -190,6 +190,7 @@ const AppRoutes = () => {
         <Route path="/terms" element={<TermsConditions />} />
         <Route path="/support" element={<SupportPage />} />
         <Route path="/order/:tableId" element={<CustomerOrder />} />
+        <Route path="/dine/:hotelId/:tableId" element={<CustomerOrder />} />
         <Route path="/menu/:hotelId/:tableNumber" element={<MenuRedirect />} />
         <Route path="/track/:orderId" element={<OrderTracker />} />
         <Route path="/features/billing" element={<BillingFeature />} />
