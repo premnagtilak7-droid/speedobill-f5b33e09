@@ -32,7 +32,8 @@ const fmtINR = (n: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
 
 export default function ManagerDashboard() {
-  const { hotelId, user, profile } = useAuth();
+  const { hotelId, user } = useAuth();
+  const fullName = (user?.user_metadata as any)?.full_name as string | undefined;
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [now, setNow] = useState(new Date());
