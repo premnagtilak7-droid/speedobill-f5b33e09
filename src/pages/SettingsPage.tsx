@@ -78,6 +78,11 @@ const SettingsPage = () => {
   const [razorpayKeyId, setRazorpayKeyId] = useState("");
   const [tipOptionsStr, setTipOptionsStr] = useState("5,10,15");
 
+  // Sound box settings
+  const [soundBoxEnabled, setSoundBoxEnabled] = useState(false);
+  const [soundBoxProvider, setSoundBoxProvider] = useState<string>("paytm");
+  const [paymentVerifyMode, setPaymentVerifyMode] = useState<string>("manual");
+
   // Operating hours
   const [hours, setHours] = useState<OperatingHours>(DEFAULT_HOURS);
 
@@ -123,6 +128,9 @@ const SettingsPage = () => {
         setPayRazorpayEnabled(data.pay_razorpay_enabled ?? false);
         setPayRequestBillEnabled(data.pay_request_bill_enabled ?? true);
         setRazorpayKeyId(data.razorpay_key_id || "");
+        setSoundBoxEnabled(data.sound_box_enabled ?? false);
+        setSoundBoxProvider(data.sound_box_provider || "paytm");
+        setPaymentVerifyMode(data.payment_verify_mode || "manual");
         if (Array.isArray(data.tip_options)) setTipOptionsStr(data.tip_options.join(","));
         if (data.operating_hours && typeof data.operating_hours === "object") {
           setHours({ ...DEFAULT_HOURS, ...(data.operating_hours as OperatingHours) });
@@ -214,6 +222,9 @@ const SettingsPage = () => {
         pay_razorpay_enabled: payRazorpayEnabled,
         pay_request_bill_enabled: payRequestBillEnabled,
         razorpay_key_id: razorpayKeyId.trim(),
+        sound_box_enabled: soundBoxEnabled,
+        sound_box_provider: soundBoxProvider,
+        payment_verify_mode: paymentVerifyMode,
         tip_options: tipOptionsStr
           .split(",")
           .map((s) => parseFloat(s.trim()))
@@ -536,6 +547,59 @@ const SettingsPage = () => {
         </CardContent>
       </Card>
 
+      {/* Sound Box & Payment Verification */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Volume2 className="h-4 w-4" /> Sound Box & Payment Verification
+          </CardTitle>
+          <p className="text-[11px] text-muted-foreground">
+            Tell SpeedoBill how you confirm UPI payments at the counter.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold">I have a UPI sound box</p>
+              <p className="text-[10px] text-muted-foreground">Paytm / PhonePe / BharatPe speaker that announces incoming payments.</p>
+            </div>
+            <Switch checked={soundBoxEnabled} onCheckedChange={setSoundBoxEnabled} />
+          </div>
+
+          {soundBoxEnabled && (
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Sound box provider</label>
+              <Select value={soundBoxProvider} onValueChange={setSoundBoxProvider}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="paytm">Paytm Sound Box</SelectItem>
+                  <SelectItem value="phonepe">PhonePe Sound Box</SelectItem>
+                  <SelectItem value="razorpay">Razorpay Sound Box</SelectItem>
+                  <SelectItem value="bharatpe">BharatPe Sound Box</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="space-y-1 pt-2 border-t border-border/40">
+            <label className="text-xs text-muted-foreground">Verification mode</label>
+            <Select value={paymentVerifyMode} onValueChange={setPaymentVerifyMode}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="manual">Manual confirm (simplest) — waiter taps "Payment received"</SelectItem>
+                <SelectItem value="utr">UTR number (safest) — guest enters 12-digit Transaction ID</SelectItem>
+                <SelectItem value="webhook">Webhook auto-detect (Razorpay only)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-[10px] text-muted-foreground">
+              {paymentVerifyMode === "manual" && "After hearing the sound box, your waiter taps one button to mark the bill paid."}
+              {paymentVerifyMode === "utr" && "Guest must enter the 12-digit UPI Transaction ID. Duplicates are flagged."}
+              {paymentVerifyMode === "webhook" && "Requires Razorpay webhook secret in backend. Auto-verifies the moment Razorpay confirms."}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2"><Clock className="h-4 w-4" /> Operating Hours</CardTitle>

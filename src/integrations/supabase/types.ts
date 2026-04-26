@@ -771,11 +771,15 @@ export type Database = {
           pay_razorpay_enabled: boolean
           pay_request_bill_enabled: boolean
           pay_upi_enabled: boolean
+          payment_verify_mode: string
           phone: string | null
           razorpay_key_id: string | null
+          razorpay_webhook_secret_set: boolean
           receipt_footer: string | null
           receipt_header_style: string
           show_gst_on_receipt: boolean
+          sound_box_enabled: boolean
+          sound_box_provider: string
           subscription_expiry: string | null
           subscription_start_date: string | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
@@ -808,11 +812,15 @@ export type Database = {
           pay_razorpay_enabled?: boolean
           pay_request_bill_enabled?: boolean
           pay_upi_enabled?: boolean
+          payment_verify_mode?: string
           phone?: string | null
           razorpay_key_id?: string | null
+          razorpay_webhook_secret_set?: boolean
           receipt_footer?: string | null
           receipt_header_style?: string
           show_gst_on_receipt?: boolean
+          sound_box_enabled?: boolean
+          sound_box_provider?: string
           subscription_expiry?: string | null
           subscription_start_date?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
@@ -845,11 +853,15 @@ export type Database = {
           pay_razorpay_enabled?: boolean
           pay_request_bill_enabled?: boolean
           pay_upi_enabled?: boolean
+          payment_verify_mode?: string
           phone?: string | null
           razorpay_key_id?: string | null
+          razorpay_webhook_secret_set?: boolean
           receipt_footer?: string | null
           receipt_header_style?: string
           show_gst_on_receipt?: boolean
+          sound_box_enabled?: boolean
+          sound_box_provider?: string
           subscription_expiry?: string | null
           subscription_start_date?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]

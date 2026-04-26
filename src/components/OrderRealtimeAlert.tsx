@@ -95,6 +95,14 @@ export default function OrderRealtimeAlert() {
   const { isAudioEnabled, playBell } = useAudioNotification();
   const tableNumberCache = useRef<Map<string, number>>(new Map());
 
+  // Hotel payment-verify mode (manual / utr / webhook)
+  const [verifyMode, setVerifyMode] = useState<string>("manual");
+  useEffect(() => {
+    if (!hotelId) return;
+    supabase.from("hotels").select("payment_verify_mode").eq("id", hotelId).maybeSingle()
+      .then(({ data }) => { if ((data as any)?.payment_verify_mode) setVerifyMode((data as any).payment_verify_mode); });
+  }, [hotelId]);
+
   // Queue of unacknowledged new orders → render as full-screen modal
   const [queue, setQueue] = useState<QueuedOrder[]>([]);
 
@@ -488,22 +496,43 @@ export default function OrderRealtimeAlert() {
             </p>
           )}
 
-          <div className="grid grid-cols-2 gap-2 pt-2">
-            <button
-              onClick={() => verifyPayment(currentPayment.id, false, "Waiter rejected")}
-              disabled={verifyingId === currentPayment.id}
-              className="py-3 rounded-2xl bg-red-500/10 text-red-600 font-bold border-2 border-red-500/40 active:scale-[0.98] transition disabled:opacity-50 flex items-center justify-center gap-1"
-            >
-              <X className="h-4 w-4" /> Reject
-            </button>
-            <button
-              onClick={() => verifyPayment(currentPayment.id, true)}
-              disabled={verifyingId === currentPayment.id}
-              className="py-3 rounded-2xl bg-emerald-600 text-white font-bold shadow-lg active:scale-[0.98] transition disabled:opacity-50 flex items-center justify-center gap-1"
-            >
-              <CheckCircle2 className="h-4 w-4" /> Verify
-            </button>
-          </div>
+          {/* Manual sound-box mode: one-tap "Payment received" */}
+          {verifyMode === "manual" && !currentPayment.utr ? (
+            <div className="space-y-2 pt-2">
+              <button
+                onClick={() => verifyPayment(currentPayment.id, true)}
+                disabled={verifyingId === currentPayment.id}
+                className="w-full py-4 rounded-2xl bg-emerald-600 text-white font-black text-lg shadow-lg active:scale-[0.98] transition disabled:opacity-50 flex items-center justify-center gap-2 min-h-[56px]"
+              >
+                <CheckCircle2 className="h-5 w-5" />
+                Payment Received ✓
+              </button>
+              <button
+                onClick={() => verifyPayment(currentPayment.id, false, "Waiter rejected")}
+                disabled={verifyingId === currentPayment.id}
+                className="w-full py-2.5 rounded-2xl bg-red-500/10 text-red-600 font-semibold border-2 border-red-500/30 active:scale-[0.98] transition disabled:opacity-50 flex items-center justify-center gap-1 text-sm"
+              >
+                <X className="h-3.5 w-3.5" /> Not received yet
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <button
+                onClick={() => verifyPayment(currentPayment.id, false, "Waiter rejected")}
+                disabled={verifyingId === currentPayment.id}
+                className="py-3 rounded-2xl bg-red-500/10 text-red-600 font-bold border-2 border-red-500/40 active:scale-[0.98] transition disabled:opacity-50 flex items-center justify-center gap-1"
+              >
+                <X className="h-4 w-4" /> Reject
+              </button>
+              <button
+                onClick={() => verifyPayment(currentPayment.id, true)}
+                disabled={verifyingId === currentPayment.id}
+                className="py-3 rounded-2xl bg-emerald-600 text-white font-bold shadow-lg active:scale-[0.98] transition disabled:opacity-50 flex items-center justify-center gap-1"
+              >
+                <CheckCircle2 className="h-4 w-4" /> Verify
+              </button>
+            </div>
+          )}
 
           {payQueue.length > 1 && (
             <p className="text-xs text-muted-foreground pt-1">

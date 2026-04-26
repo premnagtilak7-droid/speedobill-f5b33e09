@@ -82,6 +82,8 @@ interface HotelInfo {
   pay_razorpay_enabled?: boolean;
   pay_request_bill_enabled?: boolean;
   tip_options?: number[] | null;
+  payment_verify_mode?: string | null;
+  sound_box_enabled?: boolean;
 }
 
 // ── Mood → category mapping ────────────────────────────────────────────────

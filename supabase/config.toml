@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.verify-staff-pin]
 verify_jwt = false
+
+[functions.razorpay-webhook]
+verify_jwt = false

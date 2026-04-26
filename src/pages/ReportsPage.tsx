@@ -88,9 +88,30 @@ export default function ReportsPage() {
         .lte("created_at", toISO);
       const billed = (orders ?? []).filter((o) => o.status === "billed");
       const totalRev = billed.reduce((s, o) => s + Number(o.total), 0);
-      const cash = billed.filter((o) => o.payment_method === "cash").reduce((s, o) => s + Number(o.total), 0);
-      const upi = billed.filter((o) => o.payment_method === "upi").reduce((s, o) => s + Number(o.total), 0);
-      const card = billed.filter((o) => o.payment_method === "card").reduce((s, o) => s + Number(o.total), 0);
+      const sumByMethod = (m: string) =>
+        billed.filter((o) => (o.payment_method || "").toLowerCase() === m).reduce((s, o) => s + Number(o.total), 0);
+      const cash = sumByMethod("cash");
+      const upi = sumByMethod("upi");
+      const card = sumByMethod("card");
+      const razorpay = sumByMethod("razorpay");
+      const other = totalRev - (cash + upi + card + razorpay);
+
+      // Guest-initiated payment attempts (QR ordering)
+      const { data: attempts = [] } = await supabase
+        .from("payment_attempts")
+        .select("method, amount, tip_amount, status")
+        .eq("hotel_id", hotelId)
+        .gte("created_at", fromISO)
+        .lte("created_at", toISO);
+      const verified = (attempts ?? []).filter((a: any) => a.status === "verified");
+      const pendingCount = (attempts ?? []).filter((a: any) => a.status === "pending" || a.status === "verifying").length;
+      const rejectedCount = (attempts ?? []).filter((a: any) => a.status === "rejected").length;
+      const sumAtt = (m: string) => verified.filter((a: any) => a.method === m).reduce((s: number, a: any) => s + Number(a.amount) + Number(a.tip_amount || 0), 0);
+      const guestUpi = sumAtt("upi");
+      const guestCash = sumAtt("cash");
+      const guestCard = sumAtt("card");
+      const guestRzp = sumAtt("razorpay");
+      const guestTotal = guestUpi + guestCash + guestCard + guestRzp;
 
       // top items
       const ids = billed.map((o) => o.id);
@@ -113,6 +134,8 @@ export default function ReportsPage() {
         .sort((a, b) => b.revenue - a.revenue)
         .slice(0, 10);
 
+      const pct = (n: number) => totalRev ? `${Math.round((n / totalRev) * 100)}%` : "0%";
+
       return {
         title: key === "daily-sales" ? "Daily Sales Report" : "Weekly Summary",
         periodLabel: label,
@@ -123,11 +146,24 @@ export default function ReportsPage() {
           { label: "Top Item", value: topItems[0]?.name?.slice(0, 16) || "—" },
         ],
         tables: [
-          { title: "Payment Breakdown", head: ["Method", "Amount", "Share"],
+          { title: "Payment Breakdown (all bills)", head: ["Method", "Amount", "Share"],
             body: [
-              ["Cash", fmtINR(cash), totalRev ? `${Math.round((cash / totalRev) * 100)}%` : "0%"],
-              ["UPI", fmtINR(upi), totalRev ? `${Math.round((upi / totalRev) * 100)}%` : "0%"],
-              ["Card", fmtINR(card), totalRev ? `${Math.round((card / totalRev) * 100)}%` : "0%"],
+              ["💵 Cash", fmtINR(cash), pct(cash)],
+              ["📱 UPI", fmtINR(upi), pct(upi)],
+              ["💳 Card", fmtINR(card), pct(card)],
+              ["🟦 Razorpay", fmtINR(razorpay), pct(razorpay)],
+              ...(other > 0 ? [["Other / Counter", fmtINR(other), pct(other)]] : []),
+              ["Total", fmtINR(totalRev), "100%"],
+            ],
+          },
+          { title: `Guest QR Payments (${verified.length} verified · ${pendingCount} pending · ${rejectedCount} rejected)`,
+            head: ["Method", "Verified Amount"],
+            body: [
+              ["UPI", fmtINR(guestUpi)],
+              ["Cash", fmtINR(guestCash)],
+              ["Card", fmtINR(guestCard)],
+              ["Razorpay", fmtINR(guestRzp)],
+              ["Total via QR", fmtINR(guestTotal)],
             ],
           },
           { title: "Top Selling Items", head: ["#", "Item", "Qty Sold", "Revenue"],

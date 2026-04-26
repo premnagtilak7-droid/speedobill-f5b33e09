@@ -30,6 +30,7 @@ export interface PaymentHotel {
   pay_razorpay_enabled?: boolean;
   pay_request_bill_enabled?: boolean;
   tip_options?: number[] | null;
+  payment_verify_mode?: string | null;
 }
 
 export type PaymentMethod = "upi" | "cash" | "card" | "razorpay" | "request_bill";
@@ -277,16 +278,18 @@ function UpiPayPanel({
     ? `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(upiUri)}`
     : (hotel.upi_qr_url || "");
 
+  const isManualMode = (hotel.payment_verify_mode || "manual") === "manual";
   const utrOk = /^\d{12}$/.test(utr.trim());
+  const canSubmit = isManualMode ? true : utrOk;
   const expired = secondsLeft === 0;
   const mm = Math.floor(secondsLeft / 60).toString().padStart(2, "0");
   const ss = (secondsLeft % 60).toString().padStart(2, "0");
 
   const handleClick = async () => {
-    if (!utrOk || expired) return;
+    if (!canSubmit || expired) return;
     setSubmitting(true);
     try {
-      await onSubmit(utr.trim());
+      await onSubmit(isManualMode ? utr.trim() : utr.trim());
     } finally {
       setSubmitting(false);
     }
@@ -323,25 +326,27 @@ function UpiPayPanel({
 
       <div className="space-y-2 pt-2">
         <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-          UTR / Transaction ID (12 digits)
+          UTR / Transaction ID (12 digits) {isManualMode && <span className="text-muted-foreground/70 font-normal normal-case">— optional</span>}
         </label>
         <Input
           inputMode="numeric"
           maxLength={12}
-          placeholder="e.g. 412345678901"
+          placeholder={isManualMode ? "Optional — speeds up verification" : "e.g. 412345678901"}
           value={utr}
           onChange={(e) => setUtr(e.target.value.replace(/\D/g, "").slice(0, 12))}
           className="h-12 text-center font-mono text-lg tracking-wider rounded-xl"
           disabled={expired}
         />
         <p className="text-[11px] text-muted-foreground">
-          🔒 Find this 12-digit number in your UPI app under "Transaction details" after paying.
+          {isManualMode
+            ? "🔔 The waiter's sound box will confirm your payment. UTR helps but isn't required."
+            : "🔒 Find this 12-digit number in your UPI app under \"Transaction details\" after paying."}
         </p>
       </div>
 
       <Button
         onClick={handleClick}
-        disabled={!utrOk || expired || submitting}
+        disabled={!canSubmit || expired || submitting}
         className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold disabled:opacity-50"
         style={{ height: 52 }}
       >
