@@ -66,6 +66,7 @@ interface LoyaltyConfig {
   min_bill_value: number;
 }
 interface HotelInfo {
+  id?: string;
   name: string;
   logo_url: string | null;
   business_type: string | null;
@@ -74,6 +75,12 @@ interface HotelInfo {
   tax_percent: number;
   gst_enabled: boolean;
   waiter_confirms_first: boolean;
+  pay_upi_enabled?: boolean;
+  pay_cash_enabled?: boolean;
+  pay_card_enabled?: boolean;
+  pay_razorpay_enabled?: boolean;
+  pay_request_bill_enabled?: boolean;
+  tip_options?: number[] | null;
 }
 
 // ── Mood → category mapping ────────────────────────────────────────────────
