@@ -207,7 +207,10 @@ const Auth = () => {
       toast.success(`Welcome, ${selectedStaff.full_name}!`);
 
       // Redirect by role — page will route based on auth state, but force navigation for clarity
-      const target = selectedStaff.role === "chef" ? "/kds" : "/tables";
+      const target =
+        selectedStaff.role === "chef" ? "/kds" :
+        selectedStaff.role === "manager" ? "/manager" :
+        "/tables";
       window.location.replace(target);
     } catch (err: any) {
       toast.error(err?.message || "Could not verify PIN");

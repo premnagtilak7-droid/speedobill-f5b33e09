@@ -34,6 +34,7 @@ import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
 import MenuPage from "./pages/MenuPage";
 import Dashboard from "./pages/Dashboard";
+const ManagerDashboard = lazy(() => import("./pages/ManagerDashboard"));
 import VoidReports from "./pages/VoidReports";
 import DailyClosing from "./pages/DailyClosing";
 import StaffPage from "./pages/StaffPage";
@@ -132,9 +133,11 @@ const AppRoutes = () => {
       ? "/kds"
       : role === "waiter"
         ? "/tables"
-        : role === "manager" || role === "owner"
-          ? "/dashboard"
-          : "/tables";
+        : role === "manager"
+          ? "/manager"
+          : role === "owner"
+            ? "/dashboard"
+            : "/tables";
 
   useEffect(() => {
     if (
@@ -220,6 +223,7 @@ const AppRoutes = () => {
 
           {/* Owner + Manager shared routes */}
           <Route path="/dashboard" element={<RoleGuard allowed={["owner", "manager"]}><Dashboard /></RoleGuard>} />
+          <Route path="/manager" element={<RoleGuard allowed={["owner", "manager"]}><ManagerDashboard /></RoleGuard>} />
           <Route path="/incoming-orders" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><IncomingOrders /></RoleGuard>} />
           <Route path="/analytics" element={<RoleGuard allowed={["owner", "manager"]}><PlanGuard featureName="Analytics & Reports"><Analytics /></PlanGuard></RoleGuard>} />
           <Route path="/reports" element={<RoleGuard allowed={["owner", "manager"]}><PlanGuard featureName="Analytics & Reports"><ReportsPage /></PlanGuard></RoleGuard>} />
