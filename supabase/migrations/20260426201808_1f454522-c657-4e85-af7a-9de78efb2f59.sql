@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Manager sees hotel staff" ON public.profiles;
