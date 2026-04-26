@@ -69,6 +69,15 @@ const SettingsPage = () => {
   const [receiptHeaderStyle, setReceiptHeaderStyle] = useState<string>("bold");
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
+  // Customer payment methods (QR ordering)
+  const [payUpiEnabled, setPayUpiEnabled] = useState(true);
+  const [payCashEnabled, setPayCashEnabled] = useState(true);
+  const [payCardEnabled, setPayCardEnabled] = useState(false);
+  const [payRazorpayEnabled, setPayRazorpayEnabled] = useState(false);
+  const [payRequestBillEnabled, setPayRequestBillEnabled] = useState(true);
+  const [razorpayKeyId, setRazorpayKeyId] = useState("");
+  const [tipOptionsStr, setTipOptionsStr] = useState("5,10,15");
+
   // Operating hours
   const [hours, setHours] = useState<OperatingHours>(DEFAULT_HOURS);
 
