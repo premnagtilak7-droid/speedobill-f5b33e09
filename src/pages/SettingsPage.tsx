@@ -208,6 +208,17 @@ const SettingsPage = () => {
         show_gst_on_receipt: showGstOnReceipt,
         receipt_header_style: receiptHeaderStyle,
         operating_hours: hours,
+        pay_upi_enabled: payUpiEnabled,
+        pay_cash_enabled: payCashEnabled,
+        pay_card_enabled: payCardEnabled,
+        pay_razorpay_enabled: payRazorpayEnabled,
+        pay_request_bill_enabled: payRequestBillEnabled,
+        razorpay_key_id: razorpayKeyId.trim(),
+        tip_options: tipOptionsStr
+          .split(",")
+          .map((s) => parseFloat(s.trim()))
+          .filter((n) => Number.isFinite(n) && n >= 0 && n <= 100)
+          .slice(0, 4),
       } as any).eq("id", hotelId),
       supabase.from("profiles").update({
         notification_preferences: notifPrefs as any,
