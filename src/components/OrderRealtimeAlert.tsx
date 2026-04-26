@@ -95,6 +95,14 @@ export default function OrderRealtimeAlert() {
   const { isAudioEnabled, playBell } = useAudioNotification();
   const tableNumberCache = useRef<Map<string, number>>(new Map());
 
+  // Hotel payment-verify mode (manual / utr / webhook)
+  const [verifyMode, setVerifyMode] = useState<string>("manual");
+  useEffect(() => {
+    if (!hotelId) return;
+    supabase.from("hotels").select("payment_verify_mode").eq("id", hotelId).maybeSingle()
+      .then(({ data }) => { if ((data as any)?.payment_verify_mode) setVerifyMode((data as any).payment_verify_mode); });
+  }, [hotelId]);
+
   // Queue of unacknowledged new orders → render as full-screen modal
   const [queue, setQueue] = useState<QueuedOrder[]>([]);
 
