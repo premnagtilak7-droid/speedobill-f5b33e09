@@ -801,7 +801,6 @@ const StaffPage = () => {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="waiter">Waiter</SelectItem>
-                  <SelectItem value="waiter">Waiter</SelectItem>
                   <SelectItem value="captain">Captain</SelectItem>
                   <SelectItem value="chef">Chef</SelectItem>
                   <SelectItem value="manager">Manager</SelectItem>
