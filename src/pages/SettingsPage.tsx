@@ -78,6 +78,11 @@ const SettingsPage = () => {
   const [razorpayKeyId, setRazorpayKeyId] = useState("");
   const [tipOptionsStr, setTipOptionsStr] = useState("5,10,15");
 
+  // Sound box settings
+  const [soundBoxEnabled, setSoundBoxEnabled] = useState(false);
+  const [soundBoxProvider, setSoundBoxProvider] = useState<string>("paytm");
+  const [paymentVerifyMode, setPaymentVerifyMode] = useState<string>("manual");
+
   // Operating hours
   const [hours, setHours] = useState<OperatingHours>(DEFAULT_HOURS);
 
