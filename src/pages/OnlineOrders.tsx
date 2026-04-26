@@ -1,104 +1,122 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ShoppingBag, Bell, Check, Clock, Volume2 } from "lucide-react";
-import { playLoudBell } from "@/lib/notification-sounds";
+import {
+  ShoppingBag,
+  Bell,
+  Clock,
+  Volume2,
+  Copy,
+  ExternalLink,
+  Sparkles,
+  CheckCircle2,
+  Mail,
+  Zap,
+} from "lucide-react";
 
-interface SimOrder {
+interface DirectOrder {
   id: string;
-  platform: "zomato" | "swiggy";
-  items: { name: string; qty: number; price: number }[];
-  total: number;
-  customer: string;
-  address: string;
-  status: "incoming" | "accepted" | "preparing" | "ready" | "dispatched";
+  table_number: number | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  items: Array<{ name: string; quantity: number; price: number }>;
+  total_amount: number;
+  status: string;
   created_at: string;
 }
 
-const PLATFORM_STYLE = {
-  zomato: { bg: "bg-red-500/15", text: "text-red-600", border: "border-red-500/30", label: "Zomato", dot: "bg-red-500" },
-  swiggy: { bg: "bg-orange-500/15", text: "text-orange-600", border: "border-orange-500/30", label: "Swiggy", dot: "bg-orange-500" },
-};
+const COMING_SOON_MESSAGE = `Zomato/Swiggy integration coming soon!
 
-const SAMPLE_ITEMS = [
-  [{ name: "Butter Chicken", qty: 1, price: 280 }, { name: "Naan (2)", qty: 1, price: 60 }, { name: "Raita", qty: 1, price: 40 }],
-  [{ name: "Paneer Tikka", qty: 2, price: 220 }, { name: "Dal Makhani", qty: 1, price: 180 }],
-  [{ name: "Chicken Biryani", qty: 1, price: 250 }, { name: "Mirchi Ka Salan", qty: 1, price: 60 }],
-  [{ name: "Veg Thali", qty: 1, price: 180 }, { name: "Lassi", qty: 2, price: 60 }],
-  [{ name: "Masala Dosa", qty: 2, price: 120 }, { name: "Filter Coffee", qty: 2, price: 60 }],
-];
+We are working on official API partnership.
+You will be notified when available.
 
-const CUSTOMERS = ["Rahul Sharma", "Priya Patel", "Arjun Singh", "Sneha Verma", "Vikram Joshi"];
-const ADDRESSES = [
-  "Flat 302, Green Valley, Wakad",
-  "House 15, Sunshine Colony, Hinjewadi",
-  "A-404, Blue Ridge, Baner",
-  "B-12, Rose Apartments, Aundh",
-  "Plot 8, MG Road, Kothrud",
-];
+Contact: speedobill7@gmail.com`;
 
 const OnlineOrders = () => {
   const { hotelId } = useAuth();
-  const [orders, setOrders] = useState<SimOrder[]>([]);
+  const [orders, setOrders] = useState<DirectOrder[]>([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const generateOrder = useCallback(() => {
-    const platform: "zomato" | "swiggy" = Math.random() > 0.5 ? "zomato" : "swiggy";
-    const items = SAMPLE_ITEMS[Math.floor(Math.random() * SAMPLE_ITEMS.length)];
-    const total = items.reduce((s, i) => s + i.price * i.qty, 0);
-    const order: SimOrder = {
-      id: `${platform.toUpperCase()}-${Date.now().toString(36).toUpperCase()}`,
-      platform,
-      items,
-      total,
-      customer: CUSTOMERS[Math.floor(Math.random() * CUSTOMERS.length)],
-      address: ADDRESSES[Math.floor(Math.random() * ADDRESSES.length)],
-      status: "incoming",
-      created_at: new Date().toISOString(),
-    };
-    return order;
-  }, []);
+  const menuLink = hotelId
+    ? `${window.location.origin}/menu/${hotelId}`
+    : "";
 
-  const simulateIncoming = useCallback(() => {
-    const order = generateOrder();
-    setOrders(prev => [order, ...prev]);
-    if (soundEnabled) {
-      try { playLoudBell(); } catch {}
+  const fetchOrders = useCallback(async () => {
+    if (!hotelId) return;
+    const { data, error } = await supabase
+      .from("customer_orders")
+      .select("id, table_number, customer_name, customer_phone, items, total_amount, status, created_at")
+      .eq("hotel_id", hotelId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (!error && data) {
+      setOrders(
+        (data as any[]).map((o) => ({
+          ...o,
+          items: Array.isArray(o.items) ? o.items : [],
+        })),
+      );
     }
-    toast(`🔔 New ${order.platform === "zomato" ? "Zomato" : "Swiggy"} order!`, {
-      description: `${order.customer} · ₹${order.total}`,
+    setLoading(false);
+  }, [hotelId]);
+
+  useEffect(() => {
+    fetchOrders();
+    if (!hotelId) return;
+
+    const channel = supabase
+      .channel(`online-orders-${hotelId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "customer_orders",
+          filter: `hotel_id=eq.${hotelId}`,
+        },
+        () => fetchOrders(),
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [hotelId, fetchOrders]);
+
+  const handleComingSoon = (platform: string) => {
+    toast(`${platform} integration coming soon!`, {
+      description: "We're working on official API partnership. Contact speedobill7@gmail.com",
+      duration: 6000,
     });
-  }, [generateOrder, soundEnabled]);
-
-  const updateStatus = (orderId: string, newStatus: SimOrder["status"]) => {
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
-    toast.success(`Order ${orderId} → ${newStatus}`);
   };
 
-  const statusFlow: Record<string, SimOrder["status"] | null> = {
-    incoming: "accepted",
-    accepted: "preparing",
-    preparing: "ready",
-    ready: "dispatched",
-    dispatched: null,
+  const copyMenuLink = async () => {
+    try {
+      await navigator.clipboard.writeText(menuLink);
+      toast.success("Menu link copied!");
+    } catch {
+      toast.error("Could not copy link");
+    }
   };
 
-  const incomingCount = orders.filter(o => o.status === "incoming").length;
+  const incomingCount = orders.filter((o) => o.status === "incoming").length;
 
   return (
-    <div className="p-4 md:p-6 space-y-5 max-w-4xl mx-auto">
+    <div className="p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
+      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <ShoppingBag className="h-6 w-6" /> Online Orders
           </h1>
           <p className="text-sm text-muted-foreground">
-            ⚠️ Demo Mode — These are simulated test orders, not real Zomato/Swiggy orders.
-            Real integration requires aggregator API partnerships.
+            Manage online ordering channels and direct customer orders
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -107,86 +125,260 @@ const OnlineOrders = () => {
               <Bell className="h-3 w-3" /> {incomingCount} incoming
             </Badge>
           )}
-          <Button size="sm" variant="outline" onClick={() => setSoundEnabled(!soundEnabled)}>
-            <Volume2 className={`h-4 w-4 ${soundEnabled ? "text-primary" : "text-muted-foreground"}`} />
-          </Button>
-          <Button size="sm" onClick={simulateIncoming} className="gap-1">
-            <Bell className="h-4 w-4" /> Simulate Order
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            aria-label="Toggle sound"
+          >
+            <Volume2
+              className={`h-4 w-4 ${soundEnabled ? "text-primary" : "text-muted-foreground"}`}
+            />
           </Button>
         </div>
       </div>
 
-      {orders.length === 0 && (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="text-muted-foreground">No online orders yet. Click "Simulate Order" to test.</p>
-            <p className="text-xs text-muted-foreground mt-1">In production, these will come from Zomato/Swiggy APIs.</p>
+      {/* Integration cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        {/* Zomato */}
+        <Card className="overflow-hidden border-2 hover:border-red-500/40 transition-colors">
+          <div className="h-1.5 bg-red-500" />
+          <CardContent className="p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="h-12 w-12 rounded-xl bg-red-500/15 flex items-center justify-center text-red-600 font-extrabold text-lg">
+                Z
+              </div>
+              <Badge variant="secondary" className="text-[10px]">
+                Coming Soon
+              </Badge>
+            </div>
+            <div>
+              <h3 className="font-bold text-base">Connect Zomato</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Receive Zomato orders directly in SpeedoBill
+              </p>
+            </div>
+            <Button
+              onClick={() => handleComingSoon("Zomato")}
+              variant="outline"
+              size="sm"
+              className="w-full"
+            >
+              Connect
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Swiggy */}
+        <Card className="overflow-hidden border-2 hover:border-orange-500/40 transition-colors">
+          <div className="h-1.5 bg-orange-500" />
+          <CardContent className="p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="h-12 w-12 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-600 font-extrabold text-lg">
+                S
+              </div>
+              <Badge variant="secondary" className="text-[10px]">
+                Coming Soon
+              </Badge>
+            </div>
+            <div>
+              <h3 className="font-bold text-base">Connect Swiggy</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Receive Swiggy orders directly in SpeedoBill
+              </p>
+            </div>
+            <Button
+              onClick={() => handleComingSoon("Swiggy")}
+              variant="outline"
+              size="sm"
+              className="w-full"
+            >
+              Connect
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Direct */}
+        <Card className="overflow-hidden border-2 border-primary/30 bg-primary/5">
+          <div className="h-1.5 bg-primary" />
+          <CardContent className="p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+                <Zap className="h-6 w-6" />
+              </div>
+              <Badge className="bg-green-600 hover:bg-green-600 text-white text-[10px] gap-1">
+                <CheckCircle2 className="h-3 w-3" /> Active
+              </Badge>
+            </div>
+            <div>
+              <h3 className="font-bold text-base">Your Own Online Store</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Customers order directly from your SpeedoBill menu link
+              </p>
+            </div>
+            <Button
+              size="sm"
+              className="w-full"
+              onClick={() => {
+                document
+                  .getElementById("direct-orders")
+                  ?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              View Orders
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Menu link share */}
+      {hotelId && (
+        <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20">
+          <CardContent className="p-4 md:p-5 space-y-3">
+            <div className="flex items-start gap-2">
+              <Sparkles className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm">
+                  📱 Share your menu link with customers
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Customers can browse your menu and order directly — no app, no commission.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 bg-background rounded-lg p-2 border">
+              <code className="text-xs flex-1 truncate font-mono text-foreground/80">
+                {menuLink}
+              </code>
+              <Button size="sm" variant="ghost" onClick={copyMenuLink} className="gap-1 shrink-0">
+                <Copy className="h-3.5 w-3.5" /> Copy
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => window.open(menuLink, "_blank")}
+                className="gap-1 shrink-0"
+              >
+                <ExternalLink className="h-3.5 w-3.5" /> Open
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      <div className="space-y-3">
-        {orders.map(order => {
-          const ps = PLATFORM_STYLE[order.platform];
-          const nextStatus = statusFlow[order.status];
-          const elapsed = Math.floor((Date.now() - new Date(order.created_at).getTime()) / 60000);
+      {/* Direct orders list */}
+      <div id="direct-orders" className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <Zap className="h-4 w-4 text-primary" /> Direct Orders
+          </h2>
+          <span className="text-xs text-muted-foreground">
+            {orders.length} {orders.length === 1 ? "order" : "orders"}
+          </span>
+        </div>
 
-          return (
-            <Card key={order.id} className={`overflow-hidden ${order.status === "incoming" ? "ring-2 ring-primary/50 animate-pulse" : ""}`}>
-              <div className={`h-1 ${ps.dot}`} />
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2">
-                    <Badge className={`${ps.bg} ${ps.text} border ${ps.border} font-bold text-xs`}>
-                      {ps.label}
-                    </Badge>
-                    <span className="text-xs font-mono text-muted-foreground">{order.id}</span>
+        {loading ? (
+          <Card>
+            <CardContent className="p-8 text-center text-sm text-muted-foreground">
+              Loading orders…
+            </CardContent>
+          </Card>
+        ) : orders.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+              <p className="text-muted-foreground font-medium">No direct orders yet</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Share your menu link above — orders will appear here in real time.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          orders.map((order) => {
+            const elapsed = Math.floor(
+              (Date.now() - new Date(order.created_at).getTime()) / 60000,
+            );
+            return (
+              <Card
+                key={order.id}
+                className={
+                  order.status === "incoming"
+                    ? "ring-2 ring-primary/50 animate-pulse"
+                    : ""
+                }
+              >
+                <div className="h-1 bg-primary" />
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge className="bg-primary/15 text-primary border border-primary/30 font-bold text-xs">
+                        Direct Order
+                      </Badge>
+                      {order.table_number ? (
+                        <span className="text-xs text-muted-foreground">
+                          Table {order.table_number}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={order.status === "incoming" ? "destructive" : "secondary"}
+                        className="text-xs capitalize"
+                      >
+                        {order.status}
+                      </Badge>
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {elapsed < 1 ? "Now" : `${elapsed}m`}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={order.status === "incoming" ? "destructive" : order.status === "dispatched" ? "default" : "secondary"} className="text-xs capitalize">
-                      {order.status}
-                    </Badge>
-                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-3 w-3" /> {elapsed < 1 ? "Now" : `${elapsed}m`}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="grid md:grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{order.customer}</p>
-                    <p className="text-xs text-muted-foreground">{order.address}</p>
-                  </div>
-                  <div>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {order.customer_name || "Guest"}
+                      </p>
+                      {order.customer_phone && (
+                        <p className="text-xs text-muted-foreground">
+                          {order.customer_phone}
+                        </p>
+                      )}
+                    </div>
                     <div className="space-y-1">
                       {order.items.map((item, i) => (
                         <div key={i} className="flex justify-between text-xs">
-                          <span>{item.name} × {item.qty}</span>
-                          <span className="font-medium">₹{item.price * item.qty}</span>
+                          <span>
+                            {item.name} × {item.quantity}
+                          </span>
+                          <span className="font-medium">
+                            ₹{(item.price * item.quantity).toFixed(0)}
+                          </span>
                         </div>
                       ))}
                       <div className="flex justify-between text-sm font-bold border-t pt-1">
                         <span>Total</span>
-                        <span>₹{order.total}</span>
+                        <span>₹{Number(order.total_amount).toFixed(0)}</span>
                       </div>
                     </div>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
+      </div>
 
-                {nextStatus && (
-                  <div className="mt-3 flex justify-end">
-                    <Button size="sm" onClick={() => updateStatus(order.id, nextStatus)}
-                      className={order.status === "incoming" ? "bg-green-600 hover:bg-green-700 text-white" : ""}>
-                      <Check className="mr-1 h-3.5 w-3.5" />
-                      {order.status === "incoming" ? "Accept" : `Mark ${nextStatus}`}
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+      {/* Footer contact */}
+      <div className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5 pt-2">
+        <Mail className="h-3 w-3" />
+        Need aggregator integration? Contact{" "}
+        <a
+          href="mailto:speedobill7@gmail.com"
+          className="text-primary hover:underline font-medium"
+        >
+          speedobill7@gmail.com
+        </a>
       </div>
     </div>
   );
