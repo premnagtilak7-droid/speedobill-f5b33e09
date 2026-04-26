@@ -222,6 +222,9 @@ const SettingsPage = () => {
         pay_razorpay_enabled: payRazorpayEnabled,
         pay_request_bill_enabled: payRequestBillEnabled,
         razorpay_key_id: razorpayKeyId.trim(),
+        sound_box_enabled: soundBoxEnabled,
+        sound_box_provider: soundBoxProvider,
+        payment_verify_mode: paymentVerifyMode,
         tip_options: tipOptionsStr
           .split(",")
           .map((s) => parseFloat(s.trim()))
