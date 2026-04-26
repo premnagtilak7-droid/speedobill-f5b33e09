@@ -258,6 +258,64 @@ export default function OrderRealtimeAlert() {
       );
     }
 
+    // 4) PAYMENT ATTEMPT (guest-initiated UPI/Cash/Card/Razorpay/Request Bill) ----
+    const hearsPayment = role === "waiter" || role === "owner" || role === "manager";
+    if (hearsPayment) {
+      channel.on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "payment_attempts",
+          filter: `hotel_id=eq.${hotelId}`,
+        },
+        async (payload) => {
+          const next = payload.new as PaymentRow;
+          if (!next || next.hotel_id !== hotelId) return;
+          // Only push to queue when guest needs verification:
+          // - UPI (waiter must verify against bank app)
+          // - cash / card / razorpay / request_bill (waiter must collect)
+          const tableLabel = next.table_number != null
+            ? String(next.table_number)
+            : await resolveTableLabel(next.table_id);
+
+          // Duplicate UTR detection
+          let duplicate = false;
+          if (next.utr) {
+            const { count } = await supabase
+              .from("payment_attempts")
+              .select("id", { count: "exact", head: true })
+              .eq("hotel_id", hotelId)
+              .eq("utr", next.utr)
+              .neq("id", next.id);
+            duplicate = (count ?? 0) > 0;
+          }
+
+          void playClip(PAID_SOUND, 0.9);
+          try { navigator.vibrate?.([90, 60, 90, 60, 200]); } catch {}
+
+          setPayQueue((q) =>
+            q.some((p) => p.id === next.id) ? q : [...q, {
+              id: next.id,
+              tableLabel,
+              method: next.method,
+              amount: Number(next.amount ?? 0),
+              tip: Number(next.tip_amount ?? 0),
+              utr: next.utr,
+              customerName: next.customer_name || "",
+              duplicateUtr: duplicate,
+            }],
+          );
+
+          toast(`💳 Payment from Table ${tableLabel} — verify now`, {
+            id: `pay-${next.id}`,
+            duration: 12000,
+            description: `${next.method.toUpperCase()} • ₹${Math.round(Number(next.amount ?? 0))}`,
+          });
+        },
+      );
+    }
+
     channel.subscribe();
 
     return () => {
