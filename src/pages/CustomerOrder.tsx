@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import CustomerVIPCard from "@/components/loyalty/CustomerVIPCard";
+import { PaymentMethodSheet } from "@/components/customer/PaymentFlow";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface MenuItem {
