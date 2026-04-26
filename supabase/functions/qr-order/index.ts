@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
         },
         menu: menu || [],
         loyalty_config: loyaltyConfig || null,
-        hotel: hotel || null,
+        hotel: hotel ? { ...hotel, id: table.hotel_id } : null,
       });
     }
 
