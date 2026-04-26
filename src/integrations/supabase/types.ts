@@ -766,7 +766,13 @@ export type Database = {
           name: string
           operating_hours: Json | null
           owner_id: string
+          pay_card_enabled: boolean
+          pay_cash_enabled: boolean
+          pay_razorpay_enabled: boolean
+          pay_request_bill_enabled: boolean
+          pay_upi_enabled: boolean
           phone: string | null
+          razorpay_key_id: string | null
           receipt_footer: string | null
           receipt_header_style: string
           show_gst_on_receipt: boolean
@@ -774,6 +780,7 @@ export type Database = {
           subscription_start_date: string | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
           tax_percent: number
+          tip_options: Json
           token_counter: number
           updated_at: string
           upi_id: string | null
@@ -796,7 +803,13 @@ export type Database = {
           name?: string
           operating_hours?: Json | null
           owner_id: string
+          pay_card_enabled?: boolean
+          pay_cash_enabled?: boolean
+          pay_razorpay_enabled?: boolean
+          pay_request_bill_enabled?: boolean
+          pay_upi_enabled?: boolean
           phone?: string | null
+          razorpay_key_id?: string | null
           receipt_footer?: string | null
           receipt_header_style?: string
           show_gst_on_receipt?: boolean
@@ -804,6 +817,7 @@ export type Database = {
           subscription_start_date?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           tax_percent?: number
+          tip_options?: Json
           token_counter?: number
           updated_at?: string
           upi_id?: string | null
@@ -826,7 +840,13 @@ export type Database = {
           name?: string
           operating_hours?: Json | null
           owner_id?: string
+          pay_card_enabled?: boolean
+          pay_cash_enabled?: boolean
+          pay_razorpay_enabled?: boolean
+          pay_request_bill_enabled?: boolean
+          pay_upi_enabled?: boolean
           phone?: string | null
+          razorpay_key_id?: string | null
           receipt_footer?: string | null
           receipt_header_style?: string
           show_gst_on_receipt?: boolean
@@ -834,6 +854,7 @@ export type Database = {
           subscription_start_date?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           tax_percent?: number
+          tip_options?: Json
           token_counter?: number
           updated_at?: string
           upi_id?: string | null
@@ -1311,6 +1332,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_attempts: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          expires_at: string
+          hotel_id: string
+          id: string
+          method: string
+          order_id: string | null
+          rejection_reason: string | null
+          status: string
+          table_id: string | null
+          table_number: number | null
+          tip_amount: number
+          updated_at: string
+          utr: string | null
+          verified_at: string | null
+          verified_by: string | null
+          verified_by_name: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          expires_at?: string
+          hotel_id: string
+          id?: string
+          method: string
+          order_id?: string | null
+          rejection_reason?: string | null
+          status?: string
+          table_id?: string | null
+          table_number?: number | null
+          tip_amount?: number
+          updated_at?: string
+          utr?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          verified_by_name?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          expires_at?: string
+          hotel_id?: string
+          id?: string
+          method?: string
+          order_id?: string | null
+          rejection_reason?: string | null
+          status?: string
+          table_id?: string | null
+          table_number?: number | null
+          tip_amount?: number
+          updated_at?: string
+          utr?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          verified_by_name?: string | null
+        }
+        Relationships: []
       }
       platform_config: {
         Row: {
