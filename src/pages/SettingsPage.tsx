@@ -128,6 +128,9 @@ const SettingsPage = () => {
         setPayRazorpayEnabled(data.pay_razorpay_enabled ?? false);
         setPayRequestBillEnabled(data.pay_request_bill_enabled ?? true);
         setRazorpayKeyId(data.razorpay_key_id || "");
+        setSoundBoxEnabled(data.sound_box_enabled ?? false);
+        setSoundBoxProvider(data.sound_box_provider || "paytm");
+        setPaymentVerifyMode(data.payment_verify_mode || "manual");
         if (Array.isArray(data.tip_options)) setTipOptionsStr(data.tip_options.join(","));
         if (data.operating_hours && typeof data.operating_hours === "object") {
           setHours({ ...DEFAULT_HOURS, ...(data.operating_hours as OperatingHours) });
