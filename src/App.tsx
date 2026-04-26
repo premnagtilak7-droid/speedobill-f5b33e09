@@ -260,7 +260,7 @@ const AppRoutes = () => {
           <Route path="/settings" element={<RoleGuard allowed={["owner"]}><SettingsPage /></RoleGuard>} />
 
           {/* Staff self-profile — waiter, chef, manager */}
-          <Route path="/staff-profile" element={<RoleGuard allowed={["owner", "manager", "waiter", "chef"]}><StaffProfile /></RoleGuard>} />
+          <Route path="/staff-profile" element={<RoleGuard allowed={["owner", "manager", "waiter", "chef", "captain"]}><StaffProfile /></RoleGuard>} />
         </Route>
 
         <Route path="*" element={<NotFound />} />
