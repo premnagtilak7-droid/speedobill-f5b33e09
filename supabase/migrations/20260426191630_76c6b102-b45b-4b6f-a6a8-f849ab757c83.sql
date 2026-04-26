@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Owners can upload qr-codes" ON storage.objects;
