@@ -130,7 +130,7 @@ const SettingsPage = () => {
         setRazorpayKeyId(data.razorpay_key_id || "");
         setSoundBoxEnabled(data.sound_box_enabled ?? false);
         setSoundBoxProvider(data.sound_box_provider || "paytm");
-        setPaymentVerifyMode(data.payment_verify_mode || "manual");
+        setPaymentVerifyMode(data.payment_verify_mode === "utr" ? "utr" : "manual");
         if (Array.isArray(data.tip_options)) setTipOptionsStr(data.tip_options.join(","));
         if (data.operating_hours && typeof data.operating_hours === "object") {
           setHours({ ...DEFAULT_HOURS, ...(data.operating_hours as OperatingHours) });
@@ -589,13 +589,11 @@ const SettingsPage = () => {
               <SelectContent>
                 <SelectItem value="manual">Manual confirm (simplest) — waiter taps "Payment received"</SelectItem>
                 <SelectItem value="utr">UTR number (safest) — guest enters 12-digit Transaction ID</SelectItem>
-                <SelectItem value="webhook">Webhook auto-detect (Razorpay only)</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-[10px] text-muted-foreground">
               {paymentVerifyMode === "manual" && "After hearing the sound box, your waiter taps one button to mark the bill paid."}
               {paymentVerifyMode === "utr" && "Guest must enter the 12-digit UPI Transaction ID. Duplicates are flagged."}
-              {paymentVerifyMode === "webhook" && "Requires Razorpay webhook secret in backend. Auto-verifies the moment Razorpay confirms."}
             </p>
           </div>
         </CardContent>
