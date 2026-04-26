@@ -210,6 +210,7 @@ const Auth = () => {
       const target =
         selectedStaff.role === "chef" ? "/kds" :
         selectedStaff.role === "manager" ? "/manager" :
+        selectedStaff.role === "captain" ? "/captain" :
         "/tables";
       window.location.replace(target);
     } catch (err: any) {
