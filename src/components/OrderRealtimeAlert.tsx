@@ -98,6 +98,10 @@ export default function OrderRealtimeAlert() {
   // Queue of unacknowledged new orders → render as full-screen modal
   const [queue, setQueue] = useState<QueuedOrder[]>([]);
 
+  // Queue of payment attempts awaiting waiter verification
+  const [payQueue, setPayQueue] = useState<QueuedPayment[]>([]);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+
   // Helpers ----------------------------------------------------------------
   const resolveTableLabel = useCallback(
     async (tableId: string | null): Promise<string> => {
