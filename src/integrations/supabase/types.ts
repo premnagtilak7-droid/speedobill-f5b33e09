@@ -1446,6 +1446,7 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
+          assigned_section_id: string | null
           created_at: string
           email: string | null
           full_name: string | null
@@ -1471,6 +1472,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          assigned_section_id?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -1496,6 +1498,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          assigned_section_id?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -1520,6 +1523,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_assigned_section_id_fkey"
+            columns: ["assigned_section_id"]
+            isOneToOne: false
+            referencedRelation: "floor_sections"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_hotel_id_fkey"
             columns: ["hotel_id"]
@@ -2494,7 +2504,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "owner" | "waiter" | "chef" | "manager"
+      app_role: "owner" | "waiter" | "chef" | "manager" | "captain"
       subscription_tier: "free" | "basic" | "premium"
     }
     CompositeTypes: {
@@ -2623,7 +2633,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["owner", "waiter", "chef", "manager"],
+      app_role: ["owner", "waiter", "chef", "manager", "captain"],
       subscription_tier: ["free", "basic", "premium"],
     },
   },
