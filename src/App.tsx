@@ -233,7 +233,7 @@ const AppRoutes = () => {
           <Route path="/incoming-orders" element={<RoleGuard allowed={["owner", "manager", "waiter", "captain"]}><IncomingOrders /></RoleGuard>} />
           <Route path="/analytics" element={<RoleGuard allowed={["owner", "manager"]}><PlanGuard featureName="Analytics & Reports"><Analytics /></PlanGuard></RoleGuard>} />
           <Route path="/reports" element={<RoleGuard allowed={["owner", "manager"]}><PlanGuard featureName="Analytics & Reports"><ReportsPage /></PlanGuard></RoleGuard>} />
-          <Route path="/order-history" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><OrderHistory /></RoleGuard>} />
+          <Route path="/order-history" element={<RoleGuard allowed={["owner", "manager", "waiter", "captain"]}><OrderHistory /></RoleGuard>} />
           <Route path="/void-reports" element={<RoleGuard allowed={["owner", "manager"]}><VoidReports /></RoleGuard>} />
           <Route path="/staff" element={<RoleGuard allowed={["owner", "manager"]}><StaffPage /></RoleGuard>} />
           <Route path="/staff-performance" element={<RoleGuard allowed={["owner", "manager"]}><StaffPerformance /></RoleGuard>} />
