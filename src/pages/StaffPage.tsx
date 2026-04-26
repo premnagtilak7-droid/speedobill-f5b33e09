@@ -42,6 +42,8 @@ const StaffPage = () => {
   const [pinValue, setPinValue] = useState("");
   const [pinConfirm, setPinConfirm] = useState("");
   const [savingPin, setSavingPin] = useState(false);
+  const [floorSections, setFloorSections] = useState<{ id: string; name: string }[]>([]);
+  const [savingSection, setSavingSection] = useState(false);
 
   useEffect(() => {
     if (!hotelId) return;
