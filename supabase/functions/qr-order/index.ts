@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
 
       const { data: hotel } = await admin
         .from("hotels")
-        .select("name, logo_url, business_type, upi_id, upi_qr_url, tax_percent, gst_enabled, waiter_confirms_first")
+        .select("name, logo_url, business_type, upi_id, upi_qr_url, tax_percent, gst_enabled, waiter_confirms_first, pay_upi_enabled, pay_cash_enabled, pay_card_enabled, pay_razorpay_enabled, pay_request_bill_enabled, tip_options, razorpay_key_id")
         .eq("id", table.hotel_id)
         .maybeSingle();
 
@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
         },
         menu: menu || [],
         loyalty_config: loyaltyConfig || null,
-        hotel: hotel || null,
+        hotel: hotel ? { ...hotel, id: table.hotel_id } : null,
       });
     }
 

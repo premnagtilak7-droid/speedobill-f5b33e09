@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import CustomerVIPCard from "@/components/loyalty/CustomerVIPCard";
+import { PaymentMethodSheet } from "@/components/customer/PaymentFlow";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface MenuItem {
@@ -66,6 +67,7 @@ interface LoyaltyConfig {
   min_bill_value: number;
 }
 interface HotelInfo {
+  id?: string;
   name: string;
   logo_url: string | null;
   business_type: string | null;
@@ -74,6 +76,12 @@ interface HotelInfo {
   tax_percent: number;
   gst_enabled: boolean;
   waiter_confirms_first: boolean;
+  pay_upi_enabled?: boolean;
+  pay_cash_enabled?: boolean;
+  pay_card_enabled?: boolean;
+  pay_razorpay_enabled?: boolean;
+  pay_request_bill_enabled?: boolean;
+  tip_options?: number[] | null;
 }
 
 // ── Mood → category mapping ────────────────────────────────────────────────
@@ -1020,15 +1028,18 @@ const CustomerOrder = () => {
         )}
       </AnimatePresence>
 
-      {/* ════ Pay Now (UPI) Sheet ════ */}
+      {/* ════ Payment Sheet (UPI/Cash/Card/Razorpay/Request Bill) ════ */}
       <AnimatePresence>
-        {payOpen && (
-          <PayNowSheet
-            hotel={hotel}
+        {payOpen && hotel?.id && (
+          <PaymentMethodSheet
+            hotel={{ ...hotel, id: hotel.id }}
+            tableId={table.id}
             tableNumber={table.table_number}
             amount={cartTotal}
+            customerName={customerName}
+            customerPhone={customerPhone}
+            orderId={placedOrderId}
             onClose={() => setPayOpen(false)}
-            onPaid={() => { sendWaiterCall("bill", "Payment done via UPI"); setPayOpen(false); }}
           />
         )}
       </AnimatePresence>

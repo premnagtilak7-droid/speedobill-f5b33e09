@@ -48,6 +48,32 @@ interface QueuedOrder {
   items: Array<{ name: string; quantity: number; price: number }>;
 }
 
+interface PaymentRow {
+  id: string;
+  hotel_id: string;
+  table_id: string | null;
+  table_number: number | null;
+  method: string;
+  amount: number;
+  tip_amount: number;
+  utr: string | null;
+  status: string;
+  customer_name: string | null;
+  customer_phone: string | null;
+  created_at: string;
+}
+
+interface QueuedPayment {
+  id: string;
+  tableLabel: string;
+  method: string;
+  amount: number;
+  tip: number;
+  utr: string | null;
+  customerName: string;
+  duplicateUtr: boolean;
+}
+
 const NEW_ORDER_SOUND = "/sounds/kitchen_bell.mp3";
 const READY_SOUND = "/sounds/ding.mp3";
 const PAID_SOUND = "/sounds/cash_register.mp3";
@@ -71,6 +97,10 @@ export default function OrderRealtimeAlert() {
 
   // Queue of unacknowledged new orders → render as full-screen modal
   const [queue, setQueue] = useState<QueuedOrder[]>([]);
+
+  // Queue of payment attempts awaiting waiter verification
+  const [payQueue, setPayQueue] = useState<QueuedPayment[]>([]);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
   // Helpers ----------------------------------------------------------------
   const resolveTableLabel = useCallback(
@@ -228,6 +258,64 @@ export default function OrderRealtimeAlert() {
       );
     }
 
+    // 4) PAYMENT ATTEMPT (guest-initiated UPI/Cash/Card/Razorpay/Request Bill) ----
+    const hearsPayment = role === "waiter" || role === "owner" || role === "manager";
+    if (hearsPayment) {
+      channel.on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "payment_attempts",
+          filter: `hotel_id=eq.${hotelId}`,
+        },
+        async (payload) => {
+          const next = payload.new as PaymentRow;
+          if (!next || next.hotel_id !== hotelId) return;
+          // Only push to queue when guest needs verification:
+          // - UPI (waiter must verify against bank app)
+          // - cash / card / razorpay / request_bill (waiter must collect)
+          const tableLabel = next.table_number != null
+            ? String(next.table_number)
+            : await resolveTableLabel(next.table_id);
+
+          // Duplicate UTR detection
+          let duplicate = false;
+          if (next.utr) {
+            const { count } = await supabase
+              .from("payment_attempts")
+              .select("id", { count: "exact", head: true })
+              .eq("hotel_id", hotelId)
+              .eq("utr", next.utr)
+              .neq("id", next.id);
+            duplicate = (count ?? 0) > 0;
+          }
+
+          void playClip(PAID_SOUND, 0.9);
+          try { navigator.vibrate?.([90, 60, 90, 60, 200]); } catch {}
+
+          setPayQueue((q) =>
+            q.some((p) => p.id === next.id) ? q : [...q, {
+              id: next.id,
+              tableLabel,
+              method: next.method,
+              amount: Number(next.amount ?? 0),
+              tip: Number(next.tip_amount ?? 0),
+              utr: next.utr,
+              customerName: next.customer_name || "",
+              duplicateUtr: duplicate,
+            }],
+          );
+
+          toast(`💳 Payment from Table ${tableLabel} — verify now`, {
+            id: `pay-${next.id}`,
+            duration: 12000,
+            description: `${next.method.toUpperCase()} • ₹${Math.round(Number(next.amount ?? 0))}`,
+          });
+        },
+      );
+    }
+
     channel.subscribe();
 
     return () => {
@@ -235,23 +323,43 @@ export default function OrderRealtimeAlert() {
     };
   }, [user, hotelId, role, playBell, isAudioEnabled, resolveTableLabel, fetchOrderItems]);
 
+  // Verify / reject a payment attempt
+  const verifyPayment = useCallback(async (paymentId: string, accept: boolean, reason?: string) => {
+    setVerifyingId(paymentId);
+    const update: any = {
+      status: accept ? "verified" : "rejected",
+      verified_by: user?.id ?? null,
+      verified_by_name: user?.email ?? null,
+      verified_at: new Date().toISOString(),
+    };
+    if (!accept && reason) update.rejection_reason = reason;
+    const { error } = await supabase.from("payment_attempts").update(update).eq("id", paymentId);
+    setVerifyingId(null);
+    if (error) {
+      toast.error("Update failed: " + error.message);
+      return;
+    }
+    setPayQueue((q) => q.filter((p) => p.id !== paymentId));
+    toast.dismiss(`pay-${paymentId}`);
+    toast.success(accept ? "Payment verified ✅" : "Payment rejected");
+  }, [user?.id, user?.email]);
+
   // Render full-screen modal queue ----------------------------------------
   const current = queue[0];
-  if (!current) return null;
+  const currentPayment = payQueue[0];
 
-  const modal = (
+  if (!current && !currentPayment) return null;
+
+  const orderModal = current ? (
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-label="New order alert"
     >
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/70 backdrop-blur-md animate-in fade-in" />
 
-      {/* Card */}
       <div className="relative w-full max-w-lg rounded-3xl bg-card border-4 border-primary shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-        {/* Pulsing top stripe */}
         <div className="h-2 bg-primary animate-pulse" />
 
         <div className="p-6 sm:p-8 text-center">
@@ -269,7 +377,6 @@ export default function OrderRealtimeAlert() {
             ₹{current.total}
           </p>
 
-          {/* Items list */}
           <div className="text-left bg-muted/40 rounded-2xl p-4 mb-6 max-h-[40vh] overflow-y-auto">
             <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
               <Utensils className="h-3.5 w-3.5" /> Items
@@ -281,10 +388,7 @@ export default function OrderRealtimeAlert() {
             ) : (
               <ul className="space-y-1.5">
                 {current.items.map((it, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start justify-between gap-3 text-sm"
-                  >
+                  <li key={i} className="flex items-start justify-between gap-3 text-sm">
                     <span className="font-medium text-foreground">
                       <span className="text-primary font-bold">{it.quantity}×</span>{" "}
                       {it.name}
@@ -314,9 +418,109 @@ export default function OrderRealtimeAlert() {
         </div>
       </div>
     </div>
-  );
+  ) : null;
 
-  return typeof document === "undefined"
-    ? null
-    : createPortal(modal, document.body);
+  const paymentModal = currentPayment ? (
+    <div
+      className="fixed inset-0 z-[210] flex items-center justify-center p-4 sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Verify payment"
+    >
+      <div className="absolute inset-0 bg-black/75 backdrop-blur-md animate-in fade-in" />
+      <div className="relative w-full max-w-md rounded-3xl bg-card border-4 border-emerald-500 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="h-2 bg-emerald-500 animate-pulse" />
+        <div className="p-6 sm:p-7 text-center space-y-3">
+          <div className="mx-auto w-14 h-14 rounded-full bg-emerald-500/15 flex items-center justify-center">
+            <Wallet className="h-7 w-7 text-emerald-600" />
+          </div>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-600">
+            💳 Verify {currentPayment.method.toUpperCase()} Payment
+          </p>
+          <h2 className="text-2xl sm:text-3xl font-black">
+            Table {currentPayment.tableLabel}
+          </h2>
+          <p className="text-3xl font-black text-emerald-600">
+            ₹{Math.round(currentPayment.amount + currentPayment.tip)}
+            {currentPayment.tip > 0 && (
+              <span className="block text-xs font-medium text-muted-foreground mt-0.5">
+                Bill ₹{Math.round(currentPayment.amount)} + Tip ₹{Math.round(currentPayment.tip)}
+              </span>
+            )}
+          </p>
+
+          {currentPayment.utr && (
+            <div className="bg-muted/50 rounded-2xl p-3 text-left">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                UTR / Transaction ID
+              </p>
+              <p className="text-lg font-mono font-bold tracking-wider">{currentPayment.utr}</p>
+              {currentPayment.duplicateUtr && (
+                <p className="text-[11px] text-red-600 font-semibold mt-1">
+                  ⚠ This UTR was already used. Possible fraud — verify carefully.
+                </p>
+              )}
+            </div>
+          )}
+
+          {currentPayment.customerName && (
+            <p className="text-xs text-muted-foreground">From: {currentPayment.customerName}</p>
+          )}
+
+          {currentPayment.method === "upi" && (
+            <p className="text-[11px] text-muted-foreground">
+              👉 Open your UPI app and confirm the payment of ₹{Math.round(currentPayment.amount + currentPayment.tip)} was received.
+            </p>
+          )}
+          {currentPayment.method === "cash" && (
+            <p className="text-[11px] text-muted-foreground">
+              Collect cash from the table, then mark verified.
+            </p>
+          )}
+          {currentPayment.method === "card" && (
+            <p className="text-[11px] text-muted-foreground">
+              Bring the POS machine to the table.
+            </p>
+          )}
+          {currentPayment.method === "request_bill" && (
+            <p className="text-[11px] text-muted-foreground">
+              Take the printed bill to the table.
+            </p>
+          )}
+
+          <div className="grid grid-cols-2 gap-2 pt-2">
+            <button
+              onClick={() => verifyPayment(currentPayment.id, false, "Waiter rejected")}
+              disabled={verifyingId === currentPayment.id}
+              className="py-3 rounded-2xl bg-red-500/10 text-red-600 font-bold border-2 border-red-500/40 active:scale-[0.98] transition disabled:opacity-50 flex items-center justify-center gap-1"
+            >
+              <X className="h-4 w-4" /> Reject
+            </button>
+            <button
+              onClick={() => verifyPayment(currentPayment.id, true)}
+              disabled={verifyingId === currentPayment.id}
+              className="py-3 rounded-2xl bg-emerald-600 text-white font-bold shadow-lg active:scale-[0.98] transition disabled:opacity-50 flex items-center justify-center gap-1"
+            >
+              <CheckCircle2 className="h-4 w-4" /> Verify
+            </button>
+          </div>
+
+          {payQueue.length > 1 && (
+            <p className="text-xs text-muted-foreground pt-1">
+              +{payQueue.length - 1} more payment{payQueue.length - 1 === 1 ? "" : "s"} waiting
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+  if (typeof document === "undefined") return null;
+  return createPortal(
+    <>
+      {paymentModal}
+      {orderModal}
+    </>,
+    document.body,
+  );
 }
