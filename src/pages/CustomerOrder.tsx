@@ -1027,15 +1027,18 @@ const CustomerOrder = () => {
         )}
       </AnimatePresence>
 
-      {/* ════ Pay Now (UPI) Sheet ════ */}
+      {/* ════ Payment Sheet (UPI/Cash/Card/Razorpay/Request Bill) ════ */}
       <AnimatePresence>
-        {payOpen && (
-          <PayNowSheet
-            hotel={hotel}
+        {payOpen && hotel?.id && (
+          <PaymentMethodSheet
+            hotel={{ ...hotel, id: hotel.id }}
+            tableId={table.id}
             tableNumber={table.table_number}
             amount={cartTotal}
+            customerName={customerName}
+            customerPhone={customerPhone}
+            orderId={placedOrderId}
             onClose={() => setPayOpen(false)}
-            onPaid={() => { sendWaiterCall("bill", "Payment done via UPI"); setPayOpen(false); }}
           />
         )}
       </AnimatePresence>
