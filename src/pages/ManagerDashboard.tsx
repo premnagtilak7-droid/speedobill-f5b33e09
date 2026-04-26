@@ -198,7 +198,7 @@ export default function ManagerDashboard() {
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-bold">Manager Console</p>
           <h1 className="text-2xl sm:text-3xl font-black">
-            Hi, {profile?.full_name?.split(" ")[0] || "Manager"} 👋
+            Hi, {fullName?.split(" ")[0] || "Manager"} 👋
           </h1>
           <p className="text-xs text-muted-foreground">{format(now, "EEEE, dd MMM yyyy · h:mm a")}</p>
         </div>
