@@ -48,7 +48,27 @@ const StaffPage = () => {
   useEffect(() => {
     if (!hotelId) return;
     loadData();
+    supabase
+      .from("floor_sections")
+      .select("id, name")
+      .eq("hotel_id", hotelId)
+      .order("sort_order")
+      .then(({ data }) => setFloorSections((data ?? []) as any));
   }, [hotelId]);
+
+  const updateCaptainSection = async (userId: string, sectionName: string | null) => {
+    setSavingSection(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ assigned_section_name: sectionName } as any)
+      .eq("user_id", userId);
+    setSavingSection(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(sectionName ? `Section set to ${sectionName}` : "Section cleared");
+    setStaff(prev => prev.map(s => s.user_id === userId ? { ...s, assigned_section_name: sectionName } : s));
+    setSelectedStaff((prev: any) => prev && prev.user_id === userId ? { ...prev, assigned_section_name: sectionName } : prev);
+  };
+
 
   const loadData = async () => {
     if (!hotelId) return;
