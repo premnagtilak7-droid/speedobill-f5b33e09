@@ -248,6 +248,119 @@ export type Database = {
           },
         ]
       }
+      captain_sections: {
+        Row: {
+          captain_id: string | null
+          created_at: string | null
+          hotel_id: string | null
+          id: string
+          section_name: string
+          table_ids: string[] | null
+        }
+        Insert: {
+          captain_id?: string | null
+          created_at?: string | null
+          hotel_id?: string | null
+          id?: string
+          section_name: string
+          table_ids?: string[] | null
+        }
+        Update: {
+          captain_id?: string | null
+          created_at?: string | null
+          hotel_id?: string | null
+          id?: string
+          section_name?: string
+          table_ids?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "captain_sections_captain_id_fkey"
+            columns: ["captain_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "captain_sections_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      complaints: {
+        Row: {
+          complaint_text: string
+          created_at: string | null
+          hotel_id: string | null
+          id: string
+          logged_by: string | null
+          order_id: string | null
+          resolution_text: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string | null
+          table_id: string | null
+        }
+        Insert: {
+          complaint_text: string
+          created_at?: string | null
+          hotel_id?: string | null
+          id?: string
+          logged_by?: string | null
+          order_id?: string | null
+          resolution_text?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          table_id?: string | null
+        }
+        Update: {
+          complaint_text?: string
+          created_at?: string | null
+          hotel_id?: string | null
+          id?: string
+          logged_by?: string | null
+          order_id?: string | null
+          resolution_text?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          table_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "complaints_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "complaints_logged_by_fkey"
+            columns: ["logged_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "complaints_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "complaints_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       counter_orders: {
         Row: {
           created_at: string
@@ -604,6 +717,64 @@ export type Database = {
           whatsapp_number?: string
         }
         Relationships: []
+      }
+      discounts: {
+        Row: {
+          applied_at: string | null
+          applied_by: string | null
+          created_at: string | null
+          discount_type: string | null
+          discount_value: number
+          hotel_id: string | null
+          id: string
+          order_id: string | null
+          reason: string
+        }
+        Insert: {
+          applied_at?: string | null
+          applied_by?: string | null
+          created_at?: string | null
+          discount_type?: string | null
+          discount_value: number
+          hotel_id?: string | null
+          id?: string
+          order_id?: string | null
+          reason: string
+        }
+        Update: {
+          applied_at?: string | null
+          applied_by?: string | null
+          created_at?: string | null
+          discount_type?: string | null
+          discount_value?: number
+          hotel_id?: string | null
+          id?: string
+          order_id?: string | null
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discounts_applied_by_fkey"
+            columns: ["applied_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discounts_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discounts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       floor_sections: {
         Row: {
@@ -1224,6 +1395,61 @@ export type Database = {
             columns: ["hotel_id"]
             isOneToOne: false
             referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_cancellations: {
+        Row: {
+          amount_lost: number | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          hotel_id: string | null
+          id: string
+          order_id: string | null
+          owner_notified: boolean | null
+          reason: string
+        }
+        Insert: {
+          amount_lost?: number | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          hotel_id?: string | null
+          id?: string
+          order_id?: string | null
+          owner_notified?: boolean | null
+          reason: string
+        }
+        Update: {
+          amount_lost?: number | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          hotel_id?: string | null
+          id?: string
+          order_id?: string | null
+          owner_notified?: boolean | null
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_cancellations_cancelled_by_fkey"
+            columns: ["cancelled_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_cancellations_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_cancellations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -1865,6 +2091,64 @@ export type Database = {
             columns: ["table_id"]
             isOneToOne: false
             referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_attendance: {
+        Row: {
+          clock_in: string | null
+          clock_out: string | null
+          created_at: string | null
+          date: string | null
+          hotel_id: string | null
+          hours_worked: number | null
+          id: string
+          marked_by: string | null
+          staff_id: string | null
+        }
+        Insert: {
+          clock_in?: string | null
+          clock_out?: string | null
+          created_at?: string | null
+          date?: string | null
+          hotel_id?: string | null
+          hours_worked?: number | null
+          id?: string
+          marked_by?: string | null
+          staff_id?: string | null
+        }
+        Update: {
+          clock_in?: string | null
+          clock_out?: string | null
+          created_at?: string | null
+          date?: string | null
+          hotel_id?: string | null
+          hours_worked?: number | null
+          id?: string
+          marked_by?: string | null
+          staff_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_attendance_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_attendance_marked_by_fkey"
+            columns: ["marked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_attendance_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
