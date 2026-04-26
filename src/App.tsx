@@ -217,12 +217,15 @@ const AppRoutes = () => {
 
         <Route element={<ProtectedRoute requireActiveSubscription><AppLayout /></ProtectedRoute>}>
           {/* Shared routes — all roles */}
-          <Route path="/tables" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><Tables /></RoleGuard>} />
-          <Route path="/counter" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><CounterOrderPage /></RoleGuard>} />
-          <Route path="/my-orders" element={<RoleGuard allowed={["owner", "manager", "waiter"]}><WaiterOrders /></RoleGuard>} />
+          <Route path="/tables" element={<RoleGuard allowed={["owner", "manager", "waiter", "captain"]}><Tables /></RoleGuard>} />
+          <Route path="/counter" element={<RoleGuard allowed={["owner", "manager", "waiter", "captain"]}><CounterOrderPage /></RoleGuard>} />
+          <Route path="/my-orders" element={<RoleGuard allowed={["owner", "manager", "waiter", "captain"]}><WaiterOrders /></RoleGuard>} />
           {/* /kitchen removed — KDS is the single kitchen display */}
-          <Route path="/menu" element={<RoleGuard allowed={["owner", "manager", "waiter", "chef"]}><MenuPage /></RoleGuard>} />
+          <Route path="/menu" element={<RoleGuard allowed={["owner", "manager", "waiter", "chef", "captain"]}><MenuPage /></RoleGuard>} />
           <Route path="/kds" element={<RoleGuard allowed={["owner", "manager", "chef"]}><PlanGuard featureName="Kitchen Display System (KDS)"><ChefKDS /></PlanGuard></RoleGuard>} />
+
+          {/* Captain console */}
+          <Route path="/captain" element={<RoleGuard allowed={["owner", "manager", "captain"]}><CaptainDashboard /></RoleGuard>} />
 
           {/* Owner + Manager shared routes */}
           <Route path="/dashboard" element={<RoleGuard allowed={["owner", "manager"]}><Dashboard /></RoleGuard>} />
