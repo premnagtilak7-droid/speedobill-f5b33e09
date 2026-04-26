@@ -133,9 +133,11 @@ const AppRoutes = () => {
       ? "/kds"
       : role === "waiter"
         ? "/tables"
-        : role === "manager" || role === "owner"
-          ? "/dashboard"
-          : "/tables";
+        : role === "manager"
+          ? "/manager"
+          : role === "owner"
+            ? "/dashboard"
+            : "/tables";
 
   useEffect(() => {
     if (
