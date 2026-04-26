@@ -76,6 +76,7 @@ const SupplyStore = lazy(() => import("./pages/SupplyStore"));
 const LoyaltySettings = lazy(() => import("./pages/LoyaltySettings"));
 const StaffProfile = lazy(() => import("./pages/StaffProfile"));
 const WaiterOrders = lazy(() => import("./pages/WaiterOrders"));
+const OrderTracker = lazy(() => import("./pages/OrderTracker"));
 
 // Public marketing feature pages
 const BillingFeature = lazy(() => import("./pages/features/BillingFeature"));
@@ -190,6 +191,7 @@ const AppRoutes = () => {
         <Route path="/support" element={<SupportPage />} />
         <Route path="/order/:tableId" element={<CustomerOrder />} />
         <Route path="/menu/:hotelId/:tableNumber" element={<MenuRedirect />} />
+        <Route path="/track/:orderId" element={<OrderTracker />} />
         <Route path="/features/billing" element={<BillingFeature />} />
         <Route path="/features/inventory" element={<InventoryFeature />} />
         <Route path="/features/reports" element={<ReportsFeature />} />

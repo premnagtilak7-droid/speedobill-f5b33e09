@@ -452,6 +452,7 @@ const AppLayout = () => {
           <span className="font-bold text-primary text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>SpeedoBill</span>
         </div>
         <div className="flex items-center gap-0.5">
+          <HeaderSoundButton />
           <LanguageSwitcher />
           <NotificationBell />
           <button onClick={toggleTheme} className="p-2 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary/60">
@@ -516,6 +517,7 @@ const AppLayout = () => {
         {/* Desktop top bar */}
         <div className="hidden md:flex sticky top-0 z-30 h-12 shrink-0 items-center justify-end gap-2 px-6 glass-topbar">
           <div className="flex items-center gap-2">
+            <HeaderSoundButton />
             <LanguageSwitcher />
             <NotificationBell />
             <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-secondary/60 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center">
