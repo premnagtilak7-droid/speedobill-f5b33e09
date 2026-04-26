@@ -34,6 +34,7 @@ import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
 import MenuPage from "./pages/MenuPage";
 import Dashboard from "./pages/Dashboard";
+const ManagerDashboard = lazy(() => import("./pages/ManagerDashboard"));
 import VoidReports from "./pages/VoidReports";
 import DailyClosing from "./pages/DailyClosing";
 import StaffPage from "./pages/StaffPage";
