@@ -600,8 +600,10 @@ const SettingsPage = () => {
           </div>
         </CardContent>
       </Card>
-
-
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2"><Clock className="h-4 w-4" /> Operating Hours</CardTitle>
+        </CardHeader>
         <CardContent>
           <OperatingHoursEditor value={hours} onChange={setHours} />
         </CardContent>
