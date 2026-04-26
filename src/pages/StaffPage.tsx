@@ -590,7 +590,38 @@ const StaffPage = () => {
                   </div>
                 </div>
 
-                {/* Actions */}
+                {/* Captain section assignment */}
+                {selectedStaff.role === "captain" && (
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+                    <p className="text-sm font-semibold flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-primary" /> Assigned Floor Section
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Captain will only see tables in this section.
+                    </p>
+                    <Select
+                      value={selectedStaff.assigned_section_name || "__none__"}
+                      onValueChange={(v) => updateCaptainSection(selectedStaff.user_id, v === "__none__" ? null : v)}
+                      disabled={savingSection}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a section" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">— Unassigned —</SelectItem>
+                        {floorSections.map((sec) => (
+                          <SelectItem key={sec.id} value={sec.name}>{sec.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {floorSections.length === 0 && (
+                      <p className="text-xs text-yellow-500">
+                        No floor sections defined yet. Add them under Floor Plan.
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex gap-2 flex-wrap">
                   <Button size="sm" variant="outline" onClick={() => { setSalaryDialog(true); setSalaryForm({ base_salary: "", advance_paid: "", bonus: "", deductions: "", notes: "", month: format(new Date(), "yyyy-MM") }); }}>
                     <Wallet className="h-3.5 w-3.5 mr-1" /> Add Salary
