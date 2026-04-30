@@ -127,7 +127,7 @@ export const ClientDirectory = ({ profiles, hotels, onChanged, focusHotelId, onF
     if (planFilter !== "all") {
       list = list.filter(u => {
         const h = hotels.find(x => x.id === u.hotel_id);
-        return (h?.subscription_tier || "free").toLowerCase() === planFilter;
+        return deriveHotelPlan(h) === planFilter;
       });
     }
     if (joinedFilter !== "all") {
