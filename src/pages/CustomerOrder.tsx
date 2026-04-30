@@ -459,6 +459,35 @@ const CustomerOrder = () => {
     setCallSending(null);
   };
 
+  // ───── Submit review ─────
+  const submitReview = async () => {
+    if (!table || reviewRating < 1) {
+      toast.error("Please pick a star rating");
+      return;
+    }
+    setReviewSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("qr-order", {
+        body: {
+          action: "submit_review",
+          hotel_id: table.hotel_id,
+          order_id: placedOrderId && placedOrderId !== "pending" ? placedOrderId : null,
+          rating: reviewRating,
+          comment: reviewComment.trim(),
+        },
+      });
+      if (error || !data?.success) {
+        toast.error("Couldn't submit review. Please try again.");
+      } else {
+        setReviewSubmitted(true);
+        try { navigator.vibrate?.([30, 20, 30]); } catch {}
+      }
+    } catch {
+      toast.error("Couldn't submit review. Please try again.");
+    }
+    setReviewSubmitting(false);
+  };
+
   // ═════════════════ RENDER ═════════════════
 
   if (loading) {
