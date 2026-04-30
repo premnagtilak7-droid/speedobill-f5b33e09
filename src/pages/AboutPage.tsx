@@ -12,13 +12,14 @@ const stats = [
 ];
 
 export default function AboutPage() {
+  useEffect(() => {
+    document.title = "About SpeedoBill — Smart Restaurant Management for India";
+    const meta = document.querySelector('meta[name="description"]') || document.head.appendChild(Object.assign(document.createElement('meta'), { name: 'description' }));
+    meta.setAttribute('content', "SpeedoBill is professional restaurant billing & management software made in India. Trusted by 28+ hotels — from small dhabas to large restaurants.");
+  }, []);
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0f1629] via-[#10182c] to-[#0b1120] text-white">
-      <Helmet>
-        <title>About SpeedoBill — Smart Restaurant Management for India</title>
-        <meta name="description" content="SpeedoBill is professional restaurant billing & management software made in India. Trusted by 28+ hotels — from small dhabas to large restaurants." />
-        <link rel="canonical" href="https://speedobill.in/about" />
-      </Helmet>
+
 
       {/* Top bar */}
       <header className="sticky top-0 z-40 backdrop-blur-xl bg-[#0f1629]/70 border-b border-white/10">
