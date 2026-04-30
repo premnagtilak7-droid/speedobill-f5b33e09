@@ -215,6 +215,8 @@ const CreatorAdmin = () => {
   const [healthChecks, setHealthChecks] = useState<{ name: string; latency: number | null; ok: boolean }[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [nowIST, setNowIST] = useState(new Date());
+  const [focusHotelId, setFocusHotelId] = useState<string | null>(null);
+  const [dbTableCount, setDbTableCount] = useState<number | null>(null);
 
   // Live IST clock — tick every second
   useEffect(() => {
