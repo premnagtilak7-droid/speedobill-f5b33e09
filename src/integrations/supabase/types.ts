@@ -929,6 +929,7 @@ export type Database = {
           counter_billing_enabled: boolean
           created_at: string
           easy_void_enabled: boolean
+          google_review_url: string | null
           gst_enabled: boolean
           gst_number: string | null
           hotel_code: string
@@ -970,6 +971,7 @@ export type Database = {
           counter_billing_enabled?: boolean
           created_at?: string
           easy_void_enabled?: boolean
+          google_review_url?: string | null
           gst_enabled?: boolean
           gst_number?: string | null
           hotel_code?: string
@@ -1011,6 +1013,7 @@ export type Database = {
           counter_billing_enabled?: boolean
           created_at?: string
           easy_void_enabled?: boolean
+          google_review_url?: string | null
           gst_enabled?: boolean
           gst_number?: string | null
           hotel_code?: string
