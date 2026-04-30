@@ -44,6 +44,7 @@ const MENU_TIER_LIMITS: Record<string, number> = { free: 20, basic: Infinity, pr
 
 const MenuPage = () => {
   const { hotelId, role } = useAuth();
+  const navigate = useNavigate();
   const [items, setItems] = useState<MenuItem[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
@@ -568,8 +569,11 @@ const MenuPage = () => {
                 </CardContent>
               </Card>
             </div>
-            <Button className="w-full" onClick={() => { toast.info("Contact support to upgrade!"); setShowUpgrade(false); }}>
-              Contact to Upgrade
+            <Button className="w-full gradient-btn-primary" onClick={() => { setShowUpgrade(false); navigate("/pricing"); }}>
+              Upgrade Now
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => setShowUpgrade(false)}>
+              Maybe Later
             </Button>
           </div>
         </DialogContent>
