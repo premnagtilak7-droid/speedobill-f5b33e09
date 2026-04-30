@@ -255,6 +255,7 @@ const CreatorAdmin = () => {
       } else if (adminRes.data) {
         setHotels((adminRes.data.hotels ?? []) as any);
         setProfiles((adminRes.data.profiles ?? []) as any);
+        if (typeof adminRes.data.db_table_count === "number") setDbTableCount(adminRes.data.db_table_count);
       }
       if (licRes.data) setLicenses(licRes.data);
       if (wsRes.data) setWsProducts(wsRes.data as any);
