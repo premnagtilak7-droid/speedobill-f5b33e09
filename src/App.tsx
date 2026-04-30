@@ -32,6 +32,7 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
+import AboutPage from "./pages/AboutPage";
 import MenuPage from "./pages/MenuPage";
 import Dashboard from "./pages/Dashboard";
 const ManagerDashboard = lazy(() => import("./pages/ManagerDashboard"));
@@ -195,6 +196,7 @@ const AppRoutes = () => {
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsConditions />} />
         <Route path="/support" element={<SupportPage />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/order/:tableId" element={<CustomerOrder />} />
         <Route path="/dine/:hotelId/:tableId" element={<CustomerOrder />} />
         <Route path="/menu/:hotelId/:tableNumber" element={<MenuRedirect />} />
