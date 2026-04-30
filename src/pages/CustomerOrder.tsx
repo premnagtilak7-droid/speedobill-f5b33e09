@@ -140,10 +140,17 @@ const WAITER_REQUESTS = [
   { id: "other",    icon: "❓", label: "Other" },
 ] as const;
 
-const VEG_KEYWORDS = ["chicken","mutton","fish","egg","prawn","beef","pork","lamb","crab","kebab","tikka","biryani non","nonveg","non-veg","non veg"];
+// Words that indicate NON-VEG (presence => not veg)
+const NON_VEG_KEYWORDS = [
+  "chicken","murg","murgh","mutton","lamb","goat","fish","machli","prawn","prawns","shrimp",
+  "beef","pork","bacon","ham","sausage","crab","squid","octopus","keema","kheema","liver",
+  "tikka","kebab","seekh","tandoori chicken","butter chicken","chicken biryani","mutton biryani",
+  "egg","anda","omelette","bhurji","scrambled","boiled egg",
+  "nonveg","non-veg","non veg","non‑veg",
+];
 function isVeg(itemName: string): boolean {
   const n = itemName.toLowerCase();
-  return !VEG_KEYWORDS.some(k => n.includes(k));
+  return !NON_VEG_KEYWORDS.some(k => n.includes(k));
 }
 
 // ── Storage helpers (per-hotel guest profile) ──────────────────────────────

@@ -78,26 +78,23 @@ export function PaymentMethodSheet(props: Args) {
 
   // Create attempt row (always — gives waiter a notification)
   const createAttempt = async (method: PaymentMethod, utr?: string) => {
-    const payload = {
-      hotel_id: hotel.id,
-      table_id: props.tableId,
-      table_number: props.tableNumber,
-      order_id: props.orderId ?? null,
-      method,
-      amount,
-      tip_amount: tip,
-      utr: utr || null,
-      status: method === "upi" ? "verifying" : "pending",
-      customer_name: props.customerName || "",
-      customer_phone: props.customerPhone || "",
-    };
-    const { data, error } = await supabase
-      .from("payment_attempts")
-      .insert(payload as any)
-      .select("id")
-      .single();
-    if (error) {
-      toast.error("Could not notify waiter: " + error.message);
+    const { data, error } = await supabase.functions.invoke("qr-order", {
+      body: {
+        action: "create_payment_attempt",
+        hotel_id: hotel.id,
+        table_id: props.tableId,
+        table_number: props.tableNumber,
+        order_id: props.orderId ?? null,
+        method,
+        amount,
+        tip_amount: tip,
+        utr: utr || null,
+        customer_name: props.customerName || "",
+        customer_phone: props.customerPhone || "",
+      },
+    });
+    if (error || (data as any)?.error) {
+      toast.error("Could not notify waiter: " + ((data as any)?.error || error?.message || "unknown error"));
       return null;
     }
     return (data as any).id as string;

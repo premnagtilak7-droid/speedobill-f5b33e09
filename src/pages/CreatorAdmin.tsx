@@ -954,14 +954,6 @@ const CreatorAdmin = () => {
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} /> Refresh
             </Button>
-            <CreateHotelDialog
-              onCreated={fetchData}
-              trigger={
-                <Button size="sm" className="gap-1.5 h-8 text-xs rounded-xl text-white" style={{ background: "linear-gradient(135deg,#F97316,#EA580C)" }}>
-                  <Building2 className="h-3.5 w-3.5" /> Create New Hotel
-                </Button>
-              }
-            />
             <AdminNotifications onNavigate={(target) => {
               const m = target.match(/tab=([a-z]+)/);
               if (m && TABS.some(t => t.id === m[1])) setActiveTab(m[1] as TabId);

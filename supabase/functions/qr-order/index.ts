@@ -272,7 +272,56 @@ Deno.serve(async (req) => {
       return json({ success: true });
     }
 
-    return json({ error: "Unknown action" }, 400);
+    // ── 7. CREATE PAYMENT ATTEMPT (anonymous, via QR — bypasses RLS using service role) ──
+    if (action === "create_payment_attempt") {
+      const {
+        hotel_id, table_id, table_number, order_id,
+        method, amount, tip_amount, utr,
+        customer_name, customer_phone,
+      } = body;
+
+      if (!hotel_id || typeof hotel_id !== "string" || hotel_id.length < 30) {
+        return json({ error: "Invalid hotel_id" }, 400);
+      }
+      const allowedMethods = ["upi","cash","card","razorpay","request_bill"];
+      if (!allowedMethods.includes(method)) {
+        return json({ error: "Invalid payment method" }, 400);
+      }
+      const amt = Number(amount);
+      if (!Number.isFinite(amt) || amt < 0) {
+        return json({ error: "Invalid amount" }, 400);
+      }
+      const tip = Number(tip_amount ?? 0);
+
+      // Verify hotel exists
+      const { data: hotel } = await admin
+        .from("hotels").select("id").eq("id", hotel_id).maybeSingle();
+      if (!hotel) return json({ error: "Hotel not found" }, 404);
+
+      const { data, error } = await admin
+        .from("payment_attempts")
+        .insert({
+          hotel_id,
+          table_id: table_id || null,
+          table_number: table_number ?? null,
+          order_id: order_id || null,
+          method,
+          amount: amt,
+          tip_amount: Number.isFinite(tip) ? tip : 0,
+          utr: typeof utr === "string" && utr.trim() ? utr.trim().slice(0, 50) : null,
+          status: method === "upi" ? "verifying" : "pending",
+          customer_name: typeof customer_name === "string" ? customer_name.slice(0, 80) : "",
+          customer_phone: typeof customer_phone === "string" ? customer_phone.slice(0, 20) : "",
+        })
+        .select("id")
+        .single();
+
+      if (error) {
+        console.error("create_payment_attempt failed:", error);
+        return json({ error: "Failed to notify waiter" }, 500);
+      }
+      return json({ id: (data as any).id });
+    }
   } catch (e) {
     console.error("qr-order error:", e);
     return json({ error: "Internal server error" }, 500);
