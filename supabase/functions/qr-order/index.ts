@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
 
       const { data: hotel } = await admin
         .from("hotels")
-        .select("name, logo_url, business_type, upi_id, upi_qr_url, tax_percent, gst_enabled, waiter_confirms_first, pay_upi_enabled, pay_cash_enabled, pay_card_enabled, pay_razorpay_enabled, pay_request_bill_enabled, tip_options, razorpay_key_id, payment_verify_mode, sound_box_enabled")
+        .select("name, logo_url, business_type, upi_id, upi_qr_url, tax_percent, gst_enabled, waiter_confirms_first, pay_upi_enabled, pay_cash_enabled, pay_card_enabled, pay_razorpay_enabled, pay_request_bill_enabled, tip_options, razorpay_key_id, payment_verify_mode, sound_box_enabled, google_review_url")
         .eq("id", table.hotel_id)
         .maybeSingle();
 
@@ -246,6 +246,30 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (!data) return json({ error: "Order not found" }, 404);
       return json({ order: data });
+    }
+
+    // ── 6. SUBMIT CUSTOMER REVIEW (anonymous, via QR) ──
+    if (action === "submit_review") {
+      const { hotel_id, order_id, rating, comment } = body;
+      if (!hotel_id || typeof hotel_id !== "string" || hotel_id.length < 30) {
+        return json({ error: "Invalid hotel_id" }, 400);
+      }
+      const r = Number(rating);
+      if (!Number.isFinite(r) || r < 1 || r > 5) {
+        return json({ error: "Invalid rating" }, 400);
+      }
+      const safeComment = typeof comment === "string" ? comment.slice(0, 500) : "";
+      const { error: fbErr } = await admin.from("customer_feedback").insert({
+        hotel_id,
+        order_id: order_id || null,
+        rating: Math.round(r),
+        comment: safeComment,
+      });
+      if (fbErr) {
+        console.error("submit_review insert failed:", fbErr);
+        return json({ error: "Failed to submit review" }, 500);
+      }
+      return json({ success: true });
     }
 
     return json({ error: "Unknown action" }, 400);

@@ -84,6 +84,28 @@ interface HotelInfo {
   tip_options?: number[] | null;
   payment_verify_mode?: string | null;
   sound_box_enabled?: boolean;
+  google_review_url?: string | null;
+}
+
+// ── Category → emoji + gradient (used when item has no image) ──────────────
+const CATEGORY_STYLE: Array<{ match: RegExp; emoji: string; gradient: string }> = [
+  { match: /(starter|appetiz|snack|chaat|pakoda|tikka)/i, emoji: "🥗", gradient: "from-emerald-400/30 to-lime-400/30" },
+  { match: /(main|thali|combo|meal|biryani|curry|sabzi|gravy)/i, emoji: "🍛", gradient: "from-orange-400/30 to-amber-500/30" },
+  { match: /(rice|pulao|fried rice)/i, emoji: "🍚", gradient: "from-yellow-400/30 to-amber-300/30" },
+  { match: /(bread|roti|naan|paratha|kulcha)/i, emoji: "🫓", gradient: "from-amber-300/30 to-yellow-200/30" },
+  { match: /(dessert|sweet|ice cream|kulfi|gulab|rasgulla|cake)/i, emoji: "🍰", gradient: "from-pink-400/30 to-rose-300/30" },
+  { match: /(beverage|drink|tea|coffee|juice|shake|mocktail|lassi)/i, emoji: "☕", gradient: "from-sky-400/30 to-cyan-300/30" },
+  { match: /(pizza)/i, emoji: "🍕", gradient: "from-red-400/30 to-orange-400/30" },
+  { match: /(burger|sandwich|wrap|roll)/i, emoji: "🥪", gradient: "from-amber-400/30 to-orange-300/30" },
+  { match: /(pasta|noodle|chinese)/i, emoji: "🍜", gradient: "from-orange-400/30 to-rose-300/30" },
+  { match: /(soup)/i, emoji: "🍲", gradient: "from-amber-400/30 to-red-300/30" },
+  { match: /(salad)/i, emoji: "🥗", gradient: "from-green-400/30 to-emerald-300/30" },
+  { match: /(egg|omelette)/i, emoji: "🥚", gradient: "from-yellow-300/30 to-amber-200/30" },
+  { match: /(chicken|mutton|fish|prawn|kebab|non[- ]?veg)/i, emoji: "🍗", gradient: "from-red-400/30 to-rose-400/30" },
+];
+function categoryVisual(category: string): { emoji: string; gradient: string } {
+  for (const c of CATEGORY_STYLE) if (c.match.test(category)) return { emoji: c.emoji, gradient: c.gradient };
+  return { emoji: "🍽️", gradient: "from-orange-400/30 to-amber-300/30" };
 }
 
 // ── Mood → category mapping ────────────────────────────────────────────────
@@ -185,6 +207,13 @@ const CustomerOrder = () => {
   const [callSending, setCallSending] = useState<string | null>(null);
   const [payOpen, setPayOpen] = useState(false);
 
+  // Review (after served)
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [reviewSkipped, setReviewSkipped] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
   // ───── Load table + menu ─────
   useEffect(() => {
     if (!tableId) return;
@@ -259,6 +288,11 @@ const CustomerOrder = () => {
 
   // ───── Categories + filters ─────
   const categories = useMemo(() => ["All", ...new Set(menu.map(m => m.category))], [menu]);
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: menu.length };
+    for (const m of menu) counts[m.category] = (counts[m.category] || 0) + 1;
+    return counts;
+  }, [menu]);
 
   const filteredMenu = useMemo(() => {
     let items = menu;
@@ -425,6 +459,35 @@ const CustomerOrder = () => {
     setCallSending(null);
   };
 
+  // ───── Submit review ─────
+  const submitReview = async () => {
+    if (!table || reviewRating < 1) {
+      toast.error("Please pick a star rating");
+      return;
+    }
+    setReviewSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("qr-order", {
+        body: {
+          action: "submit_review",
+          hotel_id: table.hotel_id,
+          order_id: placedOrderId && placedOrderId !== "pending" ? placedOrderId : null,
+          rating: reviewRating,
+          comment: reviewComment.trim(),
+        },
+      });
+      if (error || !data?.success) {
+        toast.error("Couldn't submit review. Please try again.");
+      } else {
+        setReviewSubmitted(true);
+        try { navigator.vibrate?.([30, 20, 30]); } catch {}
+      }
+    } catch {
+      toast.error("Couldn't submit review. Please try again.");
+    }
+    setReviewSubmitting(false);
+  };
+
   // ═════════════════ RENDER ═════════════════
 
   if (loading) {
@@ -463,7 +526,17 @@ const CustomerOrder = () => {
         loyaltyDiscount={loyaltyDiscount}
         upiId={hotel?.upi_id || ""}
         upiQrUrl={hotel?.upi_qr_url || ""}
-        onOrderMore={() => { setPlacedOrderId(null); setPlacedStatus("incoming"); }}
+        googleReviewUrl={hotel?.google_review_url || ""}
+        reviewSubmitted={reviewSubmitted}
+        reviewSkipped={reviewSkipped}
+        reviewRating={reviewRating}
+        reviewComment={reviewComment}
+        reviewSubmitting={reviewSubmitting}
+        onSetReviewRating={setReviewRating}
+        onSetReviewComment={setReviewComment}
+        onSubmitReview={submitReview}
+        onSkipReview={() => setReviewSkipped(true)}
+        onOrderMore={() => { setPlacedOrderId(null); setPlacedStatus("incoming"); setReviewSubmitted(false); setReviewSkipped(false); setReviewRating(0); setReviewComment(""); }}
         onCallWaiter={() => setCallOpen(true)}
         onRequestBill={() => sendWaiterCall("bill")}
         onPayNow={() => setPayOpen(true)}
@@ -597,22 +670,31 @@ const CustomerOrder = () => {
           </div>
         </div>
 
-        {/* Categories */}
+        {/* Categories — with item counts */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => { setActiveCategory(cat); if (cat !== "All") setSelectedMood(null); }}
-              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all min-h-[36px] ${
-                activeCategory === cat
-                  ? "bg-foreground text-background shadow-md"
-                  : "bg-white dark:bg-gray-800 text-foreground/70 border border-gray-200 dark:border-gray-700"
-              }`}
-            >{cat}</button>
-          ))}
+          {categories.map(cat => {
+            const active = activeCategory === cat;
+            const count = categoryCounts[cat] ?? 0;
+            return (
+              <button
+                key={cat}
+                onClick={() => { setActiveCategory(cat); if (cat !== "All") setSelectedMood(null); }}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all min-h-[36px] ${
+                  active
+                    ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/30"
+                    : "bg-white dark:bg-gray-800 text-foreground/70 border border-gray-200 dark:border-gray-700"
+                }`}
+              >
+                <span>{cat}</span>
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                  active ? "bg-white/25 text-white" : "bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-300"
+                }`}>{count}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Menu list */}
+        {/* Menu list — beautiful cards */}
         <div className="space-y-3">
           {filteredMenu.length === 0 ? (
             <div className="text-center py-16 text-muted-foreground">
@@ -624,72 +706,101 @@ const CustomerOrder = () => {
             const veg = isVeg(item.name);
             const inCart = cartCountFor(item.id);
             const highlighted = moodHighlightedIds.has(item.id);
+            const visual = categoryVisual(item.category);
+            const minPrice = variants ? Math.min(...variants.map((v: any) => Number(v.price))) : item.price;
             return (
               <motion.div
                 key={item.id} layout
                 whileTap={{ scale: 0.99 }}
                 onClick={() => openDetail(item)}
-                className={`relative p-3 rounded-2xl border bg-white dark:bg-gray-800 shadow-sm cursor-pointer transition-all ${
+                className={`relative rounded-2xl border bg-white dark:bg-gray-800 shadow-sm overflow-hidden cursor-pointer transition-all ${
                   highlighted
-                    ? "ring-2 ring-orange-300 border-orange-300"
+                    ? "ring-2 ring-orange-400 border-orange-300"
                     : "border-gray-100 dark:border-gray-700"
                 }`}
               >
-                <div className="flex gap-3">
-                  {/* Image */}
-                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-orange-100 dark:bg-gray-700 shrink-0">
-                    {item.image_url ? (
-                      <img src={item.image_url} alt={item.name} loading="lazy" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <ImageIcon className="h-8 w-8 text-orange-300" />
+                {/* Hero image — 16:9 */}
+                <div className={`relative w-full aspect-[16/9] overflow-hidden bg-gradient-to-br ${visual.gradient}`}>
+                  {item.image_url ? (
+                    <img src={item.image_url} alt={item.name} loading="lazy" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center">
+                      <span className="text-6xl drop-shadow-sm" aria-hidden>{visual.emoji}</span>
+                      <span className="text-[10px] font-semibold text-foreground/60 mt-1 uppercase tracking-wider">{item.category}</span>
+                    </div>
+                  )}
+                  {/* Veg/Non-veg dot */}
+                  <span
+                    className={`absolute top-2 left-2 inline-flex items-center justify-center w-5 h-5 rounded-md bg-white/95 shadow-sm border ${
+                      veg ? "border-emerald-600" : "border-red-600"
+                    }`}
+                    title={veg ? "Veg" : "Non-Veg"}
+                  >
+                    <span className={`w-2.5 h-2.5 rounded-full ${veg ? "bg-emerald-600" : "bg-red-600"}`} />
+                  </span>
+                  {highlighted && (
+                    <span className="absolute top-2 right-2 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">⭐ PICK</span>
+                  )}
+                </div>
+
+                {/* Body */}
+                <div className="p-3 space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-sm leading-tight text-foreground truncate">{item.name}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{item.category}</p>
+                    </div>
+                    {/* Add / qty controls */}
+                    {inCart > 0 ? (
+                      <div className="flex items-center gap-1 bg-emerald-500 text-white rounded-xl shadow shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const last = [...cart].reverse().find(c => c.baseId === item.id);
+                            if (last) updateQtyByCartId(last.id, -1);
+                          }}
+                          className="w-9 h-9 flex items-center justify-center active:scale-90"
+                          aria-label="Remove one"
+                        ><Minus className="h-4 w-4" /></button>
+                        <span className="text-sm font-bold tabular-nums min-w-[20px] text-center">{inCart}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (variants) { openDetail(item); }
+                            else { addToCart(item, null, 1); }
+                          }}
+                          className="w-9 h-9 flex items-center justify-center active:scale-90"
+                          aria-label="Add one more"
+                        ><Plus className="h-4 w-4" /></button>
                       </div>
-                    )}
-                    {highlighted && (
-                      <span className="absolute top-1 left-1 bg-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">⭐ PICK</span>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (variants) { openDetail(item); }
+                          else { addToCart(item, null, 1); toast.success(`Added ${item.name}`, { duration: 1200 }); }
+                        }}
+                        className="px-4 h-9 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow-md shadow-orange-500/30 active:scale-95 shrink-0"
+                      >ADD +</button>
                     )}
                   </div>
-                  {/* Body */}
-                  <div className="flex-1 min-w-0 flex flex-col">
-                    <div className="flex items-start gap-2">
-                      <span
-                        className={`mt-1 inline-flex items-center justify-center w-3.5 h-3.5 border-[1.5px] rounded-sm shrink-0 ${
-                          veg ? "border-emerald-600" : "border-red-600"
-                        }`}
-                        title={veg ? "Veg" : "Non-Veg"}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${veg ? "bg-emerald-600" : "bg-red-600"}`} />
-                      </span>
-                      <p className="font-semibold text-sm leading-tight flex-1">{item.name}</p>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{item.category}</p>
-
-                    {/* Price + Add */}
-                    <div className="mt-auto flex items-end justify-between pt-2">
-                      <div>
-                        {variants ? (
-                          <div className="flex flex-wrap gap-1">
-                            {variants.map((v: any) => (
-                              <span key={v.label} className="text-[10px] bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-1.5 py-0.5 rounded font-semibold">
-                                {v.label} ₹{v.price}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="font-bold text-base text-foreground">₹{item.price}</p>
-                        )}
+                  {/* Price row */}
+                  <div className="flex items-center flex-wrap gap-2">
+                    {variants ? (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {variants.map((v: any, idx: number) => (
+                          <span key={`${v.label}-${idx}`} className="text-[11px] font-semibold text-foreground">
+                            {v.label} <span className="text-orange-600 font-bold">₹{v.price}</span>
+                            {idx < variants.length - 1 && <span className="text-muted-foreground/50 mx-1">|</span>}
+                          </span>
+                        ))}
                       </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); openDetail(item); }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition active:scale-95 min-h-[36px] ${
-                          inCart > 0
-                            ? "bg-emerald-500 text-white"
-                            : "bg-white dark:bg-gray-700 text-orange-600 dark:text-orange-400 border-[1.5px] border-orange-500"
-                        }`}
-                      >
-                        {inCart > 0 ? `${inCart} IN CART` : "ADD +"}
-                      </button>
-                    </div>
+                    ) : (
+                      <p className="text-base font-black text-orange-600">₹{item.price}</p>
+                    )}
+                    {variants && (
+                      <span className="text-[10px] text-muted-foreground">from ₹{minPrice}</span>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -1260,16 +1371,22 @@ function statusIndex(s: string): number {
 
 function OrderTrackingScreen({
   hotelName, tableNumber, sectionName, status, loyaltyDiscount,
-  upiId, upiQrUrl,
+  upiId, upiQrUrl, googleReviewUrl,
+  reviewSubmitted, reviewSkipped, reviewRating, reviewComment, reviewSubmitting,
+  onSetReviewRating, onSetReviewComment, onSubmitReview, onSkipReview,
   onOrderMore, onCallWaiter, onRequestBill, onPayNow,
 }: {
   hotelName: string; tableNumber: number; sectionName?: string;
   status: string; loyaltyDiscount: number;
-  upiId: string; upiQrUrl: string;
+  upiId: string; upiQrUrl: string; googleReviewUrl: string;
+  reviewSubmitted: boolean; reviewSkipped: boolean; reviewRating: number; reviewComment: string; reviewSubmitting: boolean;
+  onSetReviewRating: (n: number) => void; onSetReviewComment: (s: string) => void;
+  onSubmitReview: () => void; onSkipReview: () => void;
   onOrderMore: () => void; onCallWaiter: () => void; onRequestBill: () => void; onPayNow: () => void;
 }) {
   const idx = statusIndex(status);
   const rejected = status === "rejected" || status === "cancelled";
+  const showReview = !rejected && (status === "served" || status === "billed") && !reviewSkipped;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-amber-50 dark:from-gray-950 dark:to-gray-900">
@@ -1330,6 +1447,76 @@ function OrderTrackingScreen({
           <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-lg p-5 text-center border border-red-200">
             <p className="text-sm">Sorry, this order was not accepted. Please ask the waiter for help.</p>
           </div>
+        )}
+
+        {/* Review screen — shown after served */}
+        {showReview && !reviewSubmitted && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-orange-500 to-amber-500 text-white rounded-3xl p-5 shadow-xl space-y-4"
+          >
+            <div className="text-center space-y-1">
+              <div className="text-4xl">⭐</div>
+              <h2 className="text-xl font-black">How was your experience?</h2>
+              <p className="text-xs text-white/85">Your feedback helps {hotelName} serve you better</p>
+            </div>
+            <div className="flex justify-center gap-2">
+              {[1,2,3,4,5].map(n => (
+                <button
+                  key={n}
+                  onClick={() => onSetReviewRating(n)}
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl transition active:scale-90 ${
+                    n <= reviewRating ? "bg-white text-amber-500 shadow-lg" : "bg-white/20 text-white/60"
+                  }`}
+                  aria-label={`Rate ${n} star${n>1?"s":""}`}
+                >★</button>
+              ))}
+            </div>
+            <Textarea
+              value={reviewComment}
+              onChange={(e) => onSetReviewComment(e.target.value.slice(0, 500))}
+              placeholder="Any specific feedback? (optional)"
+              className="bg-white/95 text-foreground rounded-2xl border-0 min-h-[80px] resize-none placeholder:text-muted-foreground"
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                onClick={onSkipReview}
+                variant="ghost"
+                className="bg-white/15 hover:bg-white/25 text-white rounded-2xl font-semibold"
+                style={{ height: 48 }}
+              >Skip</Button>
+              <Button
+                onClick={onSubmitReview}
+                disabled={reviewSubmitting || reviewRating < 1}
+                className="bg-white hover:bg-white/95 text-orange-600 rounded-2xl font-bold"
+                style={{ height: 48 }}
+              >
+                {reviewSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit ⭐"}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {showReview && reviewSubmitted && (
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+            className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-lg border border-emerald-100 dark:border-gray-800 text-center space-y-3"
+          >
+            <div className="text-4xl">🙏</div>
+            <h3 className="text-lg font-black text-emerald-600">Thank you for your feedback!</h3>
+            <p className="text-xs text-muted-foreground">Visit us again soon!</p>
+            {googleReviewUrl && (
+              <a
+                href={googleReviewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl font-bold px-4"
+                style={{ height: 48 }}
+              >
+                <Star className="h-4 w-4" /> Leave us a Google Review 🌟
+              </a>
+            )}
+          </motion.div>
         )}
 
         {/* Actions */}

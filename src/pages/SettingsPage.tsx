@@ -64,6 +64,7 @@ const SettingsPage = () => {
   // Branding & receipt
   const [logoUrl, setLogoUrl] = useState("");
   const [upiId, setUpiId] = useState("");
+  const [googleReviewUrl, setGoogleReviewUrl] = useState("");
   const [receiptFooter, setReceiptFooter] = useState("Thank you! Visit again.");
   const [showGstOnReceipt, setShowGstOnReceipt] = useState(true);
   const [receiptHeaderStyle, setReceiptHeaderStyle] = useState<string>("bold");
@@ -119,6 +120,7 @@ const SettingsPage = () => {
         setAutoCleanup(data.auto_cleanup_after_bill);
         setLogoUrl(data.logo_url || "");
         setUpiId(data.upi_id || "");
+        setGoogleReviewUrl(data.google_review_url || "");
         setReceiptFooter(data.receipt_footer || "Thank you! Visit again.");
         setShowGstOnReceipt(data.show_gst_on_receipt ?? true);
         setReceiptHeaderStyle(data.receipt_header_style || "bold");
@@ -212,6 +214,7 @@ const SettingsPage = () => {
         counter_billing_enabled: counterBilling,
         auto_cleanup_after_bill: autoCleanup,
         upi_id: upiId.trim(),
+        google_review_url: googleReviewUrl.trim() || null,
         receipt_footer: receiptFooter.trim(),
         show_gst_on_receipt: showGstOnReceipt,
         receipt_header_style: receiptHeaderStyle,
@@ -400,6 +403,17 @@ const SettingsPage = () => {
             <label className="text-xs text-muted-foreground flex items-center gap-1"><QrCode className="h-3 w-3" /> UPI ID (for payment QR on bills)</label>
             <Input placeholder="yourname@upi" value={upiId} onChange={(e) => setUpiId(e.target.value)} />
             <p className="text-[10px] text-muted-foreground">e.g. nagtilakprem@okaxis — QR code auto-generated on every bill</p>
+          </div>
+          {/* Google Review link */}
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground flex items-center gap-1">⭐ Google Review Link (shown to QR customers after they're served)</label>
+            <Input
+              placeholder="https://g.page/r/..."
+              value={googleReviewUrl}
+              onChange={(e) => setGoogleReviewUrl(e.target.value)}
+              maxLength={500}
+            />
+            <p className="text-[10px] text-muted-foreground">Get this from your Google Business profile → "Get more reviews"</p>
           </div>
           {/* Footer Message */}
           <div className="space-y-1">
