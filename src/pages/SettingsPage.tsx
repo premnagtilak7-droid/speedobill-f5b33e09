@@ -214,6 +214,7 @@ const SettingsPage = () => {
         counter_billing_enabled: counterBilling,
         auto_cleanup_after_bill: autoCleanup,
         upi_id: upiId.trim(),
+        google_review_url: googleReviewUrl.trim() || null,
         receipt_footer: receiptFooter.trim(),
         show_gst_on_receipt: showGstOnReceipt,
         receipt_header_style: receiptHeaderStyle,
