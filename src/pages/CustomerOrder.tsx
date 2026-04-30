@@ -288,6 +288,11 @@ const CustomerOrder = () => {
 
   // ───── Categories + filters ─────
   const categories = useMemo(() => ["All", ...new Set(menu.map(m => m.category))], [menu]);
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: menu.length };
+    for (const m of menu) counts[m.category] = (counts[m.category] || 0) + 1;
+    return counts;
+  }, [menu]);
 
   const filteredMenu = useMemo(() => {
     let items = menu;
