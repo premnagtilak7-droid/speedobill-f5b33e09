@@ -210,8 +210,10 @@ const AppRoutes = () => {
         <Route path="/addons/feedback" element={<FeedbackAddon />} />
         <Route path="/creator-admin" element={<ProtectedRoute><RoleGuard allowed={["owner"]} redirectTo="/tables"><CreatorAdmin /></RoleGuard></ProtectedRoute>} />
 
+        {/* Public pricing — no login required */}
+        <Route path="/pricing" element={<PricingPage />} />
+
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-          <Route path="/pricing" element={<RoleGuard allowed={["owner", "manager"]}><PricingPage /></RoleGuard>} />
           <Route path="/download-data-export" element={<RoleGuard allowed={["owner", "manager"]}><DataExportDownload /></RoleGuard>} />
         </Route>
 

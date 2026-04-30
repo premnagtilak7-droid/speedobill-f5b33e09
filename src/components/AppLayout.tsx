@@ -26,6 +26,7 @@ import { WaiterReadyBanner } from "@/components/WaiterReadyBanner";
 import SidebarPlanBadge from "@/components/SidebarPlanBadge";
 import SidebarSoundToggle from "@/components/SidebarSoundToggle";
 import ScreenWakeLock from "@/components/ScreenWakeLock";
+import SubscriptionExpiredBanner from "@/components/SubscriptionExpiredBanner";
 
 interface NavItem {
   label: string;
@@ -560,6 +561,7 @@ const AppLayout = () => {
             </Avatar>
           </div>
         </div>
+        <SubscriptionExpiredBanner />
         <BroadcastBanner />
         <WaiterReadyBanner />
         <SectionErrorBoundary section="Page Content">
