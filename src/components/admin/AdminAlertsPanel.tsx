@@ -47,7 +47,10 @@ interface Props {
   demoLeads: DemoLeadLite[];
   contactedLeadIds: string[];
   totalRevenue: number;
+  /** Generic tab navigation */
   onNavigate: (tab: string) => void;
+  /** Open the Client Directory drawer focused on a specific hotel */
+  onViewHotel?: (hotelId: string) => void;
   onContactLead?: (lead: DemoLeadLite) => void;
   pendingKotsByHotel?: PendingKotsRow[];
   inactiveWaiters?: InactiveWaiterRow[];
