@@ -195,6 +195,7 @@ const AppRoutes = () => {
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsConditions />} />
         <Route path="/support" element={<SupportPage />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/order/:tableId" element={<CustomerOrder />} />
         <Route path="/dine/:hotelId/:tableId" element={<CustomerOrder />} />
         <Route path="/menu/:hotelId/:tableNumber" element={<MenuRedirect />} />
