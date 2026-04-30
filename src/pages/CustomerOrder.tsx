@@ -694,8 +694,8 @@ const CustomerOrder = () => {
           })}
         </div>
 
-        {/* Menu list — beautiful cards */}
-        <div className="space-y-3">
+        {/* Menu list — beautiful cards (2-col mobile, more on larger) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {filteredMenu.length === 0 ? (
             <div className="text-center py-16 text-muted-foreground">
               <UtensilsCrossed className="h-12 w-12 mx-auto mb-3 opacity-30" />
