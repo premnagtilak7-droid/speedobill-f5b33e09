@@ -207,6 +207,13 @@ const CustomerOrder = () => {
   const [callSending, setCallSending] = useState<string | null>(null);
   const [payOpen, setPayOpen] = useState(false);
 
+  // Review (after served)
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [reviewSkipped, setReviewSkipped] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
   // ───── Load table + menu ─────
   useEffect(() => {
     if (!tableId) return;
