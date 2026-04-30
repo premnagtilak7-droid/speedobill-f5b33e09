@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Mail, Globe, Clock, Instagram, Facebook, MessageCircle, Building2, Package, Star, Flag } from "lucide-react";
-import { Helmet } from "react-helmet-async";
+import { useEffect } from "react";
 
 const stats = [
   { icon: Building2, value: "28+", label: "Hotels using SpeedoBill" },
