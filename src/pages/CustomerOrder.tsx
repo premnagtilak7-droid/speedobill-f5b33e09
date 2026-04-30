@@ -565,7 +565,7 @@ const CustomerOrder = () => {
 
       {/* ════ HEADER ════ */}
       <div className="sticky top-0 z-40 bg-white/85 dark:bg-gray-900/85 backdrop-blur-xl border-b border-orange-100 dark:border-gray-800">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
+        <div className="max-w-2xl lg:max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
           {hotel?.logo_url ? (
             <img src={hotel.logo_url} alt={hotel.name} className="w-9 h-9 rounded-xl object-cover ring-1 ring-orange-200" />
           ) : (
@@ -593,7 +593,7 @@ const CustomerOrder = () => {
         </div>
 
         {/* Search */}
-        <div className="max-w-lg mx-auto px-4 pb-3">
+        <div className="max-w-2xl lg:max-w-5xl mx-auto px-4 pb-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -607,7 +607,7 @@ const CustomerOrder = () => {
       </div>
 
       {/* ════ MAIN ════ */}
-      <div className="max-w-lg mx-auto px-4 py-4 space-y-5 pb-32">
+      <div className="max-w-2xl lg:max-w-5xl mx-auto px-4 py-4 space-y-5 pb-32">
 
         {/* Welcome-back strip */}
         {customerProfile && !welcomeOpen && (
@@ -819,7 +819,7 @@ const CustomerOrder = () => {
           >
             <button
               onClick={() => setCartOpen(true)}
-              className="w-full max-w-lg mx-auto flex items-center justify-between bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-2xl px-5 py-3.5 shadow-2xl active:scale-[0.98]"
+              className="w-full max-w-2xl lg:max-w-5xl mx-auto flex items-center justify-between bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-2xl px-5 py-3.5 shadow-2xl active:scale-[0.98]"
             >
               <div className="flex items-center gap-2">
                 <ShoppingCart className="h-5 w-5" />
