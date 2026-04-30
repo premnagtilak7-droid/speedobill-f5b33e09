@@ -743,35 +743,42 @@ const CustomerOrder = () => {
                   )}
                 </div>
 
-                {/* Body */}
-                <div className="p-3 space-y-2">
-                  <div className="flex items-start justify-between gap-3">
+                {/* Body — compact for 2-col mobile */}
+                <div className="p-2.5 space-y-1.5">
+                  <div className="min-w-0">
+                    <p className="font-bold text-[13px] leading-tight text-foreground line-clamp-2 break-words">{item.name}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{item.category}</p>
+                  </div>
+                  {/* Price + Add row */}
+                  <div className="flex items-center justify-between gap-2 pt-0.5">
                     <div className="min-w-0 flex-1">
-                      <p className="font-bold text-sm leading-tight text-foreground truncate">{item.name}</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">{item.category}</p>
+                      {variants ? (
+                        <p className="text-[12px] font-black text-orange-600 truncate">from ₹{minPrice}</p>
+                      ) : (
+                        <p className="text-sm font-black text-orange-600 truncate">₹{item.price}</p>
+                      )}
                     </div>
-                    {/* Add / qty controls */}
                     {inCart > 0 ? (
-                      <div className="flex items-center gap-1 bg-emerald-500 text-white rounded-xl shadow shrink-0">
+                      <div className="flex items-center gap-0.5 bg-emerald-500 text-white rounded-lg shadow shrink-0">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             const last = [...cart].reverse().find(c => c.baseId === item.id);
                             if (last) updateQtyByCartId(last.id, -1);
                           }}
-                          className="w-9 h-9 flex items-center justify-center active:scale-90"
+                          className="w-7 h-7 flex items-center justify-center active:scale-90"
                           aria-label="Remove one"
-                        ><Minus className="h-4 w-4" /></button>
-                        <span className="text-sm font-bold tabular-nums min-w-[20px] text-center">{inCart}</span>
+                        ><Minus className="h-3.5 w-3.5" /></button>
+                        <span className="text-xs font-bold tabular-nums min-w-[16px] text-center">{inCart}</span>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             if (variants) { openDetail(item); }
                             else { addToCart(item, null, 1); }
                           }}
-                          className="w-9 h-9 flex items-center justify-center active:scale-90"
+                          className="w-7 h-7 flex items-center justify-center active:scale-90"
                           aria-label="Add one more"
-                        ><Plus className="h-4 w-4" /></button>
+                        ><Plus className="h-3.5 w-3.5" /></button>
                       </div>
                     ) : (
                       <button
@@ -780,26 +787,8 @@ const CustomerOrder = () => {
                           if (variants) { openDetail(item); }
                           else { addToCart(item, null, 1); toast.success(`Added ${item.name}`, { duration: 1200 }); }
                         }}
-                        className="px-4 h-9 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow-md shadow-orange-500/30 active:scale-95 shrink-0"
+                        className="px-2.5 h-7 rounded-lg text-[11px] font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow shadow-orange-500/30 active:scale-95 shrink-0"
                       >ADD +</button>
-                    )}
-                  </div>
-                  {/* Price row */}
-                  <div className="flex items-center flex-wrap gap-2">
-                    {variants ? (
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {variants.map((v: any, idx: number) => (
-                          <span key={`${v.label}-${idx}`} className="text-[11px] font-semibold text-foreground">
-                            {v.label} <span className="text-orange-600 font-bold">₹{v.price}</span>
-                            {idx < variants.length - 1 && <span className="text-muted-foreground/50 mx-1">|</span>}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-base font-black text-orange-600">₹{item.price}</p>
-                    )}
-                    {variants && (
-                      <span className="text-[10px] text-muted-foreground">from ₹{minPrice}</span>
                     )}
                   </div>
                 </div>
