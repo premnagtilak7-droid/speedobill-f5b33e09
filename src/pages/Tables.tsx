@@ -91,6 +91,8 @@ const Tables = () => {
   const { density, setDensity } = useGridDensity("qb_tables_density");
   const isOwner = role === "owner";
   const [counterBillingEnabled, setCounterBillingEnabled] = useState(false);
+  const planLimits = usePlanLimits();
+  const { upgradeDialogProps, promptUpgrade } = useUpgradePrompt();
 
   /* ── data ── */
   const [tables, setTables] = useState<Table[]>([]);
@@ -1580,6 +1582,7 @@ const Tables = () => {
           </div>
         </DialogContent>
       </Dialog>
+      <UpgradePromptDialog {...upgradeDialogProps} />
     </div>
   );
 };
