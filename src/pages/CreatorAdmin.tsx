@@ -34,6 +34,7 @@ import { AdminAlertsPanel } from "@/components/admin/AdminAlertsPanel";
 import { ClientDirectory } from "@/components/admin/ClientDirectory";
 import { CreateHotelDialog } from "@/components/admin/CreateHotelDialog";
 import { deriveHotelPlan, planBadgeColor } from "@/lib/adminPlan";
+import TeamManagementPanel from "@/components/admin/TeamManagementPanel";
 
 /* ─── Types ─── */
 interface License {
