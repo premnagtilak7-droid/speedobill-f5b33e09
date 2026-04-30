@@ -120,6 +120,7 @@ const SettingsPage = () => {
         setAutoCleanup(data.auto_cleanup_after_bill);
         setLogoUrl(data.logo_url || "");
         setUpiId(data.upi_id || "");
+        setGoogleReviewUrl(data.google_review_url || "");
         setReceiptFooter(data.receipt_footer || "Thank you! Visit again.");
         setShowGstOnReceipt(data.show_gst_on_receipt ?? true);
         setReceiptHeaderStyle(data.receipt_header_style || "bold");
