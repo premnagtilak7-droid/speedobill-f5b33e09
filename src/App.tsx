@@ -32,6 +32,7 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
+import AboutPage from "./pages/AboutPage";
 import MenuPage from "./pages/MenuPage";
 import Dashboard from "./pages/Dashboard";
 const ManagerDashboard = lazy(() => import("./pages/ManagerDashboard"));
