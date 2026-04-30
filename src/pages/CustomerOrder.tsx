@@ -84,6 +84,28 @@ interface HotelInfo {
   tip_options?: number[] | null;
   payment_verify_mode?: string | null;
   sound_box_enabled?: boolean;
+  google_review_url?: string | null;
+}
+
+// ── Category → emoji + gradient (used when item has no image) ──────────────
+const CATEGORY_STYLE: Array<{ match: RegExp; emoji: string; gradient: string }> = [
+  { match: /(starter|appetiz|snack|chaat|pakoda|tikka)/i, emoji: "🥗", gradient: "from-emerald-400/30 to-lime-400/30" },
+  { match: /(main|thali|combo|meal|biryani|curry|sabzi|gravy)/i, emoji: "🍛", gradient: "from-orange-400/30 to-amber-500/30" },
+  { match: /(rice|pulao|fried rice)/i, emoji: "🍚", gradient: "from-yellow-400/30 to-amber-300/30" },
+  { match: /(bread|roti|naan|paratha|kulcha)/i, emoji: "🫓", gradient: "from-amber-300/30 to-yellow-200/30" },
+  { match: /(dessert|sweet|ice cream|kulfi|gulab|rasgulla|cake)/i, emoji: "🍰", gradient: "from-pink-400/30 to-rose-300/30" },
+  { match: /(beverage|drink|tea|coffee|juice|shake|mocktail|lassi)/i, emoji: "☕", gradient: "from-sky-400/30 to-cyan-300/30" },
+  { match: /(pizza)/i, emoji: "🍕", gradient: "from-red-400/30 to-orange-400/30" },
+  { match: /(burger|sandwich|wrap|roll)/i, emoji: "🥪", gradient: "from-amber-400/30 to-orange-300/30" },
+  { match: /(pasta|noodle|chinese)/i, emoji: "🍜", gradient: "from-orange-400/30 to-rose-300/30" },
+  { match: /(soup)/i, emoji: "🍲", gradient: "from-amber-400/30 to-red-300/30" },
+  { match: /(salad)/i, emoji: "🥗", gradient: "from-green-400/30 to-emerald-300/30" },
+  { match: /(egg|omelette)/i, emoji: "🥚", gradient: "from-yellow-300/30 to-amber-200/30" },
+  { match: /(chicken|mutton|fish|prawn|kebab|non[- ]?veg)/i, emoji: "🍗", gradient: "from-red-400/30 to-rose-400/30" },
+];
+function categoryVisual(category: string): { emoji: string; gradient: string } {
+  for (const c of CATEGORY_STYLE) if (c.match.test(category)) return { emoji: c.emoji, gradient: c.gradient };
+  return { emoji: "🍽️", gradient: "from-orange-400/30 to-amber-300/30" };
 }
 
 // ── Mood → category mapping ────────────────────────────────────────────────
