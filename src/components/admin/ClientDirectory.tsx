@@ -239,8 +239,15 @@ export const ClientDirectory = ({ profiles, hotels, onChanged, focusHotelId, onF
           <StatPill label="Suspended" value={counts.suspended} tone="red" active={statusFilter === "suspended"} onClick={() => setStatusFilter("suspended")} />
           <span className="mx-1 self-center text-slate-600">|</span>
           <StatPill label="Free" value={counts.free} active={planFilter === "free"} onClick={() => setPlanFilter("free")} />
+          <StatPill label="Trial" value={counts.trial} active={planFilter === "trial"} onClick={() => setPlanFilter("trial")} />
           <StatPill label="Basic" value={counts.basic} active={planFilter === "basic"} onClick={() => setPlanFilter("basic")} />
           <StatPill label="Premium" value={counts.premium} tone="orange" active={planFilter === "premium"} onClick={() => setPlanFilter("premium")} />
+          <StatPill label="Expired" value={counts.expired} tone="red" active={planFilter === "expired"} onClick={() => setPlanFilter("expired")} />
+          <span className="ml-auto self-center">
+            <Button size="sm" variant="ghost" onClick={onChanged} className="h-8 text-slate-300 hover:text-white gap-1">
+              <RotateCcw className="h-4 w-4" /> Refresh
+            </Button>
+          </span>
         </div>
       </div>
 
