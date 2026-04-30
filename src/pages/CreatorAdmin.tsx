@@ -1830,6 +1830,13 @@ const CreatorAdmin = () => {
               </TabPanel>
             )}
 
+            {/* ═══════ TEAM MANAGEMENT ═══════ */}
+            {activeTab === "team" && (
+              <TabPanel key="team">
+                <TeamManagementPanel />
+              </TabPanel>
+            )}
+
             {/* ═══════ E2. SYSTEM SETTINGS (placeholder) ═══════ */}
             {activeTab === "settings" && (
               <TabPanel key="settings">
