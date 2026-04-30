@@ -64,6 +64,7 @@ const SettingsPage = () => {
   // Branding & receipt
   const [logoUrl, setLogoUrl] = useState("");
   const [upiId, setUpiId] = useState("");
+  const [googleReviewUrl, setGoogleReviewUrl] = useState("");
   const [receiptFooter, setReceiptFooter] = useState("Thank you! Visit again.");
   const [showGstOnReceipt, setShowGstOnReceipt] = useState(true);
   const [receiptHeaderStyle, setReceiptHeaderStyle] = useState<string>("bold");
