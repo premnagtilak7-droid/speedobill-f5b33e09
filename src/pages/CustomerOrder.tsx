@@ -565,7 +565,7 @@ const CustomerOrder = () => {
 
       {/* ════ HEADER ════ */}
       <div className="sticky top-0 z-40 bg-white/85 dark:bg-gray-900/85 backdrop-blur-xl border-b border-orange-100 dark:border-gray-800">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
+        <div className="max-w-2xl lg:max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
           {hotel?.logo_url ? (
             <img src={hotel.logo_url} alt={hotel.name} className="w-9 h-9 rounded-xl object-cover ring-1 ring-orange-200" />
           ) : (
@@ -593,7 +593,7 @@ const CustomerOrder = () => {
         </div>
 
         {/* Search */}
-        <div className="max-w-lg mx-auto px-4 pb-3">
+        <div className="max-w-2xl lg:max-w-5xl mx-auto px-4 pb-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -607,7 +607,7 @@ const CustomerOrder = () => {
       </div>
 
       {/* ════ MAIN ════ */}
-      <div className="max-w-lg mx-auto px-4 py-4 space-y-5 pb-32">
+      <div className="max-w-2xl lg:max-w-5xl mx-auto px-4 py-4 space-y-5 pb-32">
 
         {/* Welcome-back strip */}
         {customerProfile && !welcomeOpen && (
@@ -694,8 +694,8 @@ const CustomerOrder = () => {
           })}
         </div>
 
-        {/* Menu list — beautiful cards */}
-        <div className="space-y-3">
+        {/* Menu list — beautiful cards (2-col mobile, more on larger) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {filteredMenu.length === 0 ? (
             <div className="text-center py-16 text-muted-foreground">
               <UtensilsCrossed className="h-12 w-12 mx-auto mb-3 opacity-30" />
@@ -719,59 +719,66 @@ const CustomerOrder = () => {
                     : "border-gray-100 dark:border-gray-700"
                 }`}
               >
-                {/* Hero image — 16:9 */}
-                <div className={`relative w-full aspect-[16/9] overflow-hidden bg-gradient-to-br ${visual.gradient}`}>
+                {/* Hero image — 4:3 (compact) */}
+                <div className={`relative w-full aspect-[4/3] overflow-hidden bg-gradient-to-br ${visual.gradient}`}>
                   {item.image_url ? (
                     <img src={item.image_url} alt={item.name} loading="lazy" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center">
-                      <span className="text-6xl drop-shadow-sm" aria-hidden>{visual.emoji}</span>
-                      <span className="text-[10px] font-semibold text-foreground/60 mt-1 uppercase tracking-wider">{item.category}</span>
+                      <span className="text-4xl drop-shadow-sm" aria-hidden>{visual.emoji}</span>
+                      <span className="text-[9px] font-semibold text-foreground/60 mt-0.5 uppercase tracking-wider">{item.category}</span>
                     </div>
                   )}
                   {/* Veg/Non-veg dot */}
                   <span
-                    className={`absolute top-2 left-2 inline-flex items-center justify-center w-5 h-5 rounded-md bg-white/95 shadow-sm border ${
+                    className={`absolute top-1.5 left-1.5 inline-flex items-center justify-center w-4 h-4 rounded-md bg-white/95 shadow-sm border ${
                       veg ? "border-emerald-600" : "border-red-600"
                     }`}
                     title={veg ? "Veg" : "Non-Veg"}
                   >
-                    <span className={`w-2.5 h-2.5 rounded-full ${veg ? "bg-emerald-600" : "bg-red-600"}`} />
+                    <span className={`w-2 h-2 rounded-full ${veg ? "bg-emerald-600" : "bg-red-600"}`} />
                   </span>
                   {highlighted && (
-                    <span className="absolute top-2 right-2 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">⭐ PICK</span>
+                    <span className="absolute top-1.5 right-1.5 bg-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow">⭐</span>
                   )}
                 </div>
 
-                {/* Body */}
-                <div className="p-3 space-y-2">
-                  <div className="flex items-start justify-between gap-3">
+                {/* Body — compact for 2-col mobile */}
+                <div className="p-2.5 space-y-1.5">
+                  <div className="min-w-0">
+                    <p className="font-bold text-[13px] leading-tight text-foreground line-clamp-2 break-words">{item.name}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{item.category}</p>
+                  </div>
+                  {/* Price + Add row */}
+                  <div className="flex items-center justify-between gap-2 pt-0.5">
                     <div className="min-w-0 flex-1">
-                      <p className="font-bold text-sm leading-tight text-foreground truncate">{item.name}</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">{item.category}</p>
+                      {variants ? (
+                        <p className="text-[12px] font-black text-orange-600 truncate">from ₹{minPrice}</p>
+                      ) : (
+                        <p className="text-sm font-black text-orange-600 truncate">₹{item.price}</p>
+                      )}
                     </div>
-                    {/* Add / qty controls */}
                     {inCart > 0 ? (
-                      <div className="flex items-center gap-1 bg-emerald-500 text-white rounded-xl shadow shrink-0">
+                      <div className="flex items-center gap-0.5 bg-emerald-500 text-white rounded-lg shadow shrink-0">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             const last = [...cart].reverse().find(c => c.baseId === item.id);
                             if (last) updateQtyByCartId(last.id, -1);
                           }}
-                          className="w-9 h-9 flex items-center justify-center active:scale-90"
+                          className="w-7 h-7 flex items-center justify-center active:scale-90"
                           aria-label="Remove one"
-                        ><Minus className="h-4 w-4" /></button>
-                        <span className="text-sm font-bold tabular-nums min-w-[20px] text-center">{inCart}</span>
+                        ><Minus className="h-3.5 w-3.5" /></button>
+                        <span className="text-xs font-bold tabular-nums min-w-[16px] text-center">{inCart}</span>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             if (variants) { openDetail(item); }
                             else { addToCart(item, null, 1); }
                           }}
-                          className="w-9 h-9 flex items-center justify-center active:scale-90"
+                          className="w-7 h-7 flex items-center justify-center active:scale-90"
                           aria-label="Add one more"
-                        ><Plus className="h-4 w-4" /></button>
+                        ><Plus className="h-3.5 w-3.5" /></button>
                       </div>
                     ) : (
                       <button
@@ -780,26 +787,8 @@ const CustomerOrder = () => {
                           if (variants) { openDetail(item); }
                           else { addToCart(item, null, 1); toast.success(`Added ${item.name}`, { duration: 1200 }); }
                         }}
-                        className="px-4 h-9 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow-md shadow-orange-500/30 active:scale-95 shrink-0"
+                        className="px-2.5 h-7 rounded-lg text-[11px] font-bold text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow shadow-orange-500/30 active:scale-95 shrink-0"
                       >ADD +</button>
-                    )}
-                  </div>
-                  {/* Price row */}
-                  <div className="flex items-center flex-wrap gap-2">
-                    {variants ? (
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {variants.map((v: any, idx: number) => (
-                          <span key={`${v.label}-${idx}`} className="text-[11px] font-semibold text-foreground">
-                            {v.label} <span className="text-orange-600 font-bold">₹{v.price}</span>
-                            {idx < variants.length - 1 && <span className="text-muted-foreground/50 mx-1">|</span>}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-base font-black text-orange-600">₹{item.price}</p>
-                    )}
-                    {variants && (
-                      <span className="text-[10px] text-muted-foreground">from ₹{minPrice}</span>
                     )}
                   </div>
                 </div>
@@ -830,7 +819,7 @@ const CustomerOrder = () => {
           >
             <button
               onClick={() => setCartOpen(true)}
-              className="w-full max-w-lg mx-auto flex items-center justify-between bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-2xl px-5 py-3.5 shadow-2xl active:scale-[0.98]"
+              className="w-full max-w-2xl lg:max-w-5xl mx-auto flex items-center justify-between bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-2xl px-5 py-3.5 shadow-2xl active:scale-[0.98]"
             >
               <div className="flex items-center gap-2">
                 <ShoppingCart className="h-5 w-5" />
