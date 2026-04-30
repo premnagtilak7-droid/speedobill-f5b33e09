@@ -33,6 +33,7 @@ import { AdminNotifications } from "@/components/admin/AdminNotifications";
 import { AdminAlertsPanel } from "@/components/admin/AdminAlertsPanel";
 import { ClientDirectory } from "@/components/admin/ClientDirectory";
 import { CreateHotelDialog } from "@/components/admin/CreateHotelDialog";
+import { deriveHotelPlan, planBadgeColor } from "@/lib/adminPlan";
 
 /* ─── Types ─── */
 interface License {
@@ -214,6 +215,8 @@ const CreatorAdmin = () => {
   const [healthChecks, setHealthChecks] = useState<{ name: string; latency: number | null; ok: boolean }[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [nowIST, setNowIST] = useState(new Date());
+  const [focusHotelId, setFocusHotelId] = useState<string | null>(null);
+  const [dbTableCount, setDbTableCount] = useState<number | null>(null);
 
   // Live IST clock — tick every second
   useEffect(() => {
@@ -252,6 +255,7 @@ const CreatorAdmin = () => {
       } else if (adminRes.data) {
         setHotels((adminRes.data.hotels ?? []) as any);
         setProfiles((adminRes.data.profiles ?? []) as any);
+        if (typeof adminRes.data.db_table_count === "number") setDbTableCount(adminRes.data.db_table_count);
       }
       if (licRes.data) setLicenses(licRes.data);
       if (wsRes.data) setWsProducts(wsRes.data as any);
@@ -948,6 +952,14 @@ const CreatorAdmin = () => {
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} /> Refresh
             </Button>
+            <CreateHotelDialog
+              onCreated={fetchData}
+              trigger={
+                <Button size="sm" className="gap-1.5 h-8 text-xs rounded-xl text-white" style={{ background: "linear-gradient(135deg,#F97316,#EA580C)" }}>
+                  <Building2 className="h-3.5 w-3.5" /> Create New Hotel
+                </Button>
+              }
+            />
             <AdminNotifications onNavigate={(target) => {
               const m = target.match(/tab=([a-z]+)/);
               if (m && TABS.some(t => t.id === m[1])) setActiveTab(m[1] as TabId);
@@ -1291,7 +1303,13 @@ const CreatorAdmin = () => {
                   </div>
                   <CreateHotelDialog onCreated={fetchData} />
                 </div>
-                <ClientDirectory profiles={profiles} hotels={hotels} onChanged={fetchData} />
+                <ClientDirectory
+                  profiles={profiles}
+                  hotels={hotels}
+                  onChanged={fetchData}
+                  focusHotelId={focusHotelId}
+                  onFocusHandled={() => setFocusHotelId(null)}
+                />
               </TabPanel>
             )}
 
@@ -1802,6 +1820,7 @@ const CreatorAdmin = () => {
                   contactedLeadIds={Array.from(contactedLeads)}
                   totalRevenue={lifetimeRevenue}
                   onNavigate={(t) => setActiveTab(t as TabId)}
+                  onViewHotel={(hid) => { setFocusHotelId(hid); setActiveTab("directory"); }}
                   pendingKotsByHotel={(adminExtras as any)?.pendingKotsByHotel || []}
                   inactiveWaiters={(adminExtras as any)?.inactiveWaiters || []}
                   stuckBills={(adminExtras as any)?.stuckBills || []}
@@ -1895,7 +1914,7 @@ const CreatorAdmin = () => {
                     <GradientMetricCard label="Total Hotels" value={hotels.length} icon={Hotel} gradient="bg-gradient-to-br from-orange-500/40 via-orange-500/10 to-transparent dark:from-orange-500/25 dark:to-transparent" />
                     <GradientMetricCard label="Total Profiles" value={profiles.length} icon={Users} gradient="bg-gradient-to-br from-emerald-500/40 via-emerald-500/10 to-transparent dark:from-emerald-500/25 dark:to-transparent" />
                     <GradientMetricCard label="Keys Generated" value={licenses.length} icon={Key} gradient="bg-gradient-to-br from-amber-500/40 via-amber-500/10 to-transparent dark:from-amber-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="DB Tables" value="34" icon={Database} gradient="bg-gradient-to-br from-indigo-500/40 via-indigo-500/10 to-transparent dark:from-indigo-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="DB Tables" value={dbTableCount ?? "…"} icon={Database} gradient="bg-gradient-to-br from-indigo-500/40 via-indigo-500/10 to-transparent dark:from-indigo-500/25 dark:to-transparent" />
                   </div>
 
                   <GlassCard className="overflow-hidden">
@@ -1913,14 +1932,19 @@ const CreatorAdmin = () => {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border/30">
-                          {profiles.slice(0, 20).map(p => (
-                            <tr key={p.user_id} className="hover:bg-white/40 dark:hover:bg-white/[0.02] transition-colors">
-                              <td className="px-5 py-3 text-sm text-foreground">{p.full_name || "—"}</td>
-                              <td className="px-5 py-3">{roleBadge(p.role)}</td>
-                              <td className="px-5 py-3">{statusBadge(p.subscription_status || "trial")}</td>
-                              <td className="px-5 py-3 text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</td>
-                            </tr>
-                          ))}
+                          {profiles.slice(0, 20).map(p => {
+                            const h = hotels.find(x => x.id === p.hotel_id);
+                            const plan = deriveHotelPlan(h);
+                            const statusKey = plan === "expired" ? "expired" : plan === "free" || plan === "trial" ? "trial" : "active";
+                            return (
+                              <tr key={p.user_id} className="hover:bg-white/40 dark:hover:bg-white/[0.02] transition-colors">
+                                <td className="px-5 py-3 text-sm text-foreground">{p.full_name || "—"}</td>
+                                <td className="px-5 py-3">{roleBadge(p.role)}</td>
+                                <td className="px-5 py-3">{statusBadge(statusKey)}</td>
+                                <td className="px-5 py-3 text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>

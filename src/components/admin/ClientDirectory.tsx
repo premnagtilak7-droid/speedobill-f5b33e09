@@ -11,18 +11,24 @@ import {
   ShieldOff, X, Users as UsersIcon, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { UserProfileDrawer, type DirectoryHotel, type DirectoryUser } from "./UserProfileDrawer";
+import { deriveHotelPlan, planBadgeColor } from "@/lib/adminPlan";
+import { useEffect } from "react";
+import { supabase as sb } from "@/integrations/supabase/client";
 
 interface Props {
   profiles: any[];
   hotels: any[];
   onChanged: () => void;
   onSwitchToBroadcast?: (preselectUserIds: string[]) => void;
+  /** Optional — when provided, opens the drawer for that hotel on mount. */
+  focusHotelId?: string | null;
+  onFocusHandled?: () => void;
 }
 
 const PANEL_BG = "#131C35";
 const BORDER = "#1E2D4A";
 
-export const ClientDirectory = ({ profiles, hotels, onChanged }: Props) => {
+export const ClientDirectory = ({ profiles, hotels, onChanged, focusHotelId, onFocusHandled }: Props) => {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [planFilter, setPlanFilter] = useState<string>("all");
@@ -33,6 +39,37 @@ export const ClientDirectory = ({ profiles, hotels, onChanged }: Props) => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [drawerUser, setDrawerUser] = useState<DirectoryUser | null>(null);
   const [working, setWorking] = useState(false);
+  const [hotelMetrics, setHotelMetrics] = useState<Record<string, { staff: number; orders: number }>>({});
+
+  // Fetch staff count + monthly orders per hotel (lightweight aggregate)
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      if (!hotels.length) return;
+      const monthStart = new Date();
+      monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+      const [pRes, oRes] = await Promise.all([
+        sb.from("profiles").select("hotel_id, role"),
+        sb.from("orders").select("hotel_id").gte("created_at", monthStart.toISOString()),
+      ]);
+      if (cancelled) return;
+      const m: Record<string, { staff: number; orders: number }> = {};
+      (pRes.data || []).forEach((p: any) => {
+        if (!p.hotel_id) return;
+        m[p.hotel_id] ||= { staff: 0, orders: 0 };
+        if (p.role && p.role !== "owner") m[p.hotel_id].staff += 1;
+      });
+      (oRes.data || []).forEach((o: any) => {
+        if (!o.hotel_id) return;
+        m[o.hotel_id] ||= { staff: 0, orders: 0 };
+        m[o.hotel_id].orders += 1;
+      });
+      setHotelMetrics(m);
+    };
+    void run();
+    const iv = setInterval(run, 60_000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, [hotels.length]);
 
   const enriched = useMemo<DirectoryUser[]>(() => {
     return profiles.map(p => {
@@ -45,6 +82,15 @@ export const ClientDirectory = ({ profiles, hotels, onChanged }: Props) => {
     });
   }, [profiles, hotels]);
 
+  // External focus → open drawer for the matching hotel's owner
+  useEffect(() => {
+    if (!focusHotelId) return;
+    const owner = enriched.find(u => u.hotel_id === focusHotelId && u.role === "owner")
+      || enriched.find(u => u.hotel_id === focusHotelId);
+    if (owner) setDrawerUser(owner);
+    onFocusHandled?.();
+  }, [focusHotelId, enriched, onFocusHandled]);
+
   const counts = useMemo(() => {
     const total = enriched.length;
     const owners = enriched.filter(u => u.role === "owner").length;
@@ -53,15 +99,17 @@ export const ClientDirectory = ({ profiles, hotels, onChanged }: Props) => {
     const managers = enriched.filter(u => u.role === "manager").length;
     const active = enriched.filter(u => u.is_active !== false).length;
     const suspended = enriched.filter(u => u.is_active === false).length;
-    let free = 0, basic = 0, premium = 0;
+    let free = 0, basic = 0, premium = 0, expired = 0, trial = 0;
     enriched.forEach(u => {
       const h = hotels.find(x => x.id === u.hotel_id);
-      const t = (h?.subscription_tier || "free").toLowerCase();
-      if (t === "premium") premium++;
-      else if (t === "basic") basic++;
+      const p = deriveHotelPlan(h);
+      if (p === "premium") premium++;
+      else if (p === "basic") basic++;
+      else if (p === "trial") trial++;
+      else if (p === "expired") expired++;
       else free++;
     });
-    return { total, owners, waiters, chefs, managers, active, suspended, free, basic, premium };
+    return { total, owners, waiters, chefs, managers, active, suspended, free, basic, premium, expired, trial };
   }, [enriched, hotels]);
 
   const filtered = useMemo(() => {
@@ -79,7 +127,7 @@ export const ClientDirectory = ({ profiles, hotels, onChanged }: Props) => {
     if (planFilter !== "all") {
       list = list.filter(u => {
         const h = hotels.find(x => x.id === u.hotel_id);
-        return (h?.subscription_tier || "free").toLowerCase() === planFilter;
+        return deriveHotelPlan(h) === planFilter;
       });
     }
     if (joinedFilter !== "all") {
@@ -191,8 +239,15 @@ export const ClientDirectory = ({ profiles, hotels, onChanged }: Props) => {
           <StatPill label="Suspended" value={counts.suspended} tone="red" active={statusFilter === "suspended"} onClick={() => setStatusFilter("suspended")} />
           <span className="mx-1 self-center text-slate-600">|</span>
           <StatPill label="Free" value={counts.free} active={planFilter === "free"} onClick={() => setPlanFilter("free")} />
+          <StatPill label="Trial" value={counts.trial} active={planFilter === "trial"} onClick={() => setPlanFilter("trial")} />
           <StatPill label="Basic" value={counts.basic} active={planFilter === "basic"} onClick={() => setPlanFilter("basic")} />
           <StatPill label="Premium" value={counts.premium} tone="orange" active={planFilter === "premium"} onClick={() => setPlanFilter("premium")} />
+          <StatPill label="Expired" value={counts.expired} tone="red" active={planFilter === "expired"} onClick={() => setPlanFilter("expired")} />
+          <span className="ml-auto self-center">
+            <Button size="sm" variant="ghost" onClick={onChanged} className="h-8 text-slate-300 hover:text-white gap-1">
+              <RotateCcw className="h-4 w-4" /> Refresh
+            </Button>
+          </span>
         </div>
       </div>
 
@@ -252,8 +307,10 @@ export const ClientDirectory = ({ profiles, hotels, onChanged }: Props) => {
                   <SelectContent>
                     <SelectItem value="all">All</SelectItem>
                     <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="trial">Trial</SelectItem>
                     <SelectItem value="basic">Basic</SelectItem>
                     <SelectItem value="premium">Premium</SelectItem>
+                    <SelectItem value="expired">Expired</SelectItem>
                   </SelectContent>
                 </Select>
               </FilterField>
@@ -316,6 +373,9 @@ export const ClientDirectory = ({ profiles, hotels, onChanged }: Props) => {
                   <th className="text-left px-4 py-3 font-medium">Role</th>
                   <th className="text-left px-4 py-3 font-medium">Hotel</th>
                   <th className="text-left px-4 py-3 font-medium">Plan</th>
+                  <th className="text-left px-4 py-3 font-medium">Expires</th>
+                  <th className="text-left px-4 py-3 font-medium">Staff</th>
+                  <th className="text-left px-4 py-3 font-medium">Orders (mo)</th>
                   <th className="text-left px-4 py-3 font-medium">Status</th>
                   <th className="text-left px-4 py-3 font-medium">Joined</th>
                   <th className="text-right px-4 py-3 font-medium">Actions</th>
@@ -324,7 +384,10 @@ export const ClientDirectory = ({ profiles, hotels, onChanged }: Props) => {
               <tbody>
                 {visible.map(u => {
                   const h = hotels.find(x => x.id === u.hotel_id);
-                  const tier = (h?.subscription_tier || "free").toLowerCase();
+                  const plan = deriveHotelPlan(h);
+                  const planColors = planBadgeColor(plan);
+                  const expiry = h?.subscription_expiry ? new Date(h.subscription_expiry) : null;
+                  const metrics = u.hotel_id ? hotelMetrics[u.hotel_id] : undefined;
                   const checked = selected.has(u.user_id);
                   return (
                     <tr key={u.user_id} className="hover:bg-white/[0.02] transition-colors" style={{ borderBottom: `1px solid ${BORDER}` }}>
@@ -344,10 +407,13 @@ export const ClientDirectory = ({ profiles, hotels, onChanged }: Props) => {
                       <td className="px-4 py-3"><Badge variant="outline" style={{ borderColor: "#1E2D4A", color: "#F97316" }}>{(u.role || "—").toUpperCase()}</Badge></td>
                       <td className="px-4 py-3 text-slate-300 truncate max-w-[140px]">{u.hotelName}</td>
                       <td className="px-4 py-3">
-                        <Badge style={{ background: tier === "premium" ? "#F97316" : tier === "basic" ? "#1E2D4A" : "#374151", color: "white" }}>
-                          {tier.toUpperCase()}
-                        </Badge>
+                        <Badge style={{ background: planColors.bg, color: planColors.text }}>{plan.toUpperCase()}</Badge>
                       </td>
+                      <td className="px-4 py-3 text-slate-400 text-xs">
+                        {expiry ? expiry.toLocaleDateString("en-IN") : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-slate-300 text-xs">{metrics?.staff ?? "—"}</td>
+                      <td className="px-4 py-3 text-slate-300 text-xs">{metrics?.orders ?? "—"}</td>
                       <td className="px-4 py-3">
                         {u.is_active === false
                           ? <Badge style={{ background: "#EF4444", color: "white" }}>Suspended</Badge>
@@ -377,7 +443,7 @@ export const ClientDirectory = ({ profiles, hotels, onChanged }: Props) => {
                   );
                 })}
                 {visible.length === 0 && (
-                  <tr><td colSpan={8} className="text-center py-10 text-slate-500">
+                  <tr><td colSpan={11} className="text-center py-10 text-slate-500">
                     <UsersIcon className="h-10 w-10 mx-auto mb-2 opacity-40" />
                     No users match your filters
                   </td></tr>
