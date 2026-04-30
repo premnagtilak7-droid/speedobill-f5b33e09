@@ -1295,7 +1295,13 @@ const CreatorAdmin = () => {
                   </div>
                   <CreateHotelDialog onCreated={fetchData} />
                 </div>
-                <ClientDirectory profiles={profiles} hotels={hotels} onChanged={fetchData} />
+                <ClientDirectory
+                  profiles={profiles}
+                  hotels={hotels}
+                  onChanged={fetchData}
+                  focusHotelId={focusHotelId}
+                  onFocusHandled={() => setFocusHotelId(null)}
+                />
               </TabPanel>
             )}
 
