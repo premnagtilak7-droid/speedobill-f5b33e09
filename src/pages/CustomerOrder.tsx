@@ -150,7 +150,7 @@ const NON_VEG_KEYWORDS = [
 ];
 function isVeg(itemName: string): boolean {
   const n = itemName.toLowerCase();
-  return !VEG_KEYWORDS.some(k => n.includes(k));
+  return !NON_VEG_KEYWORDS.some(k => n.includes(k));
 }
 
 // ── Storage helpers (per-hotel guest profile) ──────────────────────────────
