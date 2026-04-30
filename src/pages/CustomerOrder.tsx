@@ -1333,16 +1333,22 @@ function statusIndex(s: string): number {
 
 function OrderTrackingScreen({
   hotelName, tableNumber, sectionName, status, loyaltyDiscount,
-  upiId, upiQrUrl,
+  upiId, upiQrUrl, googleReviewUrl,
+  reviewSubmitted, reviewSkipped, reviewRating, reviewComment, reviewSubmitting,
+  onSetReviewRating, onSetReviewComment, onSubmitReview, onSkipReview,
   onOrderMore, onCallWaiter, onRequestBill, onPayNow,
 }: {
   hotelName: string; tableNumber: number; sectionName?: string;
   status: string; loyaltyDiscount: number;
-  upiId: string; upiQrUrl: string;
+  upiId: string; upiQrUrl: string; googleReviewUrl: string;
+  reviewSubmitted: boolean; reviewSkipped: boolean; reviewRating: number; reviewComment: string; reviewSubmitting: boolean;
+  onSetReviewRating: (n: number) => void; onSetReviewComment: (s: string) => void;
+  onSubmitReview: () => void; onSkipReview: () => void;
   onOrderMore: () => void; onCallWaiter: () => void; onRequestBill: () => void; onPayNow: () => void;
 }) {
   const idx = statusIndex(status);
   const rejected = status === "rejected" || status === "cancelled";
+  const showReview = !rejected && (status === "served" || status === "billed") && !reviewSkipped;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-amber-50 dark:from-gray-950 dark:to-gray-900">
