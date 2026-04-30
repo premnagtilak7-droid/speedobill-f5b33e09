@@ -57,7 +57,7 @@ const generateKeyCode = () => {
   return `SB-${seg()}-${seg()}-${seg()}-${seg()}`;
 };
 
-type TabId = "command" | "directory" | "leads" | "revenue" | "vault" | "broadcast" | "console" | "wholesale" | "settings" | "alerts";
+type TabId = "command" | "directory" | "leads" | "revenue" | "vault" | "broadcast" | "console" | "wholesale" | "settings" | "alerts" | "team";
 
 const TABS: { id: TabId; label: string; shortLabel: string; icon: any; emoji: string }[] = [
   { id: "command",   label: "Executive Command", shortLabel: "Command",   icon: Crown,         emoji: "👑" },
