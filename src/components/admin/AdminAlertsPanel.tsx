@@ -98,7 +98,7 @@ export function AdminAlertsPanel({
         description: `Expired on ${new Date(h.subscription_expiry!).toLocaleDateString("en-IN")}. Reach out to renew.`,
         timestamp: h.subscription_expiry!,
         actionLabel: "View",
-        onAction: () => onNavigate("directory"),
+        onAction: () => (onViewHotel ? onViewHotel(h.id) : onNavigate("directory")),
       });
     });
 
