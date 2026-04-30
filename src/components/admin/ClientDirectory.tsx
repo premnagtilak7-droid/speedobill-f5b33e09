@@ -99,15 +99,17 @@ export const ClientDirectory = ({ profiles, hotels, onChanged, focusHotelId, onF
     const managers = enriched.filter(u => u.role === "manager").length;
     const active = enriched.filter(u => u.is_active !== false).length;
     const suspended = enriched.filter(u => u.is_active === false).length;
-    let free = 0, basic = 0, premium = 0;
+    let free = 0, basic = 0, premium = 0, expired = 0, trial = 0;
     enriched.forEach(u => {
       const h = hotels.find(x => x.id === u.hotel_id);
-      const t = (h?.subscription_tier || "free").toLowerCase();
-      if (t === "premium") premium++;
-      else if (t === "basic") basic++;
+      const p = deriveHotelPlan(h);
+      if (p === "premium") premium++;
+      else if (p === "basic") basic++;
+      else if (p === "trial") trial++;
+      else if (p === "expired") expired++;
       else free++;
     });
-    return { total, owners, waiters, chefs, managers, active, suspended, free, basic, premium };
+    return { total, owners, waiters, chefs, managers, active, suspended, free, basic, premium, expired, trial };
   }, [enriched, hotels]);
 
   const filtered = useMemo(() => {
