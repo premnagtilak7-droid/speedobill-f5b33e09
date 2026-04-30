@@ -1812,6 +1812,7 @@ const CreatorAdmin = () => {
                   contactedLeadIds={Array.from(contactedLeads)}
                   totalRevenue={lifetimeRevenue}
                   onNavigate={(t) => setActiveTab(t as TabId)}
+                  onViewHotel={(hid) => { setFocusHotelId(hid); setActiveTab("directory"); }}
                   pendingKotsByHotel={(adminExtras as any)?.pendingKotsByHotel || []}
                   inactiveWaiters={(adminExtras as any)?.inactiveWaiters || []}
                   stuckBills={(adminExtras as any)?.stuckBills || []}
