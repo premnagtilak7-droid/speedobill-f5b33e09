@@ -404,6 +404,17 @@ const SettingsPage = () => {
             <Input placeholder="yourname@upi" value={upiId} onChange={(e) => setUpiId(e.target.value)} />
             <p className="text-[10px] text-muted-foreground">e.g. nagtilakprem@okaxis — QR code auto-generated on every bill</p>
           </div>
+          {/* Google Review link */}
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground flex items-center gap-1">⭐ Google Review Link (shown to QR customers after they're served)</label>
+            <Input
+              placeholder="https://g.page/r/..."
+              value={googleReviewUrl}
+              onChange={(e) => setGoogleReviewUrl(e.target.value)}
+              maxLength={500}
+            />
+            <p className="text-[10px] text-muted-foreground">Get this from your Google Business profile → "Get more reviews"</p>
+          </div>
           {/* Footer Message */}
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground flex items-center gap-1"><Receipt className="h-3 w-3" /> Receipt Footer Message</label>
