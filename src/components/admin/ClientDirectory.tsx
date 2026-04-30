@@ -307,8 +307,10 @@ export const ClientDirectory = ({ profiles, hotels, onChanged, focusHotelId, onF
                   <SelectContent>
                     <SelectItem value="all">All</SelectItem>
                     <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="trial">Trial</SelectItem>
                     <SelectItem value="basic">Basic</SelectItem>
                     <SelectItem value="premium">Premium</SelectItem>
+                    <SelectItem value="expired">Expired</SelectItem>
                   </SelectContent>
                 </Select>
               </FilterField>
