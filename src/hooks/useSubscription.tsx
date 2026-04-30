@@ -76,16 +76,25 @@ function resolveSubscription(
   } | null,
 ): { status: TrialStatus; daysLeft: number | null; plan: string | null; expiresAt: string | null } {
   const now = new Date();
+  const EXPIRED_GRACE_DAYS = 7;
 
   if (hotel && hotel.subscription_tier && hotel.subscription_tier !== "free") {
     const tier = hotel.subscription_tier;
     const expiry = hotel.subscription_expiry;
 
     if (expiry) {
-      const daysLeft = Math.max(0, Math.ceil((new Date(expiry).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+      const expiryDate = new Date(expiry);
+      const msDiff = expiryDate.getTime() - now.getTime();
+      const daysLeft = Math.max(0, Math.ceil(msDiff / (1000 * 60 * 60 * 24)));
 
       if (daysLeft > 0) {
         return { status: "active", daysLeft, plan: tier, expiresAt: expiry };
+      }
+
+      // Expired — show "expired" banner for the grace window, then fall through to "free"
+      const daysSinceExpiry = Math.floor(-msDiff / (1000 * 60 * 60 * 24));
+      if (daysSinceExpiry <= EXPIRED_GRACE_DAYS) {
+        return { status: "expired", daysLeft: 0, plan: tier, expiresAt: expiry };
       }
 
       return { status: "free", daysLeft: 0, plan: null, expiresAt: null };
@@ -93,11 +102,16 @@ function resolveSubscription(
   }
 
   if (profile?.subscription_status === "active" && profile.subscription_plan) {
-    const daysLeft = profile.subscription_expires_at
-      ? Math.max(0, Math.ceil((new Date(profile.subscription_expires_at).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+    const expiresAt = profile.subscription_expires_at;
+    const daysLeft = expiresAt
+      ? Math.max(0, Math.ceil((new Date(expiresAt).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
       : null;
 
-    if (daysLeft !== null && daysLeft <= 0) {
+    if (daysLeft !== null && daysLeft <= 0 && expiresAt) {
+      const daysSinceExpiry = Math.floor((now.getTime() - new Date(expiresAt).getTime()) / (1000 * 60 * 60 * 24));
+      if (daysSinceExpiry <= EXPIRED_GRACE_DAYS) {
+        return { status: "expired", daysLeft: 0, plan: profile.subscription_plan, expiresAt };
+      }
       return { status: "free", daysLeft: 0, plan: null, expiresAt: null };
     }
 
@@ -105,7 +119,7 @@ function resolveSubscription(
       status: "active",
       daysLeft,
       plan: profile.subscription_plan,
-      expiresAt: profile.subscription_expires_at,
+      expiresAt,
     };
   }
 
