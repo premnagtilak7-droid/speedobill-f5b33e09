@@ -371,6 +371,9 @@ export const ClientDirectory = ({ profiles, hotels, onChanged, focusHotelId, onF
                   <th className="text-left px-4 py-3 font-medium">Role</th>
                   <th className="text-left px-4 py-3 font-medium">Hotel</th>
                   <th className="text-left px-4 py-3 font-medium">Plan</th>
+                  <th className="text-left px-4 py-3 font-medium">Expires</th>
+                  <th className="text-left px-4 py-3 font-medium">Staff</th>
+                  <th className="text-left px-4 py-3 font-medium">Orders (mo)</th>
                   <th className="text-left px-4 py-3 font-medium">Status</th>
                   <th className="text-left px-4 py-3 font-medium">Joined</th>
                   <th className="text-right px-4 py-3 font-medium">Actions</th>
@@ -379,7 +382,10 @@ export const ClientDirectory = ({ profiles, hotels, onChanged, focusHotelId, onF
               <tbody>
                 {visible.map(u => {
                   const h = hotels.find(x => x.id === u.hotel_id);
-                  const tier = (h?.subscription_tier || "free").toLowerCase();
+                  const plan = deriveHotelPlan(h);
+                  const planColors = planBadgeColor(plan);
+                  const expiry = h?.subscription_expiry ? new Date(h.subscription_expiry) : null;
+                  const metrics = u.hotel_id ? hotelMetrics[u.hotel_id] : undefined;
                   const checked = selected.has(u.user_id);
                   return (
                     <tr key={u.user_id} className="hover:bg-white/[0.02] transition-colors" style={{ borderBottom: `1px solid ${BORDER}` }}>
@@ -399,10 +405,13 @@ export const ClientDirectory = ({ profiles, hotels, onChanged, focusHotelId, onF
                       <td className="px-4 py-3"><Badge variant="outline" style={{ borderColor: "#1E2D4A", color: "#F97316" }}>{(u.role || "—").toUpperCase()}</Badge></td>
                       <td className="px-4 py-3 text-slate-300 truncate max-w-[140px]">{u.hotelName}</td>
                       <td className="px-4 py-3">
-                        <Badge style={{ background: tier === "premium" ? "#F97316" : tier === "basic" ? "#1E2D4A" : "#374151", color: "white" }}>
-                          {tier.toUpperCase()}
-                        </Badge>
+                        <Badge style={{ background: planColors.bg, color: planColors.text }}>{plan.toUpperCase()}</Badge>
                       </td>
+                      <td className="px-4 py-3 text-slate-400 text-xs">
+                        {expiry ? expiry.toLocaleDateString("en-IN") : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-slate-300 text-xs">{metrics?.staff ?? "—"}</td>
+                      <td className="px-4 py-3 text-slate-300 text-xs">{metrics?.orders ?? "—"}</td>
                       <td className="px-4 py-3">
                         {u.is_active === false
                           ? <Badge style={{ background: "#EF4444", color: "white" }}>Suspended</Badge>
