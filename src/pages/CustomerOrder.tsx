@@ -719,27 +719,27 @@ const CustomerOrder = () => {
                     : "border-gray-100 dark:border-gray-700"
                 }`}
               >
-                {/* Hero image — 16:9 */}
-                <div className={`relative w-full aspect-[16/9] overflow-hidden bg-gradient-to-br ${visual.gradient}`}>
+                {/* Hero image — 4:3 (compact) */}
+                <div className={`relative w-full aspect-[4/3] overflow-hidden bg-gradient-to-br ${visual.gradient}`}>
                   {item.image_url ? (
                     <img src={item.image_url} alt={item.name} loading="lazy" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center">
-                      <span className="text-6xl drop-shadow-sm" aria-hidden>{visual.emoji}</span>
-                      <span className="text-[10px] font-semibold text-foreground/60 mt-1 uppercase tracking-wider">{item.category}</span>
+                      <span className="text-4xl drop-shadow-sm" aria-hidden>{visual.emoji}</span>
+                      <span className="text-[9px] font-semibold text-foreground/60 mt-0.5 uppercase tracking-wider">{item.category}</span>
                     </div>
                   )}
                   {/* Veg/Non-veg dot */}
                   <span
-                    className={`absolute top-2 left-2 inline-flex items-center justify-center w-5 h-5 rounded-md bg-white/95 shadow-sm border ${
+                    className={`absolute top-1.5 left-1.5 inline-flex items-center justify-center w-4 h-4 rounded-md bg-white/95 shadow-sm border ${
                       veg ? "border-emerald-600" : "border-red-600"
                     }`}
                     title={veg ? "Veg" : "Non-Veg"}
                   >
-                    <span className={`w-2.5 h-2.5 rounded-full ${veg ? "bg-emerald-600" : "bg-red-600"}`} />
+                    <span className={`w-2 h-2 rounded-full ${veg ? "bg-emerald-600" : "bg-red-600"}`} />
                   </span>
                   {highlighted && (
-                    <span className="absolute top-2 right-2 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">⭐ PICK</span>
+                    <span className="absolute top-1.5 right-1.5 bg-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow">⭐</span>
                   )}
                 </div>
 
