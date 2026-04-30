@@ -248,6 +248,30 @@ Deno.serve(async (req) => {
       return json({ order: data });
     }
 
+    // ── 6. SUBMIT CUSTOMER REVIEW (anonymous, via QR) ──
+    if (action === "submit_review") {
+      const { hotel_id, order_id, rating, comment } = body;
+      if (!hotel_id || typeof hotel_id !== "string" || hotel_id.length < 30) {
+        return json({ error: "Invalid hotel_id" }, 400);
+      }
+      const r = Number(rating);
+      if (!Number.isFinite(r) || r < 1 || r > 5) {
+        return json({ error: "Invalid rating" }, 400);
+      }
+      const safeComment = typeof comment === "string" ? comment.slice(0, 500) : "";
+      const { error: fbErr } = await admin.from("customer_feedback").insert({
+        hotel_id,
+        order_id: order_id || null,
+        rating: Math.round(r),
+        comment: safeComment,
+      });
+      if (fbErr) {
+        console.error("submit_review insert failed:", fbErr);
+        return json({ error: "Failed to submit review" }, 500);
+      }
+      return json({ success: true });
+    }
+
     return json({ error: "Unknown action" }, 400);
   } catch (e) {
     console.error("qr-order error:", e);
