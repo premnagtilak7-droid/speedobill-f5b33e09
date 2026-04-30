@@ -1411,6 +1411,76 @@ function OrderTrackingScreen({
           </div>
         )}
 
+        {/* Review screen — shown after served */}
+        {showReview && !reviewSubmitted && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-orange-500 to-amber-500 text-white rounded-3xl p-5 shadow-xl space-y-4"
+          >
+            <div className="text-center space-y-1">
+              <div className="text-4xl">⭐</div>
+              <h2 className="text-xl font-black">How was your experience?</h2>
+              <p className="text-xs text-white/85">Your feedback helps {hotelName} serve you better</p>
+            </div>
+            <div className="flex justify-center gap-2">
+              {[1,2,3,4,5].map(n => (
+                <button
+                  key={n}
+                  onClick={() => onSetReviewRating(n)}
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl transition active:scale-90 ${
+                    n <= reviewRating ? "bg-white text-amber-500 shadow-lg" : "bg-white/20 text-white/60"
+                  }`}
+                  aria-label={`Rate ${n} star${n>1?"s":""}`}
+                >★</button>
+              ))}
+            </div>
+            <Textarea
+              value={reviewComment}
+              onChange={(e) => onSetReviewComment(e.target.value.slice(0, 500))}
+              placeholder="Any specific feedback? (optional)"
+              className="bg-white/95 text-foreground rounded-2xl border-0 min-h-[80px] resize-none placeholder:text-muted-foreground"
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                onClick={onSkipReview}
+                variant="ghost"
+                className="bg-white/15 hover:bg-white/25 text-white rounded-2xl font-semibold"
+                style={{ height: 48 }}
+              >Skip</Button>
+              <Button
+                onClick={onSubmitReview}
+                disabled={reviewSubmitting || reviewRating < 1}
+                className="bg-white hover:bg-white/95 text-orange-600 rounded-2xl font-bold"
+                style={{ height: 48 }}
+              >
+                {reviewSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit ⭐"}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {showReview && reviewSubmitted && (
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+            className="bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-lg border border-emerald-100 dark:border-gray-800 text-center space-y-3"
+          >
+            <div className="text-4xl">🙏</div>
+            <h3 className="text-lg font-black text-emerald-600">Thank you for your feedback!</h3>
+            <p className="text-xs text-muted-foreground">Visit us again soon!</p>
+            {googleReviewUrl && (
+              <a
+                href={googleReviewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl font-bold px-4"
+                style={{ height: 48 }}
+              >
+                <Star className="h-4 w-4" /> Leave us a Google Review 🌟
+              </a>
+            )}
+          </motion.div>
+        )}
+
         {/* Actions */}
         <div className="space-y-2">
           <Button onClick={onOrderMore} className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-2xl font-bold" style={{ height: 52 }}>
