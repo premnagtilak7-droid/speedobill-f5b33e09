@@ -526,7 +526,17 @@ const CustomerOrder = () => {
         loyaltyDiscount={loyaltyDiscount}
         upiId={hotel?.upi_id || ""}
         upiQrUrl={hotel?.upi_qr_url || ""}
-        onOrderMore={() => { setPlacedOrderId(null); setPlacedStatus("incoming"); }}
+        googleReviewUrl={hotel?.google_review_url || ""}
+        reviewSubmitted={reviewSubmitted}
+        reviewSkipped={reviewSkipped}
+        reviewRating={reviewRating}
+        reviewComment={reviewComment}
+        reviewSubmitting={reviewSubmitting}
+        onSetReviewRating={setReviewRating}
+        onSetReviewComment={setReviewComment}
+        onSubmitReview={submitReview}
+        onSkipReview={() => setReviewSkipped(true)}
+        onOrderMore={() => { setPlacedOrderId(null); setPlacedStatus("incoming"); setReviewSubmitted(false); setReviewSkipped(false); setReviewRating(0); setReviewComment(""); }}
         onCallWaiter={() => setCallOpen(true)}
         onRequestBill={() => sendWaiterCall("bill")}
         onPayNow={() => setPayOpen(true)}
