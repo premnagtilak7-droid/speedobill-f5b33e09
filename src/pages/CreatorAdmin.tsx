@@ -68,6 +68,7 @@ const TABS: { id: TabId; label: string; shortLabel: string; icon: any; emoji: st
   { id: "broadcast", label: "Smart Broadcast",   shortLabel: "Broadcast", icon: Megaphone,     emoji: "📡" },
   { id: "leads",     label: "Demo Leads",        shortLabel: "Leads",     icon: Target,        emoji: "🎯" },
   { id: "alerts",    label: "Alerts",            shortLabel: "Alerts",    icon: AlertTriangle, emoji: "🚨" },
+  { id: "team",      label: "SpeedoBill Team",   shortLabel: "Team",      icon: ShieldCheck,   emoji: "🛡️" },
   { id: "settings",  label: "System Settings",   shortLabel: "Settings",  icon: Activity,      emoji: "⚙️" },
   { id: "console",   label: "Developer Console", shortLabel: "Console",   icon: Terminal,      emoji: "🖥️" },
 ];
