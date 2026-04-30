@@ -14,10 +14,14 @@ import { toast } from "sonner";
 import { Users, Copy, UserCheck, Wallet, Clock, BarChart3, Calendar, ChevronRight, Phone, Mail, MapPin, Plus, Star, TrendingUp, Award, KeyRound, ShieldCheck, ShieldAlert, Monitor } from "lucide-react";
 import { useKioskMode } from "@/hooks/useKioskMode";
 import { format, differenceInMinutes, parseISO, startOfMonth, endOfMonth } from "date-fns";
+import UpgradePromptDialog from "@/components/UpgradePromptDialog";
+import { usePlanLimits, useUpgradePrompt } from "@/hooks/usePlanLimits";
 
 const StaffPage = () => {
   const { hotelId, user } = useAuth();
   const { enterKiosk } = useKioskMode();
+  const planLimits = usePlanLimits();
+  const { upgradeDialogProps, promptUpgrade } = useUpgradePrompt();
   const [staff, setStaff] = useState<any[]>([]);
   const [hotel, setHotel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -310,7 +314,17 @@ const StaffPage = () => {
           >
             <Monitor className="h-4 w-4" /> Enter Staff Mode
           </Button>
-          <Button size="sm" onClick={() => setAddStaffDialog(true)}>
+          <Button size="sm" onClick={() => {
+            const currentStaffCount = staff.filter(s => s.role !== "owner").length;
+            if (Number.isFinite(planLimits.staff) && currentStaffCount >= planLimits.staff) {
+              promptUpgrade(
+                `Adding more than ${planLimits.staff} staff member${planLimits.staff === 1 ? "" : "s"}`,
+                planLimits.staff < 5 ? "Basic" : "Premium",
+              );
+              return;
+            }
+            setAddStaffDialog(true);
+          }}>
             <Plus className="h-4 w-4 mr-1" /> Add Staff
           </Button>
           <span className="text-sm text-muted-foreground">Hotel Code:</span>
