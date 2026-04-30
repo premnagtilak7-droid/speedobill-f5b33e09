@@ -1917,14 +1917,19 @@ const CreatorAdmin = () => {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-border/30">
-                          {profiles.slice(0, 20).map(p => (
-                            <tr key={p.user_id} className="hover:bg-white/40 dark:hover:bg-white/[0.02] transition-colors">
-                              <td className="px-5 py-3 text-sm text-foreground">{p.full_name || "—"}</td>
-                              <td className="px-5 py-3">{roleBadge(p.role)}</td>
-                              <td className="px-5 py-3">{statusBadge(p.subscription_status || "trial")}</td>
-                              <td className="px-5 py-3 text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</td>
-                            </tr>
-                          ))}
+                          {profiles.slice(0, 20).map(p => {
+                            const h = hotels.find(x => x.id === p.hotel_id);
+                            const plan = deriveHotelPlan(h);
+                            const statusKey = plan === "expired" ? "expired" : plan === "free" || plan === "trial" ? "trial" : "active";
+                            return (
+                              <tr key={p.user_id} className="hover:bg-white/40 dark:hover:bg-white/[0.02] transition-colors">
+                                <td className="px-5 py-3 text-sm text-foreground">{p.full_name || "—"}</td>
+                                <td className="px-5 py-3">{roleBadge(p.role)}</td>
+                                <td className="px-5 py-3">{statusBadge(statusKey)}</td>
+                                <td className="px-5 py-3 text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
