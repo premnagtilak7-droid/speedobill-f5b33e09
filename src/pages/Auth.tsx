@@ -330,8 +330,15 @@ const Auth = () => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: getResetPasswordRedirectUrl(),
     });
-    if (error) toast.error(error.message);
-    else toast.success("Password reset email sent!");
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("✅ Password reset link sent!", {
+        description: "Check your email inbox. Link expires in 1 hour.",
+        duration: 6000,
+      });
+      setForgotMode(false);
+    }
     setLoading(false);
   };
 
