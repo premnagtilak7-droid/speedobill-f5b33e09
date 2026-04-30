@@ -35,10 +35,11 @@ Deno.serve(async (req) => {
 
     const admin = createClient(supabaseUrl, serviceKey);
 
-    const [hotelsRes, profilesRes, rolesRes] = await Promise.all([
+    const [hotelsRes, profilesRes, rolesRes, licensesRes] = await Promise.all([
       admin.from("hotels").select("id, name, owner_id, subscription_tier, subscription_expiry, created_at, phone").limit(2000),
       admin.from("profiles").select("user_id, full_name, role, hotel_id, subscription_status, trial_ends_at, created_at, email, phone").limit(5000),
       admin.from("user_roles").select("user_id, role").limit(5000),
+      admin.from("licenses").select("id", { count: "exact", head: true }),
     ]);
 
     if (hotelsRes.error) throw hotelsRes.error;
@@ -57,11 +58,24 @@ Deno.serve(async (req) => {
       role: roleMap.get(p.user_id) ?? p.role ?? "owner",
     }));
 
+    // Count public schema tables (best-effort; falls back to null)
+    let dbTableCount: number | null = null;
+    try {
+      const { data: tblData } = await admin
+        .schema("information_schema" as any)
+        .from("tables" as any)
+        .select("table_name")
+        .eq("table_schema", "public");
+      if (Array.isArray(tblData)) dbTableCount = tblData.length;
+    } catch { /* ignore */ }
+
     return new Response(
       JSON.stringify({
         hotels: hotelsRes.data ?? [],
         profiles: enrichedProfiles,
         roles: rolesRes.data ?? [],
+        licenses_count: licensesRes.count ?? 0,
+        db_table_count: dbTableCount,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
