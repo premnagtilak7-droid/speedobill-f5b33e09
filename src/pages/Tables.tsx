@@ -20,6 +20,8 @@ import { toast } from "sonner";
 import { writeAudit } from "@/lib/audit";
 import TableMapSkeleton from "@/components/skeletons/TableMapSkeleton";
 import { printReceipt } from "@/lib/print-receipt";
+import UpgradePromptDialog from "@/components/UpgradePromptDialog";
+import { usePlanLimits, useUpgradePrompt } from "@/hooks/usePlanLimits";
 
 /* ────────── types ────────── */
 interface Table { id: string; table_number: number; capacity: number; status: string; section_name: string; }
@@ -336,6 +338,16 @@ const Tables = () => {
   const addTables = async () => {
     const count = parseInt(newCount, 10);
     if (!count || count < 1 || !hotelId) return;
+    // Plan-limit enforcement
+    const limit = planLimits.tables;
+    if (Number.isFinite(limit) && tables.length + count > limit) {
+      setAddOpen(false);
+      promptUpgrade(
+        `Adding more than ${limit} tables`,
+        limit < 20 ? "Basic" : "Premium",
+      );
+      return;
+    }
     const sectionToUse = (newTableSection || "Main").trim() || "Main";
     const maxNum = tables.length > 0 ? Math.max(...tables.map((t) => t.table_number)) : 0;
     const inserts = Array.from({ length: count }, (_, i) => ({
