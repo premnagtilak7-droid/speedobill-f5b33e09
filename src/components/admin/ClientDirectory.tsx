@@ -11,12 +11,18 @@ import {
   ShieldOff, X, Users as UsersIcon, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { UserProfileDrawer, type DirectoryHotel, type DirectoryUser } from "./UserProfileDrawer";
+import { deriveHotelPlan, planBadgeColor } from "@/lib/adminPlan";
+import { useEffect } from "react";
+import { supabase as sb } from "@/integrations/supabase/client";
 
 interface Props {
   profiles: any[];
   hotels: any[];
   onChanged: () => void;
   onSwitchToBroadcast?: (preselectUserIds: string[]) => void;
+  /** Optional — when provided, opens the drawer for that hotel on mount. */
+  focusHotelId?: string | null;
+  onFocusHandled?: () => void;
 }
 
 const PANEL_BG = "#131C35";
