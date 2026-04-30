@@ -111,7 +111,7 @@ export function AdminAlertsPanel({
         description: `Kitchen is overloaded — orders may be delayed. Notify the team.`,
         timestamp: new Date().toISOString(),
         actionLabel: "View",
-        onAction: () => onNavigate("directory"),
+        onAction: () => (onViewHotel ? onViewHotel(p.hotel_id) : onNavigate("directory")),
       });
     });
 
@@ -124,12 +124,15 @@ export function AdminAlertsPanel({
         description: `Active order open for ${b.minutes_pending} minutes without billing. Check on the table.`,
         timestamp: new Date().toISOString(),
         actionLabel: "View",
-        onAction: () => onNavigate("directory"),
+        onAction: () => (onViewHotel ? onViewHotel(b.hotel_id) : onNavigate("directory")),
       });
     });
 
     // WARNING — waiter not logged in today
     inactiveWaiters.forEach(w => {
+      // Find the hotel for this waiter
+      const profile = profiles.find(p => p.user_id === w.user_id);
+      const hotelId = (profile as any)?.hotel_id;
       list.push({
         id: `waiter-inactive-${w.user_id}`,
         severity: "warning",
@@ -137,7 +140,7 @@ export function AdminAlertsPanel({
         description: `No clock-in recorded. Confirm shift coverage.`,
         timestamp: new Date().toISOString(),
         actionLabel: "View",
-        onAction: () => onNavigate("directory"),
+        onAction: () => (hotelId && onViewHotel ? onViewHotel(hotelId) : onNavigate("directory")),
       });
     });
 
@@ -156,7 +159,7 @@ export function AdminAlertsPanel({
         description: `Subscription ends ${new Date(h.subscription_expiry!).toLocaleDateString("en-IN")}.`,
         timestamp: h.subscription_expiry!,
         actionLabel: "Renew",
-        onAction: () => onNavigate("directory"),
+        onAction: () => (onViewHotel ? onViewHotel(h.id) : onNavigate("directory")),
       });
     });
 
