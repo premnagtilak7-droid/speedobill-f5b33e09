@@ -443,7 +443,7 @@ export const ClientDirectory = ({ profiles, hotels, onChanged, focusHotelId, onF
                   );
                 })}
                 {visible.length === 0 && (
-                  <tr><td colSpan={8} className="text-center py-10 text-slate-500">
+                  <tr><td colSpan={11} className="text-center py-10 text-slate-500">
                     <UsersIcon className="h-10 w-10 mx-auto mb-2 opacity-40" />
                     No users match your filters
                   </td></tr>
