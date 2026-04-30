@@ -74,7 +74,7 @@ const SEV_STYLE = {
 };
 
 export function AdminAlertsPanel({
-  hotels, profiles, demoLeads, contactedLeadIds, totalRevenue, onNavigate, onContactLead,
+  hotels, profiles, demoLeads, contactedLeadIds, totalRevenue, onNavigate, onViewHotel, onContactLead,
   pendingKotsByHotel = [], inactiveWaiters = [], stuckBills = [],
 }: Props) {
   const [dismissed, setDismissed] = useState<string[]>([]);
