@@ -28,7 +28,7 @@ interface Props {
 const PANEL_BG = "#131C35";
 const BORDER = "#1E2D4A";
 
-export const ClientDirectory = ({ profiles, hotels, onChanged }: Props) => {
+export const ClientDirectory = ({ profiles, hotels, onChanged, focusHotelId, onFocusHandled }: Props) => {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [planFilter, setPlanFilter] = useState<string>("all");
@@ -39,6 +39,37 @@ export const ClientDirectory = ({ profiles, hotels, onChanged }: Props) => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [drawerUser, setDrawerUser] = useState<DirectoryUser | null>(null);
   const [working, setWorking] = useState(false);
+  const [hotelMetrics, setHotelMetrics] = useState<Record<string, { staff: number; orders: number }>>({});
+
+  // Fetch staff count + monthly orders per hotel (lightweight aggregate)
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      if (!hotels.length) return;
+      const monthStart = new Date();
+      monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
+      const [pRes, oRes] = await Promise.all([
+        sb.from("profiles").select("hotel_id, role"),
+        sb.from("orders").select("hotel_id").gte("created_at", monthStart.toISOString()),
+      ]);
+      if (cancelled) return;
+      const m: Record<string, { staff: number; orders: number }> = {};
+      (pRes.data || []).forEach((p: any) => {
+        if (!p.hotel_id) return;
+        m[p.hotel_id] ||= { staff: 0, orders: 0 };
+        if (p.role && p.role !== "owner") m[p.hotel_id].staff += 1;
+      });
+      (oRes.data || []).forEach((o: any) => {
+        if (!o.hotel_id) return;
+        m[o.hotel_id] ||= { staff: 0, orders: 0 };
+        m[o.hotel_id].orders += 1;
+      });
+      setHotelMetrics(m);
+    };
+    void run();
+    const iv = setInterval(run, 60_000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, [hotels.length]);
 
   const enriched = useMemo<DirectoryUser[]>(() => {
     return profiles.map(p => {
@@ -50,6 +81,15 @@ export const ClientDirectory = ({ profiles, hotels, onChanged }: Props) => {
       };
     });
   }, [profiles, hotels]);
+
+  // External focus → open drawer for the matching hotel's owner
+  useEffect(() => {
+    if (!focusHotelId) return;
+    const owner = enriched.find(u => u.hotel_id === focusHotelId && u.role === "owner")
+      || enriched.find(u => u.hotel_id === focusHotelId);
+    if (owner) setDrawerUser(owner);
+    onFocusHandled?.();
+  }, [focusHotelId, enriched, onFocusHandled]);
 
   const counts = useMemo(() => {
     const total = enriched.length;
