@@ -1899,7 +1899,7 @@ const CreatorAdmin = () => {
                     <GradientMetricCard label="Total Hotels" value={hotels.length} icon={Hotel} gradient="bg-gradient-to-br from-orange-500/40 via-orange-500/10 to-transparent dark:from-orange-500/25 dark:to-transparent" />
                     <GradientMetricCard label="Total Profiles" value={profiles.length} icon={Users} gradient="bg-gradient-to-br from-emerald-500/40 via-emerald-500/10 to-transparent dark:from-emerald-500/25 dark:to-transparent" />
                     <GradientMetricCard label="Keys Generated" value={licenses.length} icon={Key} gradient="bg-gradient-to-br from-amber-500/40 via-amber-500/10 to-transparent dark:from-amber-500/25 dark:to-transparent" />
-                    <GradientMetricCard label="DB Tables" value="34" icon={Database} gradient="bg-gradient-to-br from-indigo-500/40 via-indigo-500/10 to-transparent dark:from-indigo-500/25 dark:to-transparent" />
+                    <GradientMetricCard label="DB Tables" value={dbTableCount ?? "…"} icon={Database} gradient="bg-gradient-to-br from-indigo-500/40 via-indigo-500/10 to-transparent dark:from-indigo-500/25 dark:to-transparent" />
                   </div>
 
                   <GlassCard className="overflow-hidden">
