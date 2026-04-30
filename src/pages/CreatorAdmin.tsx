@@ -34,6 +34,7 @@ import { AdminAlertsPanel } from "@/components/admin/AdminAlertsPanel";
 import { ClientDirectory } from "@/components/admin/ClientDirectory";
 import { CreateHotelDialog } from "@/components/admin/CreateHotelDialog";
 import { deriveHotelPlan, planBadgeColor } from "@/lib/adminPlan";
+import TeamManagementPanel from "@/components/admin/TeamManagementPanel";
 
 /* ─── Types ─── */
 interface License {
@@ -57,7 +58,7 @@ const generateKeyCode = () => {
   return `SB-${seg()}-${seg()}-${seg()}-${seg()}`;
 };
 
-type TabId = "command" | "directory" | "leads" | "revenue" | "vault" | "broadcast" | "console" | "wholesale" | "settings" | "alerts";
+type TabId = "command" | "directory" | "leads" | "revenue" | "vault" | "broadcast" | "console" | "wholesale" | "settings" | "alerts" | "team";
 
 const TABS: { id: TabId; label: string; shortLabel: string; icon: any; emoji: string }[] = [
   { id: "command",   label: "Executive Command", shortLabel: "Command",   icon: Crown,         emoji: "👑" },
@@ -68,6 +69,7 @@ const TABS: { id: TabId; label: string; shortLabel: string; icon: any; emoji: st
   { id: "broadcast", label: "Smart Broadcast",   shortLabel: "Broadcast", icon: Megaphone,     emoji: "📡" },
   { id: "leads",     label: "Demo Leads",        shortLabel: "Leads",     icon: Target,        emoji: "🎯" },
   { id: "alerts",    label: "Alerts",            shortLabel: "Alerts",    icon: AlertTriangle, emoji: "🚨" },
+  { id: "team",      label: "SpeedoBill Team",   shortLabel: "Team",      icon: ShieldCheck,   emoji: "🛡️" },
   { id: "settings",  label: "System Settings",   shortLabel: "Settings",  icon: Activity,      emoji: "⚙️" },
   { id: "console",   label: "Developer Console", shortLabel: "Console",   icon: Terminal,      emoji: "🖥️" },
 ];
@@ -1825,6 +1827,13 @@ const CreatorAdmin = () => {
                   inactiveWaiters={(adminExtras as any)?.inactiveWaiters || []}
                   stuckBills={(adminExtras as any)?.stuckBills || []}
                 />
+              </TabPanel>
+            )}
+
+            {/* ═══════ TEAM MANAGEMENT ═══════ */}
+            {activeTab === "team" && (
+              <TabPanel key="team">
+                <TeamManagementPanel />
               </TabPanel>
             )}
 

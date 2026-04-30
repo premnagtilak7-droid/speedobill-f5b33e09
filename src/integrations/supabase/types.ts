@@ -660,10 +660,13 @@ export type Database = {
       }
       demo_leads: {
         Row: {
+          assigned_to: string | null
+          assignment_status: string | null
           business_type: string | null
           city: string
           created_at: string
           id: string
+          last_contacted_at: string | null
           number_of_tables: number | null
           owner_name: string
           preferred_contact_time: string | null
@@ -671,10 +674,13 @@ export type Database = {
           whatsapp_number: string
         }
         Insert: {
+          assigned_to?: string | null
+          assignment_status?: string | null
           business_type?: string | null
           city: string
           created_at?: string
           id?: string
+          last_contacted_at?: string | null
           number_of_tables?: number | null
           owner_name: string
           preferred_contact_time?: string | null
@@ -682,10 +688,13 @@ export type Database = {
           whatsapp_number: string
         }
         Update: {
+          assigned_to?: string | null
+          assignment_status?: string | null
           business_type?: string | null
           city?: string
           created_at?: string
           id?: string
+          last_contacted_at?: string | null
           number_of_tables?: number | null
           owner_name?: string
           preferred_contact_time?: string | null
@@ -1120,6 +1129,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      internal_team: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          invited_at: string
+          invited_by: string | null
+          is_active: boolean
+          joined_at: string | null
+          last_active_at: string | null
+          notes: string | null
+          role: Database["public"]["Enums"]["internal_team_role"]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          is_active?: boolean
+          joined_at?: string | null
+          last_active_at?: string | null
+          notes?: string | null
+          role?: Database["public"]["Enums"]["internal_team_role"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          is_active?: boolean
+          joined_at?: string | null
+          last_active_at?: string | null
+          notes?: string | null
+          role?: Database["public"]["Enums"]["internal_team_role"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       kot_items: {
         Row: {
@@ -2397,6 +2454,114 @@ export type Database = {
           },
         ]
       }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string
+          description: string
+          hotel_id: string | null
+          id: string
+          priority: string
+          raised_by: string | null
+          raised_by_email: string | null
+          raised_by_name: string | null
+          resolution: string | null
+          resolved_at: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          hotel_id?: string | null
+          id?: string
+          priority?: string
+          raised_by?: string | null
+          raised_by_email?: string | null
+          raised_by_name?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          hotel_id?: string | null
+          id?: string
+          priority?: string
+          raised_by?: string | null
+          raised_by_email?: string | null
+          raised_by_name?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      team_activity_logs: {
+        Row: {
+          activity_type: string
+          created_at: string
+          details: string | null
+          id: string
+          related_hotel_id: string | null
+          related_lead_id: string | null
+          related_ticket_id: string | null
+          subject: string
+          team_member_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          activity_type?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          related_hotel_id?: string | null
+          related_lead_id?: string | null
+          related_ticket_id?: string | null
+          subject?: string
+          team_member_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          related_hotel_id?: string | null
+          related_lead_id?: string | null
+          related_ticket_id?: string | null
+          subject?: string
+          team_member_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_activity_logs_related_ticket_id_fkey"
+            columns: ["related_ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_activity_logs_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "internal_team"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       upi_qr_codes: {
         Row: {
           created_at: string
@@ -2770,6 +2935,13 @@ export type Database = {
         Returns: undefined
       }
       get_user_hotel_id: { Args: { _user_id: string }; Returns: string }
+      has_internal_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["internal_team_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2778,6 +2950,8 @@ export type Database = {
         Returns: boolean
       }
       is_hotel_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_internal_team_member: { Args: { _user_id: string }; Returns: boolean }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       link_waiter_to_hotel: {
         Args: { _hotel_code: string; _user_id: string }
         Returns: string
@@ -2795,6 +2969,14 @@ export type Database = {
     }
     Enums: {
       app_role: "owner" | "waiter" | "chef" | "manager" | "captain"
+      internal_team_role:
+        | "super_admin"
+        | "sales_manager"
+        | "sales_executive"
+        | "support_agent"
+        | "tech_lead"
+        | "finance_manager"
+        | "marketing_manager"
       subscription_tier: "free" | "basic" | "premium"
     }
     CompositeTypes: {
@@ -2924,6 +3106,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "waiter", "chef", "manager", "captain"],
+      internal_team_role: [
+        "super_admin",
+        "sales_manager",
+        "sales_executive",
+        "support_agent",
+        "tech_lead",
+        "finance_manager",
+        "marketing_manager",
+      ],
       subscription_tier: ["free", "basic", "premium"],
     },
   },
