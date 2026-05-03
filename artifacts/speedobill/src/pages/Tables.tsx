@@ -46,6 +46,16 @@ const tableSectionOrder = (sectionName: string) => {
   return 100;
 };
 
+const dedupeTables = (rows: Table[]) => {
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    const key = `${row.section_name.trim().toLowerCase()}::${row.table_number}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 /* Status colors per spec: Empty=green, Occupied=orange, Reserved=blue, Cleaning=yellow.
    Theme-aware tints — different background tint values for dark vs light mode. */
 type StatusStyle = {
@@ -178,7 +188,7 @@ const Tables = () => {
     const { data } = await supabase
       .from("restaurant_tables").select("id, table_number, capacity, status, section_name")
       .eq("hotel_id", hotelId).order("table_number");
-    setTables(data || []);
+    setTables(dedupeTables((data || []) as Table[]));
     setLoading(false);
   }, [hotelId]);
 
@@ -190,7 +200,7 @@ const Tables = () => {
       supabase.from("menu_items").select("id, name, category, price, image_url, is_available, price_variants").eq("hotel_id", hotelId).eq("is_available", true).order("category").order("name"),
       supabase.from("hotels").select("name, address, phone, tax_percent, gst_enabled, upi_qr_url, logo_url, upi_id, receipt_footer").eq("id", hotelId).maybeSingle(),
     ]);
-    setTables(tablesRes.data || []);
+    setTables(dedupeTables((tablesRes.data || []) as Table[]));
     setMenuItems((menuRes.data || []) as unknown as MenuItem[]);
     setHotelInfo((hotelRes.data as HotelInfo | null) || null);
     setLoading(false);
@@ -786,8 +796,8 @@ const Tables = () => {
       void writeAudit({
         hotelId,
         action: "order_billed",
-        performedBy: user.id,
-        performerName: user.email || null,
+        performedBy: user?.id || "",
+        performerName: user?.email || null,
         tableNumber: selectedTable.table_number,
         orderId: activeOrderId,
         details: `Bill ₹${finalTotal.toFixed(2)} (${pmLabel})${isComplimentary ? " — complimentary" : ""}`,
