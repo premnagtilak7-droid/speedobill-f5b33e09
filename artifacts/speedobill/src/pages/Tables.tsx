@@ -35,6 +35,17 @@ interface FloorSection { id: string; name: string; color: string; icon: string; 
 const formatCurrency = (v: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(v);
 
+const tableSectionOrder = (sectionName: string) => {
+  const normalized = sectionName.trim().toLowerCase();
+  if (normalized === "main") return 0;
+  if (normalized.includes("ground")) return 1;
+  if (normalized.includes("first")) return 2;
+  if (normalized.includes("second")) return 3;
+  if (normalized.includes("terrace")) return 4;
+  if (normalized.includes("vip")) return 5;
+  return 100;
+};
+
 /* Status colors per spec: Empty=green, Occupied=orange, Reserved=blue, Cleaning=yellow.
    Theme-aware tints — different background tint values for dark vs light mode. */
 type StatusStyle = {
@@ -351,7 +362,8 @@ const Tables = () => {
       return;
     }
     const sectionToUse = (newTableSection || "Main").trim() || "Main";
-    const maxNum = tables.length > 0 ? Math.max(...tables.map((t) => t.table_number)) : 0;
+    const sectionTables = tables.filter((t) => t.section_name === sectionToUse);
+    const maxNum = sectionTables.length > 0 ? Math.max(...sectionTables.map((t) => t.table_number)) : 0;
     const inserts = Array.from({ length: count }, (_, i) => ({
       hotel_id: hotelId,
       table_number: maxNum + i + 1,
@@ -434,6 +446,16 @@ const Tables = () => {
     }
     toast.success("Table deleted & renumbered"); await fetchTables();
   };
+
+  const orderedTables = useMemo(() => {
+    return [...tables].sort((a, b) => {
+      const sectionDiff = tableSectionOrder(a.section_name) - tableSectionOrder(b.section_name);
+      if (sectionDiff !== 0) return sectionDiff;
+      const numberDiff = a.table_number - b.table_number;
+      if (numberDiff !== 0) return numberDiff;
+      return a.id.localeCompare(b.id);
+    });
+  }, [tables]);
 
   const markCleaningDone = async (tableId: string) => {
     await supabase.from("restaurant_tables").update({ status: "empty" }).eq("id", tableId);
@@ -968,7 +990,7 @@ const Tables = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {(sectionFilter === "all" ? tables : tables.filter((t) => t.section_name === sectionFilter)).map((table) => {
+            {(sectionFilter === "all" ? orderedTables : orderedTables.filter((t) => t.section_name === sectionFilter)).map((table) => {
               const s = tableStyles[table.status] || tableStyles.empty;
               const tint = isDark ? s.tintDark : s.tintLight;
               const tableSection = sections.find((sec) => sec.name === table.section_name);
