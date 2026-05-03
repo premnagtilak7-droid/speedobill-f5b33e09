@@ -70,6 +70,7 @@ export function installGlobalErrorHandlers() {
     const msg = `${message} at ${source}:${lineno}:${colno} — ${error?.stack || "no stack"}`;
     console.error("[GlobalErrorHandler]", msg);
     logToSupabase(msg);
+    if (import.meta.env.DEV) return false;
     showRecoveryUI(String(message));
     return false;
   };
@@ -78,6 +79,7 @@ export function installGlobalErrorHandlers() {
     const msg = `Unhandled promise rejection: ${event.reason?.message || event.reason || "unknown"}`;
     console.error("[GlobalErrorHandler]", msg);
     logToSupabase(msg);
+    if (import.meta.env.DEV) return;
     showRecoveryUI(msg);
   });
 }
