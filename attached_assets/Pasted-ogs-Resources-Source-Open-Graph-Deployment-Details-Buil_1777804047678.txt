@@ -1,0 +1,68 @@
+ogs
+Resources
+Source
+Open Graph
+Deployment Details
+Build Failed
+Command "pnpm build" exited with 1
+Created
+premnagtilak7-4032 Avatar
+premnagtilak7-4032
+3m ago
+Status
+Error
+Latest
+Duration
+18s
+2m ago
+Environment
+Production
+Domains
+speedobill-f5b33e09-spe-git-7ec688-premnagtilak7-4032s-projects.vercel.app
+speedobill-f5b33e09-speedobill-4ovrg2o1s.vercel.app
+Source
+main
+e64085d
+Prevent duplicate order alerts from appearing on the same table
+
+Deployment Settings
+3 Recommendations
+Build Logs
+18s
+134 lines
+Find in logs
+CtrlF
+15:54:47.634 
+15:54:47.634 
+> @workspace/speedobill@0.0.0 build /vercel/path0/artifacts/speedobill
+15:54:47.635 
+> vite build --config vite.config.ts
+15:54:47.635 
+15:54:47.882 
+failed to load config from /vercel/path0/artifacts/speedobill/vite.config.ts
+15:54:47.886 
+error during build:
+15:54:47.887 
+Error: PORT environment variable is required but was not provided.
+15:54:47.887 
+    at file:///vercel/path0/artifacts/speedobill/node_modules/.vite-temp/vite.config.ts.timestamp-1777803887871-d9363a2a19233.mjs:9:9
+15:54:47.887 
+    at ModuleJob.run (node:internal/modules/esm/module_job:430:25)
+15:54:47.888 
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:661:26)
+15:54:47.888 
+    at async loadConfigFromBundledFile (file:///vercel/path0/node_modules/.pnpm/vite@7.3.2_@types+node@25.3.5_jiti@2.6.1_lightningcss@1.31.1_tsx@4.21.0_yaml@2.8.2/node_modules/vite/dist/node/chunks/config.js:35920:12)
+15:54:47.888 
+    at async bundleAndLoadConfigFile (file:///vercel/path0/node_modules/.pnpm/vite@7.3.2_@types+node@25.3.5_jiti@2.6.1_lightningcss@1.31.1_tsx@4.21.0_yaml@2.8.2/node_modules/vite/dist/node/chunks/config.js:35808:17)
+15:54:47.888 
+    at async loadConfigFromFile (file:///vercel/path0/node_modules/.pnpm/vite@7.3.2_@types+node@25.3.5_jiti@2.6.1_lightningcss@1.31.1_tsx@4.21.0_yaml@2.8.2/node_modules/vite/dist/node/chunks/config.js:35775:42)
+15:54:47.889 
+    at async resolveConfig (file:///vercel/path0/node_modules/.pnpm/vite@7.3.2_@types+node@25.3.5_jiti@2.6.1_lightningcss@1.31.1_tsx@4.21.0_yaml@2.8.2/node_modules/vite/dist/node/chunks/config.js:35424:22)
+15:54:47.889 
+    at async createBuilder (file:///vercel/path0/node_modules/.pnpm/vite@7.3.2_@types+node@25.3.5_jiti@2.6.1_lightningcss@1.31.1_tsx@4.21.0_yaml@2.8.2/node_modules/vite/dist/node/chunks/config.js:33879:19)
+15:54:47.889 
+    at async CAC.<anonymous> (file:///vercel/path0/node_modules/.pnpm/vite@7.3.2_@types+node@25.3.5_jiti@2.6.1_lightningcss@1.31.1_tsx@4.21.0_yaml@2.8.2/node_modules/vite/dist/node/cli.js:629:10)
+15:54:47.908 
+ ELIFECYCLE  Command failed with exit code 1.
+15:54:47.924 
+Error: Command "pnpm build" exited with 1
