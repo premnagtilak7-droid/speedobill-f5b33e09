@@ -95,6 +95,7 @@ export default function OrderRealtimeAlert() {
   const { isAudioEnabled, playBell } = useAudioNotification();
   const tableNumberCache = useRef<Map<string, number>>(new Map());
   const seenOrderIds = useRef<Set<string>>(new Set());
+  const seenTableLabels = useRef<Set<string>>(new Set());
 
   // Hotel payment-verify mode (manual / utr / webhook)
   const [verifyMode, setVerifyMode] = useState<string>("manual");
@@ -178,11 +179,15 @@ export default function OrderRealtimeAlert() {
 
         const tableLabel = await resolveTableLabel(order.table_id);
         const total = Math.round(Number(order.total ?? 0));
+        const tableKey = `${order.table_id ?? "no-table"}::${tableLabel}`;
 
         // Bell + haptic for everyone
         void playBell();
         if (!isAudioEnabled) void playClip(NEW_ORDER_SOUND, 1);
         try { navigator.vibrate?.([220, 90, 220, 90, 320]); } catch {}
+
+        if (seenTableLabels.current.has(tableKey)) return;
+        seenTableLabels.current.add(tableKey);
 
         if (showsBigModal) {
           // Pull items for the modal (best-effort)
