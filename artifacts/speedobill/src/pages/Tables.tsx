@@ -1507,7 +1507,7 @@ const Tables = () => {
                             <Button size="sm" variant="outline" className="h-9" onClick={handlePrint}><Printer className="mr-1 h-3.5 w-3.5" /> Print</Button>
                             <Button size="sm" variant="ghost" className="h-9" onClick={handleSplitBill}><Sparkles className="mr-1 h-3.5 w-3.5" /> Split</Button>
                             <Button size="sm" variant="outline" className="h-9 text-amber-600 border-amber-500/30 hover:bg-amber-500/10" 
-                              onClick={() => { if (window.confirm("Mark as Complimentary (₹0)?")) settleBill(true); }}
+                              onClick={() => settleBill(true)}
                               disabled={!activeOrderId || savingMode !== null}>
                               <Gift className="mr-1 h-3.5 w-3.5" /> Free
                             </Button>
