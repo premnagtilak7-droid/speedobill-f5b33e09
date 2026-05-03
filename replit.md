@@ -25,3 +25,13 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+
+## Artifacts
+
+### SpeedoBill (`artifacts/speedobill/`)
+- **Type**: React + Vite (Tailwind v3), previewPath `/`
+- **Purpose**: India's restaurant POS — billing, KOT, inventory, staff management, analytics
+- **Backend**: Supabase (hardcoded URL in `src/integrations/supabase/client.ts`) — 38 tables, auth, realtime, edge functions
+- **Key deps**: react-router-dom, @supabase/supabase-js, i18next, jspdf, recharts, qrcode.react
+- **Theme**: Deep navy dark mode (#0A0F1E) + orange primary (#F97316), Inter + Space Grotesk fonts
+- **Note**: Supabase backend is preserved as-is from Lovable import. Full migration to Replit DB is a separate task.

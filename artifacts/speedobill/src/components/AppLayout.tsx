@@ -1,0 +1,618 @@
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { APP_VERSION } from "@/constants/version";
+import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
+import {
+  LayoutDashboard, UtensilsCrossed, Grid3X3, ChefHat, BarChart3,
+  Settings, LogOut, ScrollText, Menu, X, Wallet, Users, Package, ShoppingBag,
+  CalendarCheck, Store, Zap, CreditCard, ShieldCheck, Sun, Moon,
+  Bell, FileText, TrendingUp, QrCode, Layers, Link2, UserCheck,
+  HelpCircle, ChevronLeft
+} from "lucide-react";
+import BugReportButton from "@/components/BugReportButton";
+import BroadcastBanner from "@/components/BroadcastBanner";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { Button } from "@/components/ui/button";
+import { useState, useEffect, useRef, memo, useCallback, Suspense } from "react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { NotificationBell } from "@/components/NotificationBell";
+import HeaderSoundButton from "@/components/HeaderSoundButton";
+import { useRoleNotifications } from "@/hooks/useRoleNotifications";
+import SectionErrorBoundary from "@/components/SectionErrorBoundary";
+import { useIncomingOrders } from "@/hooks/useIncomingOrders";
+import { supabase } from "@/integrations/supabase/client";
+import { primeNotificationEngine } from "@/lib/notification-sounds";
+import { WaiterReadyBanner } from "@/components/WaiterReadyBanner";
+import SidebarPlanBadge from "@/components/SidebarPlanBadge";
+import SidebarSoundToggle from "@/components/SidebarSoundToggle";
+import ScreenWakeLock from "@/components/ScreenWakeLock";
+import SubscriptionExpiredBanner from "@/components/SubscriptionExpiredBanner";
+
+interface NavItem {
+  label: string;
+  icon: any;
+  path: string;
+}
+
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
+const ownerSections: NavSection[] = [
+  {
+    title: "MAIN",
+    items: [
+      { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+      { label: "Tables", icon: Grid3X3, path: "/tables" },
+      { label: "Counter", icon: Store, path: "/counter" },
+      { label: "Incoming", icon: Bell, path: "/incoming-orders" },
+      { label: "Online Orders", icon: ShoppingBag, path: "/online-orders" },
+      { label: "KDS", icon: ChefHat, path: "/kds" },
+      { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
+    ],
+  },
+  {
+    title: "BILLING",
+    items: [
+      { label: "Pricing", icon: CreditCard, path: "/pricing" },
+      { label: "Billing History", icon: FileText, path: "/billing-history" },
+      { label: "Expenses", icon: Wallet, path: "/expenses" },
+    ],
+  },
+  {
+    title: "FINANCE",
+    items: [
+      { label: "Order History", icon: ScrollText, path: "/order-history" },
+      { label: "Data Export", icon: FileText, path: "/download-data-export" },
+    ],
+  },
+  {
+    title: "MANAGE",
+    items: [
+      { label: "Staff", icon: Users, path: "/staff" },
+      { label: "Staff Performance", icon: TrendingUp, path: "/staff-performance" },
+      { label: "Customers", icon: UserCheck, path: "/customers" },
+      { label: "Voids", icon: FileText, path: "/void-reports" },
+      { label: "Close Day", icon: CalendarCheck, path: "/daily-closing" },
+    ],
+  },
+  {
+    title: "INSIGHTS",
+    items: [
+      { label: "Analytics", icon: BarChart3, path: "/analytics" },
+      { label: "Reports", icon: FileText, path: "/reports" },
+      { label: "Loyalty Program", icon: Store, path: "/loyalty-settings" },
+      { label: "Audit Log", icon: ScrollText, path: "/audit-log" },
+    ],
+  },
+  {
+    title: "CONFIG",
+    items: [
+      { label: "Table QR", icon: QrCode, path: "/table-qr" },
+      { label: "Floor Plan", icon: Layers, path: "/layout-designer" },
+      { label: "Inventory Control", icon: Package, path: "/inventory-hub" },
+      { label: "Supply Store", icon: ShoppingBag, path: "/supply-store" },
+      { label: "Integrations", icon: Link2, path: "/integrations" },
+      { label: "Settings", icon: Settings, path: "/settings" },
+    ],
+  },
+  {
+    title: "ACCOUNT",
+    items: [
+      { label: "My Profile", icon: Users, path: "/staff-profile" },
+    ],
+  },
+];
+
+const managerSections: NavSection[] = [
+  {
+    title: "MAIN",
+    items: [
+      { label: "Manager Console", icon: LayoutDashboard, path: "/manager" },
+      { label: "Dashboard", icon: BarChart3, path: "/dashboard" },
+      { label: "Tables", icon: Grid3X3, path: "/tables" },
+      { label: "Counter", icon: Store, path: "/counter" },
+      { label: "Incoming", icon: Bell, path: "/incoming-orders" },
+      { label: "Online Orders", icon: ShoppingBag, path: "/online-orders" },
+      { label: "KDS", icon: ChefHat, path: "/kds" },
+      { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
+    ],
+  },
+  {
+    title: "MANAGE",
+    items: [
+      { label: "Staff", icon: Users, path: "/staff" },
+      { label: "Customers", icon: UserCheck, path: "/customers" },
+      { label: "Voids", icon: FileText, path: "/void-reports" },
+      { label: "Close Day", icon: CalendarCheck, path: "/daily-closing" },
+    ],
+  },
+  {
+    title: "INSIGHTS",
+    items: [
+      { label: "Analytics", icon: BarChart3, path: "/analytics" },
+      { label: "Reports", icon: FileText, path: "/reports" },
+      { label: "Order History", icon: ScrollText, path: "/order-history" },
+    ],
+  },
+  {
+    title: "CONFIG",
+    items: [
+      { label: "Table QR", icon: QrCode, path: "/table-qr" },
+      { label: "Inventory Control", icon: Package, path: "/inventory-hub" },
+    ],
+  },
+];
+
+// Add profile to manager too
+managerSections.push({
+  title: "ACCOUNT",
+  items: [
+    { label: "My Profile", icon: Users, path: "/staff-profile" },
+  ],
+});
+
+const waiterSections: NavSection[] = [
+  {
+    title: "MAIN",
+    items: [
+      { label: "Table Map", icon: Grid3X3, path: "/tables" },
+      { label: "Incoming", icon: Bell, path: "/incoming-orders" },
+      { label: "My Orders", icon: ScrollText, path: "/my-orders" },
+      { label: "Order Entry", icon: Store, path: "/counter" },
+      { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
+    ],
+  },
+  {
+    title: "ACCOUNT",
+    items: [
+      { label: "My Profile", icon: Users, path: "/staff-profile" },
+    ],
+  },
+];
+
+const chefSections: NavSection[] = [
+  {
+    title: "KITCHEN",
+    items: [
+      { label: "Kitchen Display", icon: ChefHat, path: "/kds" },
+      { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
+    ],
+  },
+  {
+    title: "ACCOUNT",
+    items: [
+      { label: "My Profile", icon: Users, path: "/staff-profile" },
+    ],
+  },
+];
+
+const captainSections: NavSection[] = [
+  {
+    title: "MAIN",
+    items: [
+      { label: "Captain Console", icon: LayoutDashboard, path: "/captain" },
+      { label: "My Tables", icon: Grid3X3, path: "/tables" },
+      { label: "Incoming", icon: Bell, path: "/incoming-orders" },
+      { label: "Take Order", icon: Store, path: "/counter" },
+      { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
+      { label: "Order History", icon: ScrollText, path: "/order-history" },
+    ],
+  },
+  {
+    title: "ACCOUNT",
+    items: [
+      { label: "My Profile", icon: Users, path: "/staff-profile" },
+    ],
+  },
+];
+
+const captainBottomNav: NavItem[] = [
+  { label: "Console", icon: LayoutDashboard, path: "/captain" },
+  { label: "Tables", icon: Grid3X3, path: "/tables" },
+  { label: "Order", icon: Store, path: "/counter" },
+  { label: "Incoming", icon: Bell, path: "/incoming-orders" },
+  { label: "More", icon: Menu, path: "__more__" },
+];
+const ownerBottomNav: NavItem[] = [
+  { label: "Home", icon: LayoutDashboard, path: "/dashboard" },
+  { label: "Tables", icon: Grid3X3, path: "/tables" },
+  { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
+  { label: "Orders", icon: ScrollText, path: "/order-history" },
+  { label: "More", icon: Menu, path: "__more__" },
+];
+
+const waiterBottomNav: NavItem[] = [
+  { label: "Tables", icon: Grid3X3, path: "/tables" },
+  { label: "Incoming", icon: Bell, path: "/incoming-orders" },
+  { label: "My Orders", icon: ScrollText, path: "/my-orders" },
+  { label: "More", icon: Menu, path: "__more__" },
+];
+
+const chefBottomNav: NavItem[] = [
+  { label: "Kitchen", icon: ChefHat, path: "/kds" },
+];
+
+const SIDEBAR_SCROLL_KEY = "qb-sidebar-scroll";
+
+const AppLayout = () => {
+  const { signOut, role, user, hotelId } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [counterBillingEnabled, setCounterBillingEnabled] = useState(false);
+  const navScrollRef = useRef<HTMLDivElement>(null);
+  const sidebarScrollTopRef = useRef(0);
+  const sidebarScrollStorageKey = `${SIDEBAR_SCROLL_KEY}:${role ?? "guest"}`;
+
+  useRoleNotifications();
+  useIncomingOrders();
+
+  useEffect(() => {
+    const unlockNotifications = () => {
+      void primeNotificationEngine();
+    };
+
+    window.addEventListener("pointerdown", unlockNotifications, { passive: true });
+    window.addEventListener("keydown", unlockNotifications);
+
+    return () => {
+      window.removeEventListener("pointerdown", unlockNotifications);
+      window.removeEventListener("keydown", unlockNotifications);
+    };
+  }, []);
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(sidebarScrollStorageKey);
+      sidebarScrollTopRef.current = saved ? Number(saved) || 0 : 0;
+    } catch {
+      sidebarScrollTopRef.current = 0;
+    }
+  }, [sidebarScrollStorageKey]);
+
+  // Fetch counter billing setting once
+  useEffect(() => {
+    if (!hotelId) return;
+    supabase.from("hotels").select("counter_billing_enabled").eq("id", hotelId).maybeSingle()
+      .then(({ data }) => { if (data) setCounterBillingEnabled(data.counter_billing_enabled); });
+  }, [hotelId]);
+
+  const isCreator = user?.email === "speedobill7@gmail.com";
+  const creatorSections: NavSection[] = isCreator
+    ? [
+        {
+          title: "CREATOR",
+          items: [{ label: "Creator Admin", icon: ShieldCheck, path: "/creator-admin" }],
+        },
+        ...ownerSections,
+      ]
+    : ownerSections;
+
+  const creatorBottomNav: NavItem[] = isCreator
+    ? [
+        { label: "Admin", icon: ShieldCheck, path: "/creator-admin" },
+        { label: "Tables", icon: Grid3X3, path: "/tables" },
+        { label: "Menu", icon: UtensilsCrossed, path: "/menu" },
+        { label: "Orders", icon: ScrollText, path: "/order-history" },
+        { label: "More", icon: Menu, path: "__more__" },
+      ]
+    : ownerBottomNav;
+
+  const navSections = role === "owner"
+    ? creatorSections
+    : role === "manager"
+      ? managerSections
+      : role === "captain"
+        ? captainSections
+        : role === "waiter"
+          ? waiterSections
+          : role === "chef"
+            ? chefSections
+            : [];
+
+  const bottomNavItems = role === "owner"
+    ? creatorBottomNav
+    : role === "manager"
+      ? ownerBottomNav
+      : role === "captain"
+        ? captainBottomNav
+        : role === "waiter"
+          ? waiterBottomNav
+          : role === "chef"
+            ? chefBottomNav
+            : [];
+
+  const roleLabel = isCreator ? "Creator Admin" : role ? role.charAt(0).toUpperCase() + role.slice(1) : "Staff";
+
+  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const userInitials = userName.slice(0, 2).toUpperCase();
+
+  const handleNav = useCallback((path: string, onClick?: () => void) => {
+    if (navScrollRef.current) {
+      sidebarScrollTopRef.current = navScrollRef.current.scrollTop;
+      try {
+        sessionStorage.setItem(sidebarScrollStorageKey, String(sidebarScrollTopRef.current));
+      } catch {}
+    }
+    navigate(path);
+    onClick?.();
+  }, [navigate, sidebarScrollStorageKey]);
+
+  useEffect(() => {
+    const navElement = navScrollRef.current;
+    if (!navElement) return;
+
+    const persistScroll = () => {
+      sidebarScrollTopRef.current = navElement.scrollTop;
+      try {
+        sessionStorage.setItem(sidebarScrollStorageKey, String(navElement.scrollTop));
+      } catch {}
+    };
+
+    persistScroll();
+    navElement.addEventListener("scroll", persistScroll, { passive: true });
+    return () => navElement.removeEventListener("scroll", persistScroll);
+  }, [sidebarOpen, collapsed, sidebarScrollStorageKey]);
+
+  useEffect(() => {
+    if (!navScrollRef.current) return;
+
+    const savedScroll = sidebarScrollTopRef.current;
+    requestAnimationFrame(() => {
+      if (navScrollRef.current) {
+        navScrollRef.current.scrollTop = savedScroll;
+      }
+    });
+  }, [location.pathname, sidebarOpen, collapsed]);
+
+  const renderNavButton = (item: NavItem, onClick: (() => void) | undefined, isActive: boolean, isCollapsed: boolean) => (
+    <button
+      key={item.path + item.label}
+      onClick={() => handleNav(item.path, onClick)}
+      className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 min-h-[44px] active:scale-[0.97] ${
+        isActive
+          ? "bg-gradient-to-r from-primary/20 via-primary/10 to-transparent text-primary font-semibold shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.18)]"
+          : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+      }`}
+    >
+      {/* Active left rail */}
+      {isActive && (
+        <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)]" />
+      )}
+      <item.icon
+        className={`h-[18px] w-[18px] flex-shrink-0 transition-colors ${
+          isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+        }`}
+      />
+      {!isCollapsed && <span className="truncate">{item.label}</span>}
+    </button>
+  );
+
+  const renderSidebarContent = (onItemClick?: () => void) => (
+    <>
+      <div className="flex items-center gap-3 px-3 py-4 mb-2">
+        <Avatar className="h-10 w-10 bg-primary text-primary-foreground">
+          <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
+            {userInitials}
+          </AvatarFallback>
+        </Avatar>
+        {!collapsed && (
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
+            <p className="text-xs text-muted-foreground">{roleLabel}</p>
+          </div>
+        )}
+      </div>
+
+      <nav ref={navScrollRef} className="flex-1 overflow-y-auto px-2 pb-4">
+        <div className="space-y-4">
+          {navSections.map((section, idx) => (
+            <div key={section.title}>
+              {/* Subtle divider between sections */}
+              {idx > 0 && !collapsed && (
+                <div className="mx-3 mb-3 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+              )}
+              {!collapsed && (
+                <p className="px-3 mb-1 text-[9px] font-bold text-muted-foreground/70 tracking-[0.18em] uppercase">
+                  {section.title}
+                </p>
+              )}
+              <div className="space-y-0.5">
+                {section.items.map((item) => (
+                  renderNavButton(item, onItemClick, location.pathname === item.path, collapsed)
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {/* Subscription plan badge */}
+          <div className="px-1">
+            <SidebarPlanBadge collapsed={collapsed} />
+          </div>
+
+          {/* Bottom actions inside scroll area */}
+          <div className="border-t border-border/60 pt-3 space-y-1">
+            <SidebarSoundToggle collapsed={collapsed} />
+            <BugReportButton collapsed={collapsed} />
+            <button
+              onClick={toggleTheme}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors min-h-[44px] active:scale-[0.97]"
+            >
+              {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+              {!collapsed && <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
+            </button>
+            <button
+              onClick={() => { navigate("/support"); onItemClick?.(); }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors min-h-[44px] active:scale-[0.97]"
+            >
+              <HelpCircle className="h-[18px] w-[18px]" />
+              {!collapsed && <span>Help & Feedback</span>}
+            </button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 text-destructive hover:bg-destructive/10 rounded-xl min-h-[44px]"
+              onClick={signOut}
+            >
+              <LogOut className="h-[18px] w-[18px]" />
+              {!collapsed && <span>Sign Out</span>}
+            </Button>
+          </div>
+        </div>
+      </nav>
+    </>
+  );
+
+  return (
+    <div className="flex min-h-screen md:h-screen md:overflow-hidden mesh-gradient-bg">
+      {/* Keep tablet/phone screen awake while in the app */}
+      <ScreenWakeLock />
+
+      {/* Mobile top bar */}
+      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between glass-topbar px-4 md:hidden"
+        style={{ height: "calc(56px + env(safe-area-inset-top))", paddingTop: "env(safe-area-inset-top)" }}
+      >
+        <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-1 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center active:bg-secondary/60">
+          <Menu className="h-5 w-5 text-foreground" />
+        </button>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg gradient-btn-primary flex items-center justify-center">
+            <Zap className="h-3.5 w-3.5 text-white" />
+          </div>
+          <span className="font-bold text-primary text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>SpeedoBill</span>
+        </div>
+        <div className="flex items-center gap-0.5">
+          <HeaderSoundButton />
+          <LanguageSwitcher />
+          <NotificationBell />
+          <button onClick={toggleTheme} className="p-2 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-secondary/60">
+            {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-[100] md:hidden" onClick={() => setSidebarOpen(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+          <aside
+            className="absolute left-0 top-0 bottom-0 w-72 glass-sidebar flex flex-col p-3 animate-slide-in-right z-[101]"
+            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-2 px-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl gradient-btn-primary flex items-center justify-center">
+                  <Zap className="h-4 w-4 text-white" />
+                </div>
+                <span className="font-bold text-lg text-primary" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>SpeedoBill</span>
+              </div>
+              <button onClick={() => setSidebarOpen(false)} className="p-2 rounded-xl hover:bg-secondary min-h-[44px] min-w-[44px] flex items-center justify-center">
+                <X className="h-5 w-5 text-muted-foreground" />
+              </button>
+            </div>
+            {renderSidebarContent(() => setSidebarOpen(false))}
+          </aside>
+        </div>
+      )}
+
+      {/* Desktop sidebar */}
+      <aside className={`hidden md:flex flex-col glass-sidebar sticky top-0 h-screen overflow-hidden transition-all duration-200 ${collapsed ? "w-16" : "w-56 lg:w-60"}`}>
+        <div className="flex items-center justify-between px-3 py-3 mb-1">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl gradient-btn-primary flex items-center justify-center shadow-md">
+              <Zap className="h-4 w-4 text-white" />
+            </div>
+            {!collapsed && (
+              <div>
+                <h1 className="text-base font-bold text-primary leading-none" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>SpeedoBill</h1>
+                <p className="text-[9px] text-muted-foreground mt-0.5">Smart Canteen</p>
+              </div>
+            )}
+          </div>
+          <button onClick={() => setCollapsed(!collapsed)} className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground min-h-[36px] min-w-[36px] flex items-center justify-center">
+            <ChevronLeft className={`h-4 w-4 transition-transform ${collapsed ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+        {renderSidebarContent()}
+        {!collapsed && (
+          <div className="px-4 py-2 text-[10px] text-muted-foreground text-center border-t border-border">
+            v{APP_VERSION}
+          </div>
+        )}
+      </aside>
+
+      {/* Main content */}
+      <main className="flex-1 min-h-screen md:h-screen overflow-x-hidden overflow-y-auto pb-[72px] pt-[calc(56px+env(safe-area-inset-top))] md:pb-0 md:pt-0">
+        {/* Desktop top bar */}
+        <div className="hidden md:flex sticky top-0 z-30 h-12 shrink-0 items-center justify-end gap-2 px-6 glass-topbar">
+          <div className="flex items-center gap-2">
+            <HeaderSoundButton />
+            <LanguageSwitcher />
+            <NotificationBell />
+            <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-secondary/60 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center">
+              {theme === "dark" ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
+            </button>
+            <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
+              <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">{userInitials}</AvatarFallback>
+            </Avatar>
+          </div>
+        </div>
+        <SubscriptionExpiredBanner />
+        <BroadcastBanner />
+        <WaiterReadyBanner />
+        <SectionErrorBoundary section="Page Content">
+          <Suspense
+            fallback={
+              <div className="flex min-h-[60vh] items-center justify-center px-6 py-10">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
+        </SectionErrorBoundary>
+      </main>
+
+      {/* Mobile bottom navigation */}
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-50 glass-bottombar md:hidden"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="flex items-stretch justify-around">
+          {bottomNavItems.map((item) => {
+            const isMore = item.path === "__more__";
+            const active = !isMore && location.pathname === item.path;
+
+            return (
+              <button
+                key={item.label}
+                onClick={() => {
+                  if (isMore) {
+                    setSidebarOpen(true);
+                  } else {
+                    navigate(item.path);
+                  }
+                }}
+                className={`flex flex-1 flex-col items-center justify-center gap-0.5 py-2.5 min-h-[56px] transition-colors active:scale-95 ${
+                  active ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                <item.icon className={`h-5 w-5 ${active ? "text-primary" : ""}`} />
+                <span className={`text-[10px] leading-tight ${active ? "font-semibold text-primary" : ""}`}>
+                  {item.label}
+                </span>
+                {active && <div className="w-4 h-0.5 rounded-full bg-primary mt-0.5" />}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+    </div>
+  );
+};
+
+export default memo(AppLayout);
