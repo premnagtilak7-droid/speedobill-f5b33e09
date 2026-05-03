@@ -94,6 +94,7 @@ export default function OrderRealtimeAlert() {
   const { user, hotelId, role } = useAuth();
   const { isAudioEnabled, playBell } = useAudioNotification();
   const tableNumberCache = useRef<Map<string, number>>(new Map());
+  const seenOrderIds = useRef<Set<string>>(new Set());
 
   // Hotel payment-verify mode (manual / utr / webhook)
   const [verifyMode, setVerifyMode] = useState<string>("manual");
@@ -172,6 +173,8 @@ export default function OrderRealtimeAlert() {
       async (payload) => {
         const order = payload.new as OrderRow;
         if (!order || order.hotel_id !== hotelId) return;
+        if (seenOrderIds.current.has(order.id)) return;
+        seenOrderIds.current.add(order.id);
 
         const tableLabel = await resolveTableLabel(order.table_id);
         const total = Math.round(Number(order.total ?? 0));
