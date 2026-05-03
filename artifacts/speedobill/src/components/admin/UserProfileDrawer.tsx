@@ -49,7 +49,7 @@ interface Props {
 
 const TIER_PRICE: Record<string, number> = { free: 0, basic: 199, premium: 499 };
 
-export const UserProfileDrawer = ({ open, onClose, user, hotel, onChanged }: Props) => {
+export const UserProfileDrawer = ({ open, onClose, user, hotel, onChanged }: Props): JSX.Element | null => {
   const [activity, setActivity] = useState<{ type: string; text: string; at: string }[]>([]);
   const [loadingActivity, setLoadingActivity] = useState(false);
   const [hotelStats, setHotelStats] = useState<{ orders: number; revenue: number; staff: number; waiters: number; chefs: number }>({

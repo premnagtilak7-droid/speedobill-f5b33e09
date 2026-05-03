@@ -28,7 +28,7 @@ interface Props {
 const PANEL_BG = "#131C35";
 const BORDER = "#1E2D4A";
 
-export const ClientDirectory = ({ profiles, hotels, onChanged, focusHotelId, onFocusHandled }: Props) => {
+export const ClientDirectory = ({ profiles, hotels, onChanged, focusHotelId, onFocusHandled }: Props): JSX.Element | null => {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [planFilter, setPlanFilter] = useState<string>("all");
@@ -40,6 +40,8 @@ export const ClientDirectory = ({ profiles, hotels, onChanged, focusHotelId, onF
   const [drawerUser, setDrawerUser] = useState<DirectoryUser | null>(null);
   const [working, setWorking] = useState(false);
   const [hotelMetrics, setHotelMetrics] = useState<Record<string, { staff: number; orders: number }>>({});
+
+  if (!profiles || !hotels) return null;
 
   // Fetch staff count + monthly orders per hotel (lightweight aggregate)
   useEffect(() => {
