@@ -1,11 +1,11 @@
 [build]
-  command = "CI=false npx vite build"
+  base = "."
+  command = "CI=false npm run build"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "18"
   CI = "false"
-  VITE_SKIP_TYPECHECK = "true"
 
 [[redirects]]
   from = "/*"
