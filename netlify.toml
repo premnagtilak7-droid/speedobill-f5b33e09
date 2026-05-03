@@ -1,5 +1,5 @@
 [build]
-  base = "."
+  base = "artifacts/speedobill"
   command = "CI=false npm run build"
   publish = "dist"
 

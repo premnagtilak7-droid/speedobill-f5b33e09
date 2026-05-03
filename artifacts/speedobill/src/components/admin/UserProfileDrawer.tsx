@@ -70,7 +70,7 @@ export const UserProfileDrawer = ({ open, onClose, user, hotel, onChanged }: Pro
     void loadHotelStats();
   }, [open, user?.user_id, hotel?.id]);
 
-  const loadActivity = async () => {
+  const loadActivity = async (): Promise<void> => {
     if (!user) return;
     setLoadingActivity(true);
     try {
@@ -86,7 +86,7 @@ export const UserProfileDrawer = ({ open, onClose, user, hotel, onChanged }: Pro
     }
   };
 
-  const loadHotelStats = async () => {
+  const loadHotelStats = async (): Promise<void> => {
     if (!hotel) { setHotelStats({ orders: 0, revenue: 0, staff: 0, waiters: 0, chefs: 0 }); return; }
     setLoadingStats(true);
     try {
@@ -107,7 +107,7 @@ export const UserProfileDrawer = ({ open, onClose, user, hotel, onChanged }: Pro
     finally { setLoadingStats(false); }
   };
 
-  const callAction = async (body: any, successMsg: string) => {
+  const callAction = async (body: any, successMsg: string): Promise<any> => {
     setWorking(true);
     try {
       const { data, error } = await supabase.functions.invoke("admin-user-action", { body });
@@ -120,28 +120,28 @@ export const UserProfileDrawer = ({ open, onClose, user, hotel, onChanged }: Pro
     } finally { setWorking(false); }
   };
 
-  const onSuspendToggle = async () => {
+  const onSuspendToggle = async (): Promise<void> => {
     if (!user) return;
     const action = user.is_active === false ? "unsuspend" : "suspend";
     await callAction({ action, user_id: user.user_id }, action === "suspend" ? "Account suspended" : "Account reactivated");
   };
 
-  const onExtend = async (days: number) => {
+  const onExtend = async (days: number): Promise<void> => {
     if (!hotel) return;
     await callAction({ action: "extend_subscription", hotel_id: hotel.id, days }, `Extended by ${days} days`);
   };
 
-  const onChangePlan = async () => {
+  const onChangePlan = async (): Promise<void> => {
     if (!hotel) return;
     await callAction({ action: "change_plan", hotel_id: hotel.id, plan: planSelect }, `Plan changed to ${planSelect}`);
   };
 
-  const onResetPwd = async () => {
+  const onResetPwd = async (): Promise<void> => {
     if (!user?.email) return toast.error("No email on file");
     await callAction({ action: "reset_password", email: user.email }, "Reset link generated");
   };
 
-  const sendWhatsApp = () => {
+  const sendWhatsApp = (): void => {
     const phone = (user?.phone || hotel?.phone || "").replace(/\D/g, "");
     if (!phone) return toast.error("No WhatsApp number");
     const msg = encodeURIComponent(waMessage || `Hi ${user?.full_name || ""}, this is SpeedoBill admin.`);

@@ -71,7 +71,7 @@ const CounterOrder = () => {
       setLoading(true);
       const [menuRes, profRes, recentRes] = await Promise.all([
         supabase.from("menu_items").select("*").eq("hotel_id", hotelId).eq("is_available", true).order("category"),
-        supabase.from("profiles").select("full_name").eq("user_id", user?.id).maybeSingle(),
+        supabase.from("profiles").select("full_name").eq("user_id", user?.id ?? "").maybeSingle(),
         supabase
           .from("counter_orders")
           .select("id, token_number, total_amount, waiter_name, created_at, items")

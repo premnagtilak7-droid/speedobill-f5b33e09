@@ -185,7 +185,7 @@ export const ClientDirectory = ({ profiles, hotels, onChanged, focusHotelId, onF
     toast.success(`Exported ${rows.length} users`);
   };
 
-  const bulkSuspend = async () => {
+  const bulkSuspend = async (): Promise<void> => {
     if (!selected.size) return;
     if (!confirm(`Suspend ${selected.size} accounts? They will be locked out.`)) return;
     setWorking(true);
@@ -199,9 +199,10 @@ export const ClientDirectory = ({ profiles, hotels, onChanged, focusHotelId, onF
       onChanged();
     } catch (e: any) { toast.error(e.message || "Failed"); }
     finally { setWorking(false); }
+    return;
   };
 
-  const bulkChangePlan = async (plan: string) => {
+  const bulkChangePlan = async (plan: string): Promise<void> => {
     const hotelIds = new Set<string>();
     selected.forEach(uid => {
       const u = enriched.find(x => x.user_id === uid);
@@ -220,6 +221,7 @@ export const ClientDirectory = ({ profiles, hotels, onChanged, focusHotelId, onF
       onChanged();
     } catch (e: any) { toast.error(e.message || "Failed"); }
     finally { setWorking(false); }
+    return;
   };
 
   const drawerHotel: DirectoryHotel | null = drawerUser?.hotel_id

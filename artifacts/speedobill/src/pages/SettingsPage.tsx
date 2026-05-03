@@ -285,7 +285,7 @@ const SettingsPage = () => {
           subscription_status: "active",
           subscription_plan: lic.tier,
           subscription_expires_at: expiry.toISOString(),
-        }).eq("user_id", user?.id),
+        }).eq("user_id", user?.id ?? ""),
       ]);
 
       if (licUpdate.error || hotelUpdate.error || profileUpdate.error) {
