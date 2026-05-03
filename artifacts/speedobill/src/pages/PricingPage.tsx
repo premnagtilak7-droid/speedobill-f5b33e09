@@ -323,13 +323,20 @@ const PricingPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border/40 bg-background/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 gap-3">
           <Link to="/" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Back to website
           </Link>
-          <Link to="/auth" className="text-sm font-semibold text-primary hover:underline">
-            Sign in
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link to="/auth" className="text-sm font-semibold text-primary hover:underline">
+              Sign in
+            </Link>
+            <Button asChild variant="outline" size="sm">
+              <Link to={user ? "/dashboard" : "/auth"}>
+                {user ? "Go to app" : "Open app"}
+              </Link>
+            </Button>
+          </div>
         </div>
       </header>
       <PricingContent />
