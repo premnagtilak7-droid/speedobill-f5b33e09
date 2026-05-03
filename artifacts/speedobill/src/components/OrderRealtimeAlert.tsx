@@ -179,7 +179,7 @@ export default function OrderRealtimeAlert() {
 
         const tableLabel = await resolveTableLabel(order.table_id);
         const total = Math.round(Number(order.total ?? 0));
-        const tableKey = `${order.table_id ?? "no-table"}::${tableLabel}`;
+        const tableKey = `${hotelId}::${order.table_id ?? "no-table"}::${tableLabel}`;
 
         // Bell + haptic for everyone
         void playBell();
@@ -188,6 +188,7 @@ export default function OrderRealtimeAlert() {
 
         if (seenTableLabels.current.has(tableKey)) return;
         seenTableLabels.current.add(tableKey);
+        setTimeout(() => seenTableLabels.current.delete(tableKey), 15000);
 
         if (showsBigModal) {
           // Pull items for the modal (best-effort)
