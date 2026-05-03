@@ -467,6 +467,17 @@ const Tables = () => {
     });
   }, [tables]);
 
+  const visibleTables = useMemo(() => {
+    const source = sectionFilter === "all" ? orderedTables : orderedTables.filter((t) => t.section_name === sectionFilter);
+    const seen = new Set<string>();
+    return source.filter((table) => {
+      const key = `${table.section_name.trim().toLowerCase()}::${table.table_number}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [orderedTables, sectionFilter]);
+
   const markCleaningDone = async (tableId: string) => {
     await supabase.from("restaurant_tables").update({ status: "empty" }).eq("id", tableId);
     toast.success("Table is now empty"); await fetchTables();
@@ -1000,7 +1011,7 @@ const Tables = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {(sectionFilter === "all" ? orderedTables : orderedTables.filter((t) => t.section_name === sectionFilter)).map((table) => {
+            {visibleTables.map((table) => {
               const s = tableStyles[table.status] || tableStyles.empty;
               const tint = isDark ? s.tintDark : s.tintLight;
               const tableSection = sections.find((sec) => sec.name === table.section_name);
